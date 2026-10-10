@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timezone
@@ -14,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import delta
+import digest
 import jobs
 import store
 
@@ -116,6 +118,38 @@ def delete_company(company_id: str):
     if not store.delete_company(company_id):
         raise HTTPException(404, "unknown company")
     return {"ok": True}
+
+
+@app.get("/digest")
+def get_digest(period: str = "day", since: str | None = None):
+    """Everything new since `since` (ISO) or over the last `period` (day | week): per company, the discrepancies,
+    contradictions and top founder questions, plus an on-screen summary and a two-host podcast script."""
+    if period not in ("day", "week"):
+        raise HTTPException(400, "period must be day or week")
+    return digest.build(period, since)
+
+
+class AudioRequest(BaseModel):
+    script: str = Field(..., min_length=1, max_length=6000)
+
+
+@app.post("/digest/audio")
+async def digest_audio(req: AudioRequest, request: Request):
+    """Voice a digest script with Fish Audio → {audio_url}. Costs credits, so it's rate-limited like /analyze."""
+    _rate_limit(request)
+    try:
+        name = await asyncio.to_thread(digest.synthesize, req.script)
+    except RuntimeError as e:
+        raise HTTPException(503, str(e))
+    return {"audio_url": f"/audio/{name}"}
+
+
+@app.get("/audio/{name}", include_in_schema=False)
+def audio(name: str):
+    path = digest.AUDIO_DIR / name
+    if not re.fullmatch(r"digest-[0-9a-f]{10}\.mp3", name) or not path.exists():
+        raise HTTPException(404, "no such audio")
+    return FileResponse(path, media_type="audio/mpeg")
 
 
 # Tester page: same API the extension uses, served at / so remote testers need only a URL.

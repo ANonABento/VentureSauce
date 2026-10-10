@@ -11,7 +11,7 @@
   <header class="top">
     <div>
       <h1>VentureSauce</h1>
-      <p class="sub">Drop a pitch deck. Every claim checked against SEC Form D, LinkedIn and press, with a source on every row.</p>
+      <p class="sub">Your deal inbox. Drop decks, emails, screenshots and call notes as they arrive: every claim is checked against SEC Form D, LinkedIn, press and your own other sources.</p>
     </div>
     <span id="mode" class="mode"></span>
   </header>
@@ -32,6 +32,32 @@
     </div>
   </section>
 
+  <section class="card digest-bar">
+    <div>
+      <h3>Your briefing</h3>
+      <p class="muted">Everything that came in, what conflicts, what to ask. Hear it on the walk to the office.</p>
+    </div>
+    <div class="row">
+      <button id="digestDay" class="btn ghost">Today</button>
+      <button id="digestWeek" class="btn ghost">This week</button>
+    </div>
+  </section>
+
+  <section id="digest" class="card" hidden>
+    <div class="summary">
+      <h2 id="digestTitle"></h2>
+      <p id="digestTotals" class="counts"></p>
+    </div>
+    <p id="digestSummary" class="note"></p>
+    <div class="row">
+      <button id="playBrief" class="btn">Play briefing</button>
+      <span id="audioStatus" class="muted"></span>
+    </div>
+    <audio id="briefAudio" controls hidden></audio>
+    <div id="digestCompanies"></div>
+    <details class="raw"><summary>Briefing script</summary><pre id="digestScript"></pre></details>
+  </section>
+
   <section id="progress" class="card" hidden>
     <ol id="steps" class="steps"></ol>
     <p id="error" class="error" hidden></p>
@@ -46,6 +72,11 @@
       </div>
       <p id="counts" class="counts"></p>
     </div>
+    <p id="items" class="muted"></p>
+    <section id="questions" class="card" hidden>
+      <h3>Ask the founder</h3>
+      <ol id="questionList" class="questions"></ol>
+    </section>
     <div id="checks"></div>
 
     <form id="feedback" class="card">

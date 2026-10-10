@@ -81,6 +81,9 @@ function render(job) {
   $("counts").textContent = `${n("gap")} differ · ${n("match")} match · ${n("unverifiable")} couldn't verify`;
   const checks = [...job.checks].sort((a, b) => ORDER[a.verdict] - ORDER[b.verdict]);
   $("checks").innerHTML = checks.map(row).join("");
+  renderQuestions(job.questions);
+  $("items").textContent = (job.items || []).length > 1
+    ? `In your inbox: ${job.items.map((i) => i.kind_name).join(" → ")}` : "";
 }
 
 function row(c) {
@@ -133,6 +136,55 @@ $("feedback").addEventListener("submit", async (ev) => {
   $("fbText").value = "";
   $("fbDone").hidden = false;
 });
+
+// Digest + spoken briefing
+let digestScript = "";
+async function loadDigest(period) {
+  $("digest").hidden = false;
+  $("digestTitle").textContent = "Building your briefing…";
+  $("digestTotals").textContent = $("digestSummary").textContent = $("audioStatus").textContent = "";
+  $("digestCompanies").innerHTML = "";
+  $("briefAudio").hidden = true;
+  try {
+    const d = await (await fetch(`${API}/digest?period=${period}`)).json();
+    digestScript = d.script;
+    const t = d.totals;
+    $("digestTitle").textContent = period === "week" ? "This week" : "Today";
+    $("digestTotals").textContent = `${t.items} items · ${t.companies} companies · ${t.discrepancies} discrepancies · ${t.contradictions} contradictions`;
+    $("digestSummary").textContent = d.summary;
+    $("digestScript").textContent = d.script;
+    $("digestCompanies").innerHTML = d.companies.map((c) => `<div class="co">
+      <h3>${esc(c.name)}${c.fictional ? " (fictional)" : ""}</h3>
+      <p class="muted">New: ${c.new_items.map((i) => esc(i.kind_name)).join(", ")} · ${esc(c.headline)}</p>
+      ${c.discrepancies.length ? `<ul>${c.discrepancies.map((x) => `<li><b>${esc(x.signal)}</b>: ${esc(x.short || x.summary)}</li>`).join("")}</ul>` : ""}
+      ${c.questions[0] ? `<p class="ask">Ask: ${esc(c.questions[0].question)}</p>` : ""}
+    </div>`).join("");
+  } catch (e) { $("digestTitle").textContent = "Couldn't build the briefing."; }
+}
+$("digestDay").addEventListener("click", () => loadDigest("day"));
+$("digestWeek").addEventListener("click", () => loadDigest("week"));
+$("playBrief").addEventListener("click", async () => {
+  $("playBrief").disabled = true;
+  $("audioStatus").textContent = "Recording your briefing (about 20 seconds)…";
+  try {
+    const r = await fetch(`${API}/digest/audio`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ script: digestScript }),
+    });
+    const body = await r.json();
+    if (!r.ok) throw new Error(body.detail || r.statusText);
+    $("briefAudio").src = body.audio_url;
+    $("briefAudio").hidden = false;
+    $("audioStatus").textContent = "";
+    $("briefAudio").play().catch(() => {});
+  } catch (e) { $("audioStatus").textContent = `Audio unavailable: ${e.message}`; }
+  $("playBrief").disabled = false;
+});
+
+// Founder questions for the current company
+function renderQuestions(qs) {
+  $("questions").hidden = !qs || !qs.length;
+  $("questionList").innerHTML = (qs || []).map((q) => `<li>${esc(q.question)}<small>${esc(q.why)}</small></li>`).join("");
+}
 
 function sendFile(f) {
   const form = new FormData(); form.append("file", f); start(form);

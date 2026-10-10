@@ -57,3 +57,14 @@ textarea, input { width: 100%; margin-top: 8px; padding: 10px; border: 1px solid
 .meta a:hover { border-color: var(--accent); }
 .raw pre { overflow-x: auto; font-size: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
 footer { margin-top: 24px; font-size: 12px; color: var(--muted); }
+.digest-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.digest-bar .row { margin-top: 0; }
+.digest-bar h3 { margin: 0; }
+audio { width: 100%; margin-top: 12px; }
+.co { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
+.co h3 { margin: 0 0 4px; }
+.co ul { margin: 6px 0; padding-left: 18px; }
+.co .ask { margin: 6px 0 0; font-style: italic; }
+.questions { margin: 0; padding-left: 20px; }
+.questions li { margin: 6px 0; }
+.questions small { color: var(--muted); display: block; }
