@@ -63,3 +63,10 @@ def test_no_contradiction_within_tolerance():
 def test_no_contradiction_inside_a_single_item():
     items = [item("a", "pdf", [c("metric", 3_100_000, "arr"), c("metric", 1_000_000, "arr")])]
     assert analysis.contradictions(analysis.all_claims(items)) == []
+
+
+def test_same_file_twice_is_listed_once():
+    items = [item("a", "pdf", [c("headcount", 25)], label="deck.pdf"), item("b", "pdf", [c("headcount", 25)], label="deck.pdf"),
+             item("e", "email", [c("headcount", 40)], label="Pasted email")]
+    out = analysis.contradictions(analysis.all_claims(items))
+    assert len(out) == 1 and len(out[0]["values"]) == 2

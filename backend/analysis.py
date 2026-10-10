@@ -70,6 +70,11 @@ def contradictions(claims: list[dict]) -> list[dict]:
             groups.setdefault(k, []).append(c)
     out = []
     for key, cs in groups.items():
+        # The same file dropped twice says the same thing twice: keep one of each (source, value).
+        uniq: dict[tuple, dict] = {}
+        for c in cs:
+            uniq[(c["item_label"], c["value"])] = c
+        cs = sorted(uniq.values(), key=lambda c: cs.index(c))
         if len({c["item_id"] for c in cs}) < 2:
             continue
         # The most different pair of values that come from DIFFERENT items.
