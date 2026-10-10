@@ -94,16 +94,21 @@ export function DeltaRow({
             {sources.map((source, index) => (
               <span key={index}>
                 {index > 0 && " · "}
-                <a
-                  href={source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={`Checked ${formatDate(source.checkedAt)}`}
-                  className="underline decoration-graphite/40 underline-offset-2 transition-colors duration-150 ease-out hover:text-ink hover:decoration-ink"
-                >
-                  {source.label}
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
+                {/* "#item" marks a claim from the user's own item: no page to open. */}
+                {source.url === "#item" ? (
+                  source.label
+                ) : (
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Checked ${formatDate(source.checkedAt)}`}
+                    className="underline decoration-graphite/40 underline-offset-2 transition-colors duration-150 ease-out hover:text-ink hover:decoration-ink"
+                  >
+                    {source.label}
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                )}
               </span>
             ))}
           </p>

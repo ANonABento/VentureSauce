@@ -7,17 +7,23 @@ export const LOADING_STEPS = [
 ];
 
 /**
- * Three quiet steps. `current` is the index of the step in progress;
- * every step before it is complete.
+ * A quiet status log. `current` is the index of the step in progress; every
+ * step before it is complete. `steps` defaults to the three report steps.
  */
-export function LoadingSteps({ current }: { current: number }) {
+export function LoadingSteps({
+  current,
+  steps = LOADING_STEPS,
+}: {
+  current: number;
+  steps?: string[];
+}) {
   return (
     <div>
       <p role="status" className="sr-only">
-        {LOADING_STEPS[Math.min(current, LOADING_STEPS.length - 1)]}
+        {steps[Math.min(current, steps.length - 1)]}
       </p>
       <ol className="space-y-3">
-        {LOADING_STEPS.map((label, index) => {
+        {steps.map((label, index) => {
           const done = index < current;
           const active = index === current;
           return (

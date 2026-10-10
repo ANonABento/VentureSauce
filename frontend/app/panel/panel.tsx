@@ -38,14 +38,15 @@ export function Panel() {
 
 type Screen = { kind: "inbox" } | { kind: "company"; id: string; filed?: string | null } | { kind: "digest" };
 
-const JOB_STEP: Record<string, string> = {
-  parsing: "Reading the item",
-  checking_sec: "Reading SEC filings",
-  checking_linkedin: "Checking LinkedIn",
-  checking_press: "Reading the press",
-  comparing_sources: "Comparing with your other items",
-  ready: "Filed",
-};
+// The backend's job statuses, in order, as the lines of the status log.
+const JOB_STEPS: [status: string, label: string][] = [
+  ["parsing", "Reading the item"],
+  ["checking_sec", "Reading SEC filings"],
+  ["checking_linkedin", "Checking LinkedIn"],
+  ["checking_press", "Reading the press"],
+  ["comparing_sources", "Comparing with your other items"],
+];
+const JOB_LABELS = JOB_STEPS.map(([, label]) => label);
 
 /** The deal inbox: Inbox → Company (Checks / Items / Questions) → Digest. */
 function InboxApp({ pageUrl }: { pageUrl: string | null }) {
@@ -53,9 +54,14 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   const [screen, setScreen] = useState<Screen>({ kind: "inbox" });
   const [companies, setCompanies] = useState<CompanySummary[] | null>(null);
   const [seen, setSeen] = useState<Record<string, string>>({});
-  const [progress, setProgress] = useState<string | null>(null);
+  // Index into JOB_STEPS while an item is being read, otherwise null.
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notInInbox, setNotInInbox] = useState(false);
+  const [unreachable, setUnreachable] = useState(false);
+  const [reload, setReload] = useState(0);
+  const [lookup, setLookup] = useState("");
+  const [lookupMiss, setLookupMiss] = useState<string | null>(null);
 
   useEffect(() => {
     if (screen.kind !== "inbox") return;
@@ -70,9 +76,10 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           } catch {}
         }
         setSeen(marks);
+        setUnreachable(false);
       })
-      .catch(() => setError("Can't reach the VentureSauce backend."));
-  }, [screen]);
+      .catch(() => setUnreachable(true));
+  }, [screen, reload]);
 
   // Opened on a company's site: jump to it if it's already in the inbox.
   useEffect(() => {
@@ -88,9 +95,13 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
 
   async function onDrop(input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string }) {
     setError(null);
-    setProgress("Reading the item");
+    setProgress(0);
     try {
-      const job = await dropItem(input, (j) => setProgress(JOB_STEP[j.status] ?? "Working"));
+      const job = await dropItem(input, (j) => {
+        const step = JOB_STEPS.findIndex(([status]) => status === j.status);
+        // "ready" and unknown statuses leave the log where it is.
+        if (step >= 0) setProgress(step);
+      });
       setScreen({ kind: "company", id: job.company_id!, filed: job.item_id });
     } catch (e) {
       setError((e as Error).message);
@@ -98,7 +109,30 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     setProgress(null);
   }
 
+  /** Open a company that is already in the inbox, found by name. */
+  async function onLookup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const company = lookup.trim();
+    if (!company) return;
+    setLookupMiss(null);
+    try {
+      const report = await getReport({ company });
+      const id = (report.company as { id?: string }).id;
+      if (id) setScreen({ kind: "company", id });
+      else setLookupMiss(company);
+    } catch (e) {
+      // A failed fetch is a TypeError; anything else is the backend's 404.
+      if (e instanceof TypeError) setUnreachable(true);
+      else setLookupMiss(company);
+    }
+  }
+
   const busy = progress !== null;
+  const statusLog = progress !== null && (
+    <div className="mt-4">
+      <LoadingSteps steps={JOB_LABELS} current={progress} />
+    </div>
+  );
   return (
     <PanelFrame>
       {screen.kind === "inbox" && (
@@ -117,17 +151,54 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           <div className="mt-4">
             <DropStrip onDrop={onDrop} busy={busy} />
           </div>
-          {progress && <p role="status" className="mt-2 text-xs text-graphite">{progress}…</p>}
-          {error && <p role="alert" className="mt-2 text-xs text-signal">{error}</p>}
-          {companies && (
-            <CompanyList companies={companies} seen={seen} onOpen={(id) => setScreen({ kind: "company", id })} />
+          {statusLog}
+          {error && <p role="alert" className="mt-2 text-xs text-ink">{error}</p>}
+
+          <form onSubmit={onLookup} className="mt-5">
+            <label htmlFor="lookup" className="micro-label block text-graphite">
+              Or look up a company
+            </label>
+            <div className="mt-2 flex gap-2">
+              <input
+                id="lookup"
+                name="company"
+                value={lookup}
+                onChange={(event) => setLookup(event.target.value)}
+                required
+                autoComplete="off"
+                placeholder="Company name"
+                className="block h-9 min-w-0 flex-1 rounded-[2px] border border-rule bg-surface px-3 text-[13px] text-ink placeholder:text-graphite"
+              />
+              <Button type="submit" variant="quiet">
+                Check
+              </Button>
+            </div>
+            {lookupMiss && (
+              <p role="status" className="mt-2 text-[13px] leading-5 text-graphite">
+                Nothing about <span className="text-ink">{lookupMiss}</span> in your inbox yet. Drop its deck or a
+                founder email.
+              </p>
+            )}
+          </form>
+
+          {unreachable ? (
+            <div className="mt-6 border-t border-rule pt-4">
+              <ErrorState
+                message="Can't reach the VentureSauce backend."
+                onRetry={() => setReload((n) => n + 1)}
+              />
+            </div>
+          ) : (
+            companies && (
+              <CompanyList companies={companies} seen={seen} onOpen={(id) => setScreen({ kind: "company", id })} />
+            )
           )}
         </>
       )}
       {screen.kind === "company" && (
         <>
-          {progress && <p role="status" className="mb-3 text-xs text-graphite">{progress}…</p>}
-          {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
+          {statusLog && <div className="mb-5">{statusLog}</div>}
+          {error && <p role="alert" className="mb-3 text-xs text-ink">{error}</p>}
           <CompanyScreen
             companyId={screen.id}
             filedItemId={screen.filed}

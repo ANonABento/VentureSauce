@@ -179,7 +179,7 @@ function HeadcountSparkline({
   );
 }
 
-/** Everyone in the filing; a hollow dot marks who is not on the team page. */
+/** Everyone in the filing; a hollow dot marks who is named there only. */
 function LeadershipList({
   people,
 }: {
@@ -201,14 +201,14 @@ function LeadershipList({
             />
             <span>{person.name}</span>
             {!person.onSite && (
-              <span className="sr-only"> (not on the team page)</span>
+              <span className="sr-only"> (in the filing only)</span>
             )}
           </li>
         ))}
       </ul>
       <Caption>
         <span>
-          {onSite} on team page of {people.length} filed
+          {onSite} named of {people.length} filed
         </span>
       </Caption>
     </div>

@@ -18,6 +18,7 @@ import { DeltaRows } from "./delta-rows";
 import { DropStrip, ItemTag } from "./inbox";
 import { ReportHeader } from "./report-header";
 import { formatDate, formatUsd } from "./report-utils";
+import { Verdict } from "./verdict";
 
 type Tab = "checks" | "items" | "questions";
 
@@ -238,7 +239,18 @@ export function CompanyScreen({
     };
   }, [companyId, filedItemId]);
 
-  if (error) return <p className="text-[13px] text-graphite">{error}</p>;
+  if (error) {
+    return (
+      <>
+        <button type="button" onClick={onBack} className="micro-label mb-4 text-graphite hover:text-ink">
+          ← Inbox
+        </button>
+        <p role="alert" className="text-[13px] leading-5 text-ink">
+          This company couldn&apos;t be opened ({error}).
+        </p>
+      </>
+    );
+  }
   if (!view) return <p className="text-[13px] text-graphite">Loading…</p>;
 
   const contradictions = view.checks.filter((c) => c.source === "your_sources");
@@ -264,6 +276,12 @@ export function CompanyScreen({
           Matched SEC filer: {view.company.form_d_entity}
           {view.company.cik && <span className="font-mono"> · CIK {view.company.cik}</span>}
         </p>
+      )}
+
+      {report && report.rows.length > 0 && (
+        <div className="mt-5">
+          <Verdict rows={report.rows} />
+        </div>
       )}
 
       <div role="tablist" className="mt-5 flex gap-5 border-b border-rule">
