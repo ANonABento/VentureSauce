@@ -7,13 +7,15 @@ from collections import defaultdict, deque
 from datetime import datetime, timezone
 from pathlib import Path
 
+import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+import chat
 import delta
 import digest
 import jobs
@@ -49,12 +51,12 @@ RATE_LIMIT = int(os.getenv("ANALYZE_PER_HOUR", "20"))
 _hits: dict[str, deque] = defaultdict(deque)
 
 
-def _rate_limit(request: Request) -> None:
+def _rate_limit(request: Request, bucket: str = "analyze", per_hour: int | None = None) -> None:
     ip = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "?")
-    now, q = time.time(), _hits[ip]
+    now, q = time.time(), _hits[f"{bucket}:{ip}"]
     while q and now - q[0] > 3600:
         q.popleft()
-    if len(q) >= RATE_LIMIT:
+    if len(q) >= (per_hour or RATE_LIMIT):
         raise HTTPException(429, "Too many decks from this address; try again in an hour.")
     q.append(now)
 
@@ -150,6 +152,63 @@ def audio(name: str):
     if not re.fullmatch(r"digest-[0-9a-f]{10}\.mp3", name) or not path.exists():
         raise HTTPException(404, "no such audio")
     return FileResponse(path, media_type="audio/mpeg")
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(..., pattern="^(user|assistant)$")
+    content: str = Field(..., max_length=8000)
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessage] = Field(..., min_length=1, max_length=60)
+    period: str = "week"
+
+
+@app.post("/chat/stream")
+def chat_stream(req: ChatRequest, request: Request):
+    """Server-sent events: {"text": delta}… then {"done": true}. Grounded only in the inbox."""
+    _rate_limit(request, bucket="chat", per_hour=200)
+    return StreamingResponse(chat.sse([m.model_dump() for m in req.messages], req.period), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+class TTSRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=600)
+
+
+@app.get("/tts")
+async def tts_get(text: str, request: Request):
+    """Same as POST /tts, as a URL an <audio> element can stream from directly."""
+    return await tts(TTSRequest(text=text), request)
+
+
+@app.post("/tts")
+async def tts(req: TTSRequest, request: Request):
+    """One sentence → Fish Audio mp3, streamed through as it's generated (low latency for the voice chat)."""
+    _rate_limit(request, bucket="tts", per_hour=1500)
+    key = os.getenv("FISH_API_KEY")
+    if not key:
+        raise HTTPException(503, "FISH_API_KEY is not set")
+    voice = (os.getenv("FISH_CHAT_VOICE") or os.getenv("FISH_VOICE_IDS", "").split(",")[0]).strip()
+    body = {"text": req.text, "format": "mp3", "mp3_bitrate": 64, "latency": "balanced", "normalize": True}
+    if voice:
+        body["reference_id"] = voice
+    http = httpx.AsyncClient(timeout=60)
+    upstream = await http.send(http.build_request(
+        "POST", "https://api.fish.audio/v1/tts", json=body,
+        headers={"Authorization": f"Bearer {key}", "model": os.getenv("FISH_MODEL", "s2.1-pro")}), stream=True)
+    if upstream.status_code != 200:
+        detail = (await upstream.aread())[:200].decode("utf-8", "replace")
+        await upstream.aclose(); await http.aclose()
+        raise HTTPException(502, f"Fish Audio {upstream.status_code}: {detail}")
+
+    async def relay():
+        try:
+            async for chunk in upstream.aiter_bytes():
+                yield chunk
+        finally:
+            await upstream.aclose(); await http.aclose()
+    return StreamingResponse(relay(), media_type="audio/mpeg")
 
 
 # Tester page: same API the extension uses, served at / so remote testers need only a URL.

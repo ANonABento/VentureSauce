@@ -43,6 +43,25 @@
     </div>
   </section>
 
+  <section id="talk" class="card">
+    <div class="digest-bar">
+      <div>
+        <h3>Talk to your briefing</h3>
+        <p class="muted">It briefs you out loud, one company at a time. Tap the mic to interrupt and ask anything.</p>
+      </div>
+      <div class="row">
+        <button id="talkStart" class="btn">Start briefing</button>
+        <button id="talkMic" class="btn ghost mic" title="Interrupt and ask">Ask by voice</button>
+        <button id="talkStop" class="btn ghost" hidden>Stop</button>
+      </div>
+    </div>
+    <div id="talkLog" class="talk-log"></div>
+    <form id="talkForm" class="row">
+      <input id="talkText" placeholder="Or type a question… (e.g. why does Alex Director matter?)" maxlength="500" autocomplete="off">
+      <button class="btn ghost">Send</button>
+    </form>
+  </section>
+
   <section id="digest" class="card" hidden>
     <div class="summary">
       <h2 id="digestTitle"></h2>

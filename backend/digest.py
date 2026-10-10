@@ -26,7 +26,7 @@ def since_for(period: str) -> str:
     return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
 
 
-def build(period: str = "day", since: str | None = None) -> dict:
+def build(period: str = "day", since: str | None = None, script: bool = True) -> dict:
     since = since or since_for(period)
     new_items = store.items_since(since)
     by_company: dict[str, list[dict]] = {}
@@ -61,7 +61,8 @@ def build(period: str = "day", since: str | None = None) -> dict:
                    "contradictions": sum(c["contradictions"] for c in companies)},
         "companies": companies,
     }
-    digest.update(write_script(digest))
+    if script:
+        digest.update(write_script(digest))
     return digest
 
 

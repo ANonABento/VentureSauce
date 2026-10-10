@@ -193,3 +193,166 @@ function sendFile(f) {
 health();
 // ?sample=1 runs the fictional Acme deck immediately (demo links, smoke tests).
 if (new URLSearchParams(location.search).has("sample")) $("sample").click();
+
+// ---------------------------------------------------------------------------
+// Talk to your briefing: streamed answers, spoken sentence by sentence, interruptible by voice or text.
+const talk = {
+  messages: [],     // {role, content} history sent to /chat/stream
+  abort: null,      // AbortController for the current text stream
+  queue: [],        // [{text, audio}] sentences waiting to play, in order
+  playing: null,    // the sentence currently playing
+  spoken: [],       // sentences of the current answer already played (kept on interrupt)
+  bubble: null,     // DOM node of the current assistant answer
+  full: "",         // full text of the current answer so far
+  recog: null,
+  gen: 0,           // bumps on every interrupt
+  committed: null,  // index in messages of the current answer once fully streamed
+};
+
+function addBubble(role, text, cls = "") {
+  const el = document.createElement("div");
+  el.className = `msg ${role} ${cls}`.trim();
+  el.textContent = text;
+  $("talkLog").append(el);
+  $("talkLog").scrollTop = $("talkLog").scrollHeight;
+  return el;
+}
+
+function paintAnswer() {
+  if (!talk.bubble) return;
+  const said = talk.spoken.join(" ");
+  const rest = talk.full.slice(said.length);
+  talk.bubble.innerHTML = `<span class="spoken">${esc(said)}</span><span class="unspoken">${esc(rest)}</span>`;
+  $("talkLog").scrollTop = $("talkLog").scrollHeight;
+}
+
+// Sentence → <audio> streaming from GET /tts. Starts downloading immediately so the next one is ready.
+function enqueueSentence(text) {
+  const audio = new Audio(`${API}/tts?text=${encodeURIComponent(text)}`);
+  audio.preload = "auto";
+  talk.queue.push({ text, audio });
+  if (!talk.playing) playNext();
+}
+
+function playNext() {
+  const next = talk.queue.shift();
+  talk.playing = next || null;
+  if (!next) return;
+  const gen = talk.gen;  // ignore events from audio that belonged to an answer we've since interrupted
+  const finished = () => { if (gen !== talk.gen) return; talk.spoken.push(next.text); paintAnswer(); playNext(); };
+  next.audio.onended = finished;
+  next.audio.onerror = finished;  // keep the text flowing if TTS fails
+  next.audio.play().catch(finished);
+}
+
+function stopTalking() {
+  talk.abort?.abort();
+  talk.abort = null;
+  talk.gen++;
+  for (const q of [talk.playing, ...talk.queue]) if (q) { q.audio.onended = q.audio.onerror = null; q.audio.pause(); q.audio.removeAttribute("src"); q.audio.load(); }
+  talk.queue = [];
+  talk.playing = null;
+  // Remember what was actually said, so the model knows where it was cut off.
+  if (talk.bubble && talk.full) {
+    const said = talk.spoken.join(" ");
+    const interrupted = said.length < talk.full.trim().length;
+    const msg = { role: "assistant", content: said || talk.full };
+    talk.interrupted = interrupted;  // told to the model on the next user turn, not inside its own words
+    // Already in the history if the text had finished streaming: trim it there instead of adding it twice.
+    if (talk.committed != null) talk.messages[talk.committed] = msg; else talk.messages.push(msg);
+    talk.bubble.textContent = said || talk.full;
+  }
+  talk.bubble = null; talk.full = ""; talk.spoken = []; talk.committed = null;
+  $("talkStop").hidden = true;
+}
+
+async function ask(text) {
+  stopTalking();
+  const note = talk.interrupted ? "[I cut you off mid-answer.] " : "";
+  talk.interrupted = false;
+  talk.messages.push({ role: "user", content: note + text });
+  addBubble("user", text);
+  talk.bubble = addBubble("assistant", "…");
+  talk.full = ""; talk.spoken = [];
+  $("talkStop").hidden = false;
+  const ctrl = new AbortController();
+  talk.abort = ctrl;
+  let pending = "";  // text not yet cut into a sentence
+  try {
+    const r = await fetch(`${API}/chat/stream`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, signal: ctrl.signal,
+      body: JSON.stringify({ messages: talk.messages }),
+    });
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf("\n\n")) >= 0) {
+        const line = buf.slice(0, i).replace(/^data: /, "");
+        buf = buf.slice(i + 2);
+        const evt = JSON.parse(line);
+        if (!evt.text) continue;
+        talk.full += evt.text;
+        pending += evt.text;
+        // Cut finished sentences (at least ~25 chars so we don't voice "Dr." on its own).
+        let m;
+        while ((m = pending.match(/^([\s\S]{25,}?[.!?])(\s+)/))) {
+          enqueueSentence(m[1].trim());
+          pending = pending.slice(m[0].length);
+        }
+        paintAnswer();
+      }
+    }
+    if (pending.trim()) enqueueSentence(pending.trim());
+    // Answer complete: it joins the history once fully generated (interrupts trim it in stopTalking).
+    if (talk.abort === ctrl) {
+      talk.messages.push({ role: "assistant", content: talk.full });
+      talk.committed = talk.messages.length - 1;
+      const bubble = talk.bubble;
+      // Keep painting until the audio catches up; then drop our handle so stopTalking won't re-add it.
+      const done = setInterval(() => { if (!talk.playing && !talk.queue.length) { clearInterval(done); if (talk.bubble === bubble) { paintAnswer(); talk.bubble = null; talk.full = ""; talk.spoken = []; talk.committed = null; $("talkStop").hidden = true; } } }, 300);
+    }
+  } catch (e) {
+    if (e.name !== "AbortError") talk.bubble.textContent = `Couldn't answer: ${e.message}`;
+  }
+}
+
+// Voice input: Chrome's built-in speech recognition (no server needed). Text box as a fallback.
+function listen() {
+  stopTalking();
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { $("talkText").focus(); $("talkText").placeholder = "Voice input needs Chrome; type your question instead."; return; }
+  const r = new SR();
+  r.lang = "en-US"; r.interimResults = true; r.maxAlternatives = 1;
+  const interim = addBubble("user", "Listening…", "interim");
+  $("talkMic").classList.add("listening");
+  let finalText = "";
+  r.onresult = (e) => {
+    const t = [...e.results].map((x) => x[0].transcript).join(" ");
+    interim.textContent = t;
+    if (e.results[e.results.length - 1].isFinal) finalText = t;
+  };
+  r.onend = () => {
+    $("talkMic").classList.remove("listening");
+    interim.remove();
+    talk.recog = null;
+    if (finalText.trim()) ask(finalText.trim());
+  };
+  r.onerror = () => { interim.textContent = "Didn't catch that. Try again or type it."; };
+  talk.recog = r;
+  r.start();
+}
+
+$("talkStart").addEventListener("click", () => ask("Start my briefing."));
+$("talkMic").addEventListener("click", () => (talk.recog ? talk.recog.stop() : listen()));
+$("talkStop").addEventListener("click", stopTalking);
+$("talkForm").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const t = $("talkText").value.trim();
+  if (t) { $("talkText").value = ""; ask(t); }
+});

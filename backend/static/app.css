@@ -68,3 +68,13 @@ audio { width: 100%; margin-top: 12px; }
 .questions { margin: 0; padding-left: 20px; }
 .questions li { margin: 6px 0; }
 .questions small { color: var(--muted); display: block; }
+.talk-log { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
+.talk-log:empty { display: none; }
+.msg { padding: 8px 12px; border-radius: 12px; max-width: 85%; white-space: pre-wrap; }
+.msg.user { align-self: flex-end; background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.msg.assistant { align-self: flex-start; background: var(--unv-bg); }
+.msg.assistant .spoken { color: var(--ink); }
+.msg.assistant .unspoken { color: var(--muted); }
+.msg.interim { opacity: 0.6; font-style: italic; }
+#talkForm input { margin-top: 0; flex: 1; min-width: 0; }
+.mic.listening { background: var(--gap-bg); color: var(--gap); border-color: var(--gap); animation: pulse 1.2s ease-in-out infinite; }
