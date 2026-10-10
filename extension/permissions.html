@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VentureSauce · Microphone</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+    <link rel="stylesheet" href="permissions.css" />
+  </head>
+  <body>
+    <!-- Optional. Chrome often can't show a permission prompt inside a side
+         panel, so the microphone is granted to the extension here, in a tab. -->
+    <main>
+      <h1>Microphone access</h1>
+      <p>
+        The voice analyst in the digest listens through the microphone. Chrome
+        may not show its permission prompt inside the side panel, so allow it
+        here once.
+      </p>
+      <button id="allow" type="button">Allow microphone</button>
+      <p id="status" role="status"></p>
+    </main>
+
+    <script type="module" src="permissions.js"></script>
+  </body>
+</html>
