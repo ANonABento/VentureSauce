@@ -1,7 +1,7 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
-import { MotionConfig, animate, motion, useReducedMotion } from "motion/react";
+import { type ReactNode, useLayoutEffect, useRef } from "react";
+import { MotionConfig, animate, motion } from "motion/react";
 import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
 
 /** Honors the OS reduced-motion setting for every motion component below it. */
@@ -41,9 +41,14 @@ export function Rise({
   );
 }
 
+/** Decimal places in a value (max 2), so a count-up of 2.5 doesn't land on "3". */
+const decimals = (value: number) => Math.min(2, (String(value).split(".")[1] ?? "").length);
+
 /**
  * A figure that counts up to its value once, so it resolves instead of popping
- * in. Screen readers get the final value only; the running digits are hidden.
+ * in. The server and first paint show the final value (no hydration mismatch,
+ * correct without JS); the count-up writes to the DOM directly. Screen readers
+ * get the final value only.
  */
 export function CountUp({
   value,
@@ -56,23 +61,30 @@ export function CountUp({
   delay?: number;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
-  const [shown, setShown] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
 
-  useEffect(() => {
-    if (reduce) return;
-    const controls = animate(0, value, {
-      duration: DUR.reveal,
-      ease: EASE_ENTER,
-      delay,
-      onUpdate: (n) => setShown(Math.round(n)),
-    });
-    return () => controls.stop();
-  }, [value, delay, reduce]);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const places = decimals(value);
+    const show = (n: number) => {
+      node.textContent = format(Number(n.toFixed(places)));
+    };
+    show(0);
+    const controls = animate(0, value, { duration: DUR.reveal, ease: EASE_ENTER, delay, onUpdate: show });
+    return () => {
+      controls.stop();
+      node.textContent = format(value);
+    };
+    // format is usually an inline arrow; the value is what matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, delay]);
 
   return (
     <span className={className}>
-      <span aria-hidden="true">{format(reduce ? value : shown)}</span>
+      <span ref={ref} aria-hidden="true">
+        {format(value)}
+      </span>
       <span className="sr-only">{format(value)}</span>
     </span>
   );

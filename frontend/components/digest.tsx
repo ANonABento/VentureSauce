@@ -15,7 +15,8 @@ import { DitherBar, Figure } from "./viz";
 
 /** The digest at a glance (decision 31): three counted-up figures, one word each. */
 function Glance({ totals }: { totals: Digest["totals"] }) {
-  const flags = totals.discrepancies + totals.contradictions;
+  // totals.discrepancies already includes the contradictions ("across your sources" rows).
+  const flags = totals.discrepancies;
   return (
     <div className="mt-5 grid grid-cols-3 gap-3">
       <Figure value={<CountUp value={totals.items} />} caption={totals.items === 1 ? "new item" : "new items"} />
@@ -381,7 +382,9 @@ function DigestCompany({
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
-  const flags = c.discrepancies.length + c.contradictions;
+  // c.discrepancies already includes the contradictions ("across your sources" rows).
+  const flags = c.discrepancies.length;
+  const publicCount = flags - c.contradictions;
   const delay = 0.2 + index * STAGGER;
   return (
     <motion.section
@@ -409,7 +412,7 @@ function DigestCompany({
         delay={delay + 0.1}
         total={scale}
         segments={[
-          { value: c.discrepancies.length, tone: "signal" },
+          { value: publicCount, tone: "signal" },
           { value: c.contradictions, tone: "signal-soft" },
         ]}
       />
@@ -422,8 +425,8 @@ function DigestCompany({
             onClick={() => setOpen((value) => !value)}
             className="mt-2 inline-flex min-h-6 items-center gap-1 text-xs font-medium text-graphite transition-colors duration-150 hover:text-ink"
           >
-            {c.discrepancies.length > 0 && `${c.discrepancies.length} with public records`}
-            {c.discrepancies.length > 0 && c.contradictions > 0 && " · "}
+            {publicCount > 0 && `${publicCount} with public records`}
+            {publicCount > 0 && c.contradictions > 0 && " · "}
             {c.contradictions > 0 && `${c.contradictions} between your items`}
             {c.discrepancies.length > 0 && (
               <CaretDown aria-hidden="true" size={12} weight="light" className={cn("transition-transform duration-300", open && "rotate-180")} />
@@ -473,10 +476,10 @@ export function DigestScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (
   const current = digest?.period === period ? digest : null;
   const ranked = current
     ? [...current.companies].sort(
-        (a, b) => b.discrepancies.length + b.contradictions - (a.discrepancies.length + a.contradictions),
+        (a, b) => b.discrepancies.length - a.discrepancies.length,
       )
     : [];
-  const scale = Math.max(1, ...ranked.map((c) => c.discrepancies.length + c.contradictions));
+  const scale = Math.max(1, ...ranked.map((c) => c.discrepancies.length));
 
   return (
     <>

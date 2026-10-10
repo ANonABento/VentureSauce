@@ -27,7 +27,8 @@ import { RangePlot, SignalStrip } from "./viz";
 
 type Tab = "checks" | "items" | "questions";
 
-const fmt = (value: number, unit: string | null) => (unit === "usd" ? formatUsd(value) : value.toLocaleString("en-US"));
+const fmt = (value: number, unit: string | null) =>
+  unit === "usd" ? formatUsd(value) : unit === "percent" ? `${value.toLocaleString("en-US")}%` : value.toLocaleString("en-US");
 
 /** "Filed under Acme AI · Change": filing to the wrong company is the costliest inbox mistake, so it's always undoable. */
 export function FiledToast({

@@ -377,13 +377,11 @@ export function SourceFlow({
               {running && (
                 <>
                   <span className="relative h-[5px] w-[5px] rounded-full bg-accent" />
-                  {!reduce && (
-                    <motion.span
-                      className="absolute inset-0 rounded-full border border-accent"
-                      animate={{ scale: [1, 1.9], opacity: [0.6, 0] }}
-                      transition={{ duration: 1.2, ease: "easeOut", repeat: Infinity }}
-                    />
-                  )}
+                  <motion.span
+                    className="absolute inset-0 rounded-full border border-accent motion-reduce:hidden"
+                    animate={{ scale: [1, 1.9], opacity: [0.6, 0] }}
+                    transition={{ duration: 1.2, ease: "easeOut", repeat: Infinity }}
+                  />
                 </>
               )}
             </span>

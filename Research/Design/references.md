@@ -169,6 +169,24 @@ A teammate's feedback: the panel reads as text overload. Replace prose with diag
 - **Mercury.** Opacity 300ms ease-out `(0,0,0.2,1)`. Accordions use **`grid-template-rows`** over 300ms. Exits use `fadeOutBlur` (500ms). Tab panels fade and translate over 300ms.
 - **The shared pattern:** quick ease-out curves, transform and opacity only, 150ms for feedback, 300ms for state changes, 600–900ms only for reveals, and nothing in a loop.
 
+## Round 5: visual-first home and digest (2026-10-10)
+
+The teammate's feedback: the Digest still reads text-heavy, and judges will navigate by visual cues. They also sent a wireframe for the main flow: greeting, three stat tiles, a "weekly report is ready" bar, a chart/todo card, and a large drop zone.
+
+| # | Topic | Decision |
+|---|---|---|
+| 37 | Digest questions | Cards drop the founder question for a **💬 N chip**. Tapping it opens the company on its Questions tab. |
+| 38 | Glyph key | The **●/◇ meaning is defined once**, by the top figures (digest glance row, home stat tiles). Cards then use glyphs alone ("● 2 ◇ 2"). |
+| 39 | Digest hero | The **player is a visual timeline**: a large ▶ and a dithered waveform shaped from the script's turns (decorative, labelled as such), with company initials marked under where each comes up. The tray's top line is icon + number pairs (items, companies). No headline sentence. |
+| 40 | Talk panel | **Folded into a 🎙 button** in the hero. The conversation opens as bubbles under the hero, and a keyboard icon reveals the text field. |
+| 41 | Scope | Company · Checks: the summary sentence goes, the serif delta stays, sources become icons, and the SEC filer line moves behind ⓘ. Inbox: the digest tray becomes a mini player and the drop label an icon. Footers: the disclaimer moves into one ⓘ popover in the header, with its wording unchanged. Items: claim dots replace "N claims". Questions stay as text. |
+| 42 | Home layout | **Follows the teammate's wireframe**: greeting → 3 stat tiles → report bar → chart card → art drop zone. |
+| 43 | Companies | **They live inside the chart card**: rows ranked by flags, each with a serif name, a dithered bar and ●/◇ glyphs, opening the company on tap. Top 4 shown, then "+N more". |
+| 44 | Stat tiles | **● public · ◇ yours · ▤ items** (companies beneath). Straight counts from `/companies`, so every number is sourced. No summed dollar figure. |
+| 45 | Greeting | **Time of day, no name** ("Good afternoon" + the date). There's no sign-in to read a name from. |
+| 46 | Drop zone | **The landscape art with an inset dashed frame**, which dissolves into the source flow on drop. One layout serves first run too: with an empty inbox only the greeting, the drop zone and the lookup show. |
+| 47 | Report bar | **A mini player**: ▶ plays the brief in place, with a mini waveform and the duration once known. Tapping the bar opens the Digest. Defaults to Today. |
+
 ## Pending
 
 - **Layout is parked.** A teammate is building the panel layout mockup. Once it's committed, pull it and apply the kit on top. Row layout, screen structure and density decisions wait for it, and parts of that layout may change afterward. The draft recommendation for the truth-table row is a three-line stack (pill and page, quote, then a big CLAIMED → OBSERVED line with confidence, then the source).
