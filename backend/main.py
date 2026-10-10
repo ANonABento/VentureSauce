@@ -11,7 +11,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -22,7 +22,10 @@ import jobs
 import store
 
 load_dotenv()
-FAKE = os.getenv("VENTURESAUCE_FAKE", "1") == "1"
+# Fake mode replays the Acme fixture. Default: on only when no LLM key is configured.
+FAKE = os.getenv("VENTURESAUCE_FAKE", "0" if os.getenv("LLM_API_KEY") else "1") == "1"
+if FAKE:
+    print("VentureSauce: FAKE MODE (every upload returns the Acme fixture). Set VENTURESAUCE_FAKE=0 for the real pipeline.")
 HERE = Path(__file__).parent
 SAMPLE_DECK = HERE.parent / "demo" / "acme_ai_deck_FICTIONAL.pdf"
 FEEDBACK_LOG = HERE / "data" / "feedback.jsonl"
@@ -238,6 +241,22 @@ async def tts(req: TTSRequest, request: Request):
 @app.get("/", include_in_schema=False)
 def tester_page():
     return FileResponse(HERE / "static" / "index.html")
+
+
+SAMPLES = HERE / "samples"
+
+
+@app.get("/samples/", include_in_schema=False)
+def samples_index():
+    """Test items to download and drop in (see samples/README.md)."""
+    rows = "".join(f'<li><a href="/samples/{f.name}" download>{f.name}</a></li>'
+                   for f in sorted(SAMPLES.iterdir()) if f.is_file())
+    return HTMLResponse(f"<!doctype html><meta name=viewport content='width=device-width'><title>Test items</title>"
+                        f"<body style='font:15px system-ui;margin:24px'><h1>Test items</h1><p>Download, then drop them in "
+                        f"<a href='/'>the tester</a> in order.</p><ul>{rows}</ul>")
+
+
+app.mount("/samples", StaticFiles(directory=SAMPLES), name="samples")
 
 
 @app.get("/sample/acme.pdf", include_in_schema=False)

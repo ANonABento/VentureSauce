@@ -1,0 +1,5 @@
+Clerk (Clerk, Inc.) - public claims from the company's own announcement. Real company; these are its published statements, not a deck.
+
+- Clerk raised a $50 million Series C led by Menlo Ventures and Anthropic's Anthology Fund, alongside Georgian and previous investors.
+- Clerk serves over 200 million users across more than 15,000 applications.
+Source: https://clerk.com/blog/series-c

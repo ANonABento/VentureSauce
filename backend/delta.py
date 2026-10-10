@@ -7,6 +7,7 @@ Customers row, as the UI designs them. Extra fields (questions, items, company.i
 
 from datetime import datetime, timezone
 
+import analysis
 from verdicts import usd
 
 STATUS = {"gap": "discrepancy", "match": "consistent", "unverifiable": "unverified"}
@@ -51,7 +52,7 @@ def _filed(c: dict, field: str) -> dict | None:
 def _signal(c: dict) -> str:
     t = c["claim_type"]
     if t == "metric":
-        return (c.get("metric") or "Metric").upper() if len(c.get("metric") or "") <= 4 else c["metric"].capitalize()
+        return analysis.metric_name(c.get("metric") or "metric")
     if t == "round_size" and isinstance(c.get("claimed_value"), (int, float)):
         # The same round is checked against Form D and press: say which, so the two rows don't read as duplicates.
         against = {"form_d": " vs. Form D", "press": " vs. press"}.get(c["source"], "")

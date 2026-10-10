@@ -62,6 +62,18 @@ def _group_key(c: dict) -> str | None:
     return None
 
 
+ACRONYMS = {"arr", "mrr", "mom", "yoy", "qoq", "nrr", "grr", "gmv", "cac", "ltv", "acv", "kpi"}
+PERCENT_WORDS = ("growth", "margin", "churn", "retention", "nrr", "grr", "conversion", "rate", "%")
+
+
+def metric_name(name: str) -> str:
+    """'arr' -> 'ARR', 'mom growth' -> 'MoM growth' (display only)."""
+    words = [("MoM" if w == "mom" else "YoY" if w == "yoy" else "QoQ" if w == "qoq" else w.upper()) if w in ACRONYMS else w
+             for w in name.split()]
+    out = " ".join(words)
+    return out[:1].upper() + out[1:]
+
+
 def contradictions(claims: list[dict]) -> list[dict]:
     """Same fact, different numbers, in different items the user dropped in."""
     groups: dict[str, list[dict]] = {}
@@ -87,17 +99,20 @@ def contradictions(claims: list[dict]) -> list[dict]:
             continue
         newest = cs[-1]
         other = lo if newest is hi else hi
-        unit = "usd" if key in ("raised",) or key.split(":")[-1] in ("arr", "revenue", "mrr", "valuation", "burn") else None
-        fmt = (lambda v: verdicts.usd(v)) if unit == "usd" else (lambda v: f"{v:,}" if isinstance(v, int) else f"{v:g}")
+        name = key.split(":")[-1]
+        unit = ("usd" if key == "raised" or name in ("arr", "revenue", "mrr", "valuation", "burn")
+                else "percent" if key.startswith("metric:") and any(w in name for w in PERCENT_WORDS) else None)
+        fmt = (verdicts.usd if unit == "usd" else (lambda v: f"{v:g}%") if unit == "percent"
+               else (lambda v: f"{v:,}" if isinstance(v, int) else f"{v:g}"))
         said = "; ".join(f"{c['item_label']} ({c['item_day']}) says {fmt(c['value'])}" for c in cs)
-        what = key.split(":")[-1] if key.startswith("metric:") else key
+        what = metric_name(name) if key.startswith("metric:") else key.capitalize()
         out.append(verdicts._check(
             newest, claim_type=newest["claim_type"], unit=unit, observed_value=other["value"],
             source="your_sources", via="internal", source_date=newest["item_day"],
             verdict="gap", label="Your sources disagree", confidence="high",
             values=[{"value": c["value"], "item_label": c["item_label"], "item_day": c["item_day"],
                      "claim_text": c["claim_text"], "page": c.get("page")} for c in cs],
-            note=f"{what.capitalize()}: {said}. Confirm which is current.",
+            note=f"{what}: {said}. Confirm which is current.",
         ))
     return out
 

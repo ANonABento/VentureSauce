@@ -2,7 +2,7 @@
 
 ```bash
 cd backend
-cp .env.example .env          # fill in keys; leave VENTURESAUCE_FAKE=1 until the real pipeline lands
+cp .env.example .env          # fill in keys; with LLM_API_KEY set the real pipeline runs (VENTURESAUCE_FAKE=1 forces the Acme replay)
 uv sync --python 3.12
 uv run uvicorn main:app --reload --port 8000
 ```
