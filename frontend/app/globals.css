@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
-/* "Marginalia" design tokens — filing-delta-context.md, section 7. */
+/* VentureSauce v2 tokens (Research/Design/tokens.css). Light only. The
+   original variable names are kept, so older components keep working. */
 :root {
-  /* Light is the default; dark is opt-in via data-theme (see ThemeParam). */
   color-scheme: light;
 
-  --paper: #f7f5f0;
+  --paper: #fbfaf7;
   --surface: #ffffff;
-  --ink: #161616;
-  --graphite: #5c5a55;
-  --rule: #e2ded6;
+  --ink: #333d34; /* pine: text and primary action */
+  --graphite: #66726a;
+  --rule: #e6e1d8;
   /* Discrepancies only. */
-  --signal: #b4441c;
-  --signal-wash: #f6e7df;
-  --steady: #3f6b4f;
-}
+  --signal: #a3321f;
+  --signal-wash: #fbe9e5;
+  --steady: #1f6b43;
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
+  --tray: #eef3f4; /* section trays: mist tint, no border */
+  --tray-strong: #e2ebed; /* tab track, empty chart marks */
+  --data: #3f6e7c; /* neutral figures, chart marks, source links */
+  --border-strong: #d4cec2;
+  --steady-wash: #e6f1ea;
+  --ink-hover: #252d26;
+  /* Amber: only the logo, the running log step, drop hover and ::selection. */
+  --accent: #d9822b;
+  --accent-subtle: #fcebd6;
+  --focus-ring: #3f6e7c;
 
-  --paper: #121211;
-  --surface: #1a1a19;
-  --ink: #edebe6;
-  --graphite: #a3a09a;
-  --rule: #2c2b29;
-  --signal: #e0794f;
-  --signal-wash: #2a1d17;
-  --steady: #7faf8e;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 @theme inline {
@@ -38,10 +38,38 @@
   --color-signal: var(--signal);
   --color-signal-wash: var(--signal-wash);
   --color-steady: var(--steady);
+  --color-steady-wash: var(--steady-wash);
+  --color-tray: var(--tray);
+  --color-tray-strong: var(--tray-strong);
+  --color-data: var(--data);
+  --color-border-strong: var(--border-strong);
+  --color-ink-hover: var(--ink-hover);
+  --color-accent: var(--accent);
+  --color-accent-subtle: var(--accent-subtle);
+
+  --shadow-fragment: 0 1px 2px rgb(31 43 48 / 0.04), 0 6px 16px -4px rgb(31 43 48 / 0.07);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-serif: var(--font-newsreader), Georgia, serif;
+
+  --animate-rise: rise 240ms var(--ease) both;
+  --animate-grow: grow 700ms var(--ease) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @keyframes grow {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
 }
 
 @layer base {
@@ -53,23 +81,34 @@
     font-variant-numeric: tabular-nums;
   }
 
+  ::selection {
+    background: var(--accent-subtle);
+    color: var(--ink);
+  }
+
   :focus-visible {
-    outline: 1px solid var(--ink);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 
   @media (prefers-reduced-motion: reduce) {
     * {
+      animation: none !important;
       transition-duration: 0ms !important;
     }
   }
 }
 
-/* "FILED", "SAID", "SOURCE" — set the color at the call site. */
+/* Small sentence-case label. Set the color at the call site. */
 @utility micro-label {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 16px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+}
+
+/* Dithered dot grid: staggered rows of dots in --dot. Used for chart bars. */
+@utility dither {
+  background:
+    radial-gradient(circle, var(--dot) 1.15px, transparent 1.35px) 0 0 / 4px 8px,
+    radial-gradient(circle, var(--dot) 1.15px, transparent 1.35px) 2px 4px / 4px 8px;
 }

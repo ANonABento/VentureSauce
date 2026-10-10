@@ -21,8 +21,8 @@ function Total({ label, value, signal }: { label: string; value: number; signal?
     return () => clearInterval(id);
   }, [value]);
   return (
-    <div className="border border-rule bg-surface p-3">
-      <div className={cn("font-mono text-2xl leading-8", signal && value > 0 ? "text-signal" : "text-ink")}>{shown}</div>
+    <div className="rounded-lg bg-surface p-3 shadow-fragment">
+      <div className={cn("font-serif text-[40px] leading-[44px] tracking-[-0.03em] lining-nums", signal && value > 0 ? "text-signal" : "text-data")}>{shown}</div>
       <div className="micro-label text-graphite">{label}</div>
     </div>
   );
@@ -46,7 +46,7 @@ function SpeedButton({ speed, onChange, label }: { speed: number; onChange: (v: 
       type="button"
       aria-label={`${label}: ${speed}×. Change speed`}
       onClick={() => onChange(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
-      className="h-8 min-w-11 shrink-0 rounded-[2px] border border-rule px-2 font-mono text-[11px] text-graphite hover:text-ink"
+      className="h-8 min-w-11 shrink-0 rounded-full border border-border-strong bg-surface px-2 font-mono text-[11px] text-graphite hover:text-ink"
     >
       {speed}×
     </button>
@@ -285,7 +285,7 @@ function TalkPanel() {
       {log.length > 0 && (
         <div className="mt-4 flex max-h-96 flex-col gap-2 overflow-y-auto">
           {log.map((m, i) => (
-            <p key={i} className={cn("max-w-[90%] rounded-[2px] px-3 py-2 text-[13px] leading-5", m.role === "user" ? "self-end bg-ink text-paper" : "self-start border border-rule bg-surface text-ink", m.interim && "opacity-60")}>
+            <p key={i} className={cn("max-w-[90%] rounded-2xl px-3 py-2 text-[13px] leading-5", m.role === "user" ? "self-end bg-ink text-white" : "self-start bg-surface text-ink shadow-fragment", m.interim && "opacity-60")}>
               {m.text}
             </p>
           ))}
@@ -301,7 +301,7 @@ function TalkPanel() {
           }
         }}
       >
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Or type: check if Acme filed a new Form D" className="h-8 min-w-0 flex-1 rounded-[2px] border border-rule bg-surface px-2 text-xs" />
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Or type: check if Acme filed a new Form D" className="h-8 min-w-0 flex-1 rounded-md border border-border-strong bg-surface px-2 text-xs" />
         <Button type="submit" variant="quiet" className="h-8 px-3 text-xs">Send</Button>
       </form>
     </section>
@@ -335,7 +335,7 @@ export function DigestScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (
       {!current && !error && <p className="mt-4 text-[13px] text-graphite">Building your briefing…</p>}
       {current && (
         <>
-          <div className="mt-5 grid grid-cols-2 gap-2">
+          <div className="mt-5 grid grid-cols-2 gap-2 rounded-xl bg-tray p-2">
             <Total label="Items" value={current.totals.items} />
             <Total label="Companies" value={current.totals.companies} />
             <Total label="Discrepancies" value={current.totals.discrepancies} signal />

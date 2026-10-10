@@ -10,7 +10,7 @@ import { formatDate } from "./report-utils";
 /** Item kinds are never colored: neutral mono tags only. */
 export function ItemTag({ kind }: { kind: ItemKind | string }) {
   return (
-    <span className="inline-flex h-5 items-center rounded-[2px] border border-rule px-1.5 font-mono text-[10px] leading-4 text-graphite uppercase">
+    <span className="inline-flex h-5 items-center rounded-full bg-tray px-2 text-[11px] leading-4 text-graphite">
       {KIND_NAME[kind] ?? kind}
     </span>
   );
@@ -50,9 +50,9 @@ export function DropStrip({
         onDragLeave={() => setOver(false)}
         onDrop={onDropFile}
         className={cn(
-          "flex items-center justify-between gap-3 rounded-[2px] border px-3 py-3 transition-colors duration-150 ease-out",
+          "flex items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-3 transition-colors duration-150 ease-out",
           dashed ? "border-dashed" : "",
-          over ? "border-ink bg-surface" : "border-rule",
+          over ? "border-accent bg-accent-subtle" : "border-border-strong bg-surface",
         )}
       >
         <span className="text-[13px] leading-5 text-graphite">{busy ? "Reading…" : label}</span>
@@ -100,7 +100,7 @@ export function DropStrip({
             onChange={(event) => setText(event.target.value)}
             rows={5}
             placeholder={pasting === "email" ? "Paste the founder's email…" : "Paste your notes from the call…"}
-            className="mt-2 block w-full rounded-[2px] border border-rule bg-surface p-3 text-[13px] leading-5 text-ink placeholder:text-graphite"
+            className="mt-2 block w-full rounded-md border border-border-strong bg-surface p-3 text-[13px] leading-5 text-ink placeholder:text-graphite"
           />
           <Button type="submit" className="mt-2 h-8" disabled={busy}>
             File it
@@ -171,17 +171,17 @@ export function CompanyList({
     );
   }
   return (
-    <ul className="mt-2">
+    <ul className="mt-5 space-y-2 rounded-xl bg-tray p-2">
       {companies.map((c) => {
         const flagged = c.discrepancies + c.contradictions > 0;
         const unseen = c.last_item_at && (!seen[c.id] || seen[c.id] < c.last_item_at);
         return (
-          <li key={c.id} className="relative border-b border-rule">
-            <span aria-hidden="true" className={cn("absolute top-4 bottom-4 -left-3 w-0.5", flagged ? "bg-signal" : "bg-graphite/40")} />
-            <button type="button" onClick={() => onOpen(c.id)} className="group w-full py-4 text-left">
+          <li key={c.id} className="relative animate-rise overflow-hidden rounded-lg bg-surface shadow-fragment">
+            <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-[3px]", flagged ? "bg-signal" : "bg-border-strong")} />
+            <button type="button" onClick={() => onOpen(c.id)} className="group w-full py-4 pr-4 pl-5 text-left">
               <span className="flex items-baseline justify-between gap-3">
-                <span className="flex items-center gap-2 text-sm leading-5 font-medium text-ink">
-                  {unseen && <span aria-label="new items" className="h-1.5 w-1.5 rounded-full bg-ink" />}
+                <span className="flex items-center gap-2 font-serif text-lg leading-6 text-ink">
+                  {unseen && <span aria-label="new items" className="h-1.5 w-1.5 rounded-full bg-data" />}
                   <span className="underline decoration-transparent underline-offset-4 group-hover:decoration-current">{c.name}</span>
                 </span>
                 <span className="shrink-0 text-[11px] leading-4 text-graphite">{formatDate(c.updated_at)}</span>

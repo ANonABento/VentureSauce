@@ -49,7 +49,7 @@ export function FiledToast({
   }
 
   return (
-    <div role="status" className="mb-5 rounded-[2px] border border-rule bg-surface px-3 py-2 text-[13px] leading-5">
+    <div role="status" className="mb-5 rounded-md border border-border-strong bg-surface px-3 py-2 text-[13px] leading-5">
       <div className="flex items-center justify-between gap-3">
         <span className="text-graphite">
           Filed under <span className="font-medium text-ink">{company}</span>
@@ -177,7 +177,7 @@ function QuestionCards({ companyId, questions }: { companyId: string; questions:
         {questions.map((q, i) => {
           const done = asked.includes(q.question);
           return (
-            <li key={q.question} className={cn("rounded-[2px] border border-rule bg-surface p-3", done && "opacity-60")}>
+            <li key={q.question} className={cn("rounded-md border border-border-strong bg-surface p-3", done && "opacity-60")}>
               <p className="text-[13px] leading-5 text-ink">
                 <span className="mr-2 font-mono text-graphite">{i + 1}</span>
                 {q.question}
@@ -284,7 +284,7 @@ export function CompanyScreen({
         </div>
       )}
 
-      <div role="tablist" className="mt-5 flex gap-5 border-b border-rule">
+      <div role="tablist" className="mt-5 flex gap-1 rounded-full bg-tray-strong p-1">
         {tabs.map(([id, label]) => (
           <button
             key={id}
@@ -292,7 +292,10 @@ export function CompanyScreen({
             type="button"
             aria-selected={tab === id}
             onClick={() => setTab(id)}
-            className={cn("-mb-px border-b pb-2 text-[13px]", tab === id ? "border-ink text-ink" : "border-transparent text-graphite hover:text-ink")}
+            className={cn(
+              "h-8 flex-1 rounded-full text-[13px] transition-colors duration-150 ease-out",
+              tab === id ? "bg-surface font-medium text-ink shadow-fragment" : "text-graphite hover:text-ink",
+            )}
           >
             {label}
           </button>
@@ -314,7 +317,7 @@ export function CompanyScreen({
             )}
             {publicRows.length > 0 ? (
               <section>
-                <h2 className="micro-label mb-4 text-graphite">Public records</h2>
+                <h2 className="mb-3 text-sm leading-5 font-medium text-ink">Public records</h2>
                 <DeltaRows rows={publicRows} />
               </section>
             ) : (

@@ -7,7 +7,6 @@ import { ErrorState } from "@/components/error-state";
 import { LoadingSteps } from "@/components/loading-steps";
 import { ReportHeader } from "@/components/report-header";
 import { ReportView } from "@/components/report-view";
-import { ThemeParam } from "@/components/theme-param";
 import type { DeltaReport } from "@/lib/types";
 import { CompanyScreen } from "@/components/company";
 import { DigestScreen } from "@/components/digest";
@@ -28,12 +27,7 @@ export type Subject = { name?: string; domain?: string };
 export function Panel() {
   const pageUrl = useSearchParams().get("url");
   // Start over whenever the extension points the panel at another page.
-  return (
-    <>
-      <ThemeParam />
-      <InboxApp key={pageUrl ?? ""} pageUrl={pageUrl} />
-    </>
-  );
+  return <InboxApp key={pageUrl ?? ""} pageUrl={pageUrl} />;
 }
 
 type Screen = { kind: "inbox" } | { kind: "company"; id: string; filed?: string | null } | { kind: "digest" };
@@ -181,7 +175,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
                 required
                 autoComplete="off"
                 placeholder="Company name"
-                className="block h-9 min-w-0 flex-1 rounded-[2px] border border-rule bg-surface px-3 text-[13px] text-ink placeholder:text-graphite"
+                className="block h-9 min-w-0 flex-1 rounded-md border border-border-strong bg-surface px-3 text-[13px] text-ink placeholder:text-graphite"
               />
               <Button type="submit" variant="quiet">
                 Check
@@ -284,7 +278,7 @@ export function PanelView({
               required
               autoComplete="off"
               placeholder="e.g. Quillfeather Robotics"
-              className="mt-2 block h-9 w-full rounded-[2px] border border-rule bg-surface px-3 text-sm text-ink placeholder:text-graphite"
+              className="mt-2 block h-9 w-full rounded-md border border-border-strong bg-surface px-3 text-sm text-ink placeholder:text-graphite"
             />
             <Button type="submit" className="mt-3">
               Compare filings
