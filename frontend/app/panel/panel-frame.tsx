@@ -21,7 +21,7 @@ export function PanelFrame({
       }
     >
       <div className="sticky top-0 z-10 flex h-10 shrink-0 items-center justify-between gap-4 border-b border-rule bg-paper px-5">
-        <span className="micro-label shrink-0 text-graphite">Filing Delta</span>
+        <span className="micro-label shrink-0 text-graphite">VentureSauce</span>
         {company && (
           <span className="truncate text-xs leading-4 text-graphite">
             {company}

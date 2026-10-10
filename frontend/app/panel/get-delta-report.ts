@@ -1,28 +1,18 @@
-import { findMockReport } from "@/lib/mock";
+import { getReport } from "@/lib/api";
 import type { DeltaReport } from "@/lib/types";
 
 /** Either the page the analyst is browsing, or a company name they typed. */
-export type DeltaQuery = { url?: string; company?: string };
+export type DeltaQuery = { url?: string; company?: string; companyId?: string };
 
-const MOCK_DELAY_MS = 2400;
-
-/**
- * The panel's only source of report data. Mock for now: swap the body for a
- * call to /api/delta once it exists. Rejects when the comparison fails.
- */
+/** The panel's report data, from the backend's /api/delta. Rejects when the company isn't in the inbox yet. */
 export async function getDeltaReport(query: DeltaQuery): Promise<DeltaReport> {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
-
-  const report = findMockReport(query);
-  if (!report) throw new Error("No mock report for this company.");
-  return report;
+  return getReport(query);
 }
 
 export type DetectedCompany = { name?: string; domain: string };
 
 /**
  * What the panel can tell from the page URL before any comparison runs.
- * The name comes from the mocks for now; later from /api/resolve.
  */
 export function detectCompany(pageUrl: string | null): DetectedCompany | null {
   if (!pageUrl) return null;
@@ -40,6 +30,5 @@ export function detectCompany(pageUrl: string | null): DetectedCompany | null {
 
   return {
     domain: url.hostname.replace(/^www\./, ""),
-    name: findMockReport({ url: pageUrl })?.company.name,
   };
 }
