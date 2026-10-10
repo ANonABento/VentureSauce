@@ -1,11 +1,13 @@
 import asyncio
 import json
 import os
+import time
+from collections import defaultdict, deque
 from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -38,9 +40,25 @@ def health():
     return {"ok": True, "fake": FAKE}
 
 
+# Public tester links run on our LLM credits: cap decks per client IP.
+RATE_LIMIT = int(os.getenv("ANALYZE_PER_HOUR", "20"))
+_hits: dict[str, deque] = defaultdict(deque)
+
+
+def _rate_limit(request: Request) -> None:
+    ip = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "?")
+    now, q = time.time(), _hits[ip]
+    while q and now - q[0] > 3600:
+        q.popleft()
+    if len(q) >= RATE_LIMIT:
+        raise HTTPException(429, "Too many decks from this address; try again in an hour.")
+    q.append(now)
+
+
 @app.post("/analyze")
-async def analyze(file: UploadFile | None = File(None), text: str | None = Form(None)):
+async def analyze(request: Request, file: UploadFile | None = File(None), text: str | None = Form(None)):
     """Send FormData with either `file` (PDF) or `text` (pasted deck/email text)."""
+    _rate_limit(request)
     if not file and not (text and text.strip()):
         raise HTTPException(400, "send a PDF as `file` or pasted text as `text`")
     pdf_bytes = await file.read() if file else None
