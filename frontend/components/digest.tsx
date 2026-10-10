@@ -1,52 +1,66 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef, useState } from "react";
-import { CheckCircle, Pause, Play, XCircle } from "@phosphor-icons/react/dist/ssr";
+import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
+import { motion } from "motion/react";
+import { ArrowLeft, CaretDown, CheckCircle, Pause, Play, XCircle } from "@phosphor-icons/react/dist/ssr";
 import { API, type Digest, chatStream, getDigest, recordBrief, transcribe, ttsUrl } from "@/lib/api";
 import { startWavRecording } from "@/lib/recorder";
 import { Button } from "./button";
+import { DUR, EASE_ENTER, RISE, SPRING, STAGGER } from "@/lib/motion";
 import { cn } from "./cn";
-import { ItemTag } from "./inbox";
+import { Collapse } from "./collapse";
+import { KindIcons } from "./inbox";
+import { CountUp } from "./motion";
+import { DitherBar, Figure } from "./viz";
 
-/** Counts up to its value once, so the totals resolve instead of popping in. */
-function Total({ label, value, signal }: { label: string; value: number; signal?: boolean }) {
-  const [shown, setShown] = useState(0);
-  useEffect(() => {
-    let frame = 0;
-    const steps = 12;
-    const id = setInterval(() => {
-      frame += 1;
-      setShown(frame >= steps ? value : Math.round((value * frame) / steps));
-      if (frame >= steps) clearInterval(id);
-    }, 40);
-    return () => clearInterval(id);
-  }, [value]);
+/** The digest at a glance (decision 31): three counted-up figures, one word each. */
+function Glance({ totals }: { totals: Digest["totals"] }) {
+  const flags = totals.discrepancies + totals.contradictions;
   return (
-    <span className="whitespace-nowrap">
-      <span className={cn("font-serif text-lg leading-6", signal && value > 0 ? "text-signal" : "text-data")}>{shown}</span>{" "}
-      {label}
-    </span>
+    <div className="mt-5 grid grid-cols-3 gap-3">
+      <Figure value={<CountUp value={totals.items} />} caption={totals.items === 1 ? "new item" : "new items"} />
+      <Figure value={<CountUp value={totals.companies} />} caption={totals.companies === 1 ? "company" : "companies"} />
+      <Figure value={<CountUp value={flags} />} caption={flags === 1 ? "flag" : "flags"} tone={flags > 0 ? "signal" : "ink"} />
+    </div>
   );
 }
 
-/** "5 new items · 2 companies · 3 discrepancies": the totals as one sentence. */
-function Totals({ totals }: { totals: Digest["totals"] }) {
-  const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
-  const parts = [
-    <Total key="items" label={plural(totals.items, "new item", "new items")} value={totals.items} />,
-    <Total key="companies" label={plural(totals.companies, "company", "companies")} value={totals.companies} />,
-    <Total key="disc" label={plural(totals.discrepancies, "discrepancy", "discrepancies")} value={totals.discrepancies} signal />,
-    <Total key="contra" label={plural(totals.contradictions, "contradiction", "contradictions")} value={totals.contradictions} signal />,
-  ];
+/** Sentences end at . ! or ? followed by a space, so "$1.5M" stays whole. */
+const sentences = (text: string) => text.split(/(?<=[.!?])\s+/).filter(Boolean);
+
+const SPEAKER: Record<string, string> = { S: "Sam", R: "Riley" };
+
+/** The brief's turns ("S: …" / "R: …" lines from the backend); a script without speakers is one turn. */
+function turns(script: string) {
+  const parsed = [...script.matchAll(/^([SR]):\s*(.+)$/gm)].map((m) => ({ speaker: SPEAKER[m[1]], text: m[2].trim() }));
+  return parsed.length ? parsed : [{ speaker: null, text: script }];
+}
+
+/**
+ * The brief, shown only while it's being read (decision 34). The current turn
+ * is lit; timing is estimated from each turn's length, so the highlight
+ * follows the voice closely without word-level timestamps.
+ */
+function Transcript({ script, progress }: { script: string; progress: number }) {
+  const lines = turns(script);
+  const total = lines.reduce((acc, line) => acc + line.text.length, 0) || 1;
+  const ends = lines.map((_, i) => (lines.slice(0, i + 1).reduce((acc, line) => acc + line.text.length, 0) / total) * 100);
+  const current = progress >= 100 ? -1 : ends.findIndex((end) => progress < end);
   return (
-    <p className="mt-4 text-[13px] leading-7 text-graphite">
-      {parts.map((part, i) => (
-        <span key={i}>
-          {i > 0 && " · "}
-          {part}
-        </span>
+    <ol className="space-y-2 text-[13px] leading-5">
+      {lines.map((line, i) => (
+        <li
+          key={i}
+          className={cn(
+            "flex gap-2.5 transition-colors duration-300 ease-out",
+            i === current || current === -1 ? "text-ink" : i < current ? "text-graphite" : "text-graphite/60",
+          )}
+        >
+          {line.speaker && <span className="w-9 shrink-0 pt-px font-mono text-[11px] leading-5 text-data">{line.speaker}</span>}
+          <span className="min-w-0">{line.text}</span>
+        </li>
       ))}
-    </p>
+    </ol>
   );
 }
 
@@ -109,14 +123,25 @@ function BriefPlayer({ script }: { script: string }) {
     el.play().catch(() => setState("unavailable"));
   }
 
-  if (state === "unavailable") return <p className="text-xs text-graphite">Audio isn&apos;t available right now; the transcript is below.</p>;
+  const started = state === "playing" || state === "paused";
+  if (state === "unavailable") {
+    return (
+      <>
+        <p className="text-xs text-graphite">Audio isn&apos;t available right now.</p>
+        <div className="mt-2">
+          <Transcript script={script} progress={100} />
+        </div>
+      </>
+    );
+  }
   return (
+    <>
     <div className="flex items-center gap-3">
       <button
         type="button"
         onClick={toggle}
         aria-label={state === "playing" ? "Pause briefing" : "Play briefing"}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-paper"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-paper transition-transform duration-150 ease-out hover:scale-105 active:scale-95"
       >
         {state === "playing" ? (
           <Pause aria-hidden="true" size={16} weight="fill" className="text-paper" />
@@ -147,6 +172,12 @@ function BriefPlayer({ script }: { script: string }) {
         onTimeUpdate={(e) => setProgress((e.currentTarget.currentTime / (e.currentTarget.duration || 1)) * 100)}
       />
     </div>
+    <Collapse open={started}>
+      <div className="mt-3 border-t border-rule pt-3">
+        <Transcript script={script} progress={progress} />
+      </div>
+    </Collapse>
+    </>
   );
 }
 
@@ -297,15 +328,15 @@ function TalkPanel() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-sm leading-5 font-medium text-ink">Talk to your briefing</h2>
-          <p className="mt-1 text-xs text-graphite">It briefs you out loud. Interrupt any time; ask it to look something up.</p>
+          <p className="mt-1 text-xs text-graphite">Interrupt any time.</p>
         </div>
       </div>
       <div className="mt-3 flex gap-2">
-        <Button className="h-8 px-3 text-xs" onClick={() => ask("Start my briefing.")}>Start</Button>
-        <Button variant="quiet" className={cn("h-8 px-3 text-xs", listening && "border-signal text-signal")} onClick={() => (s.current.recog ? s.current.recog.stop() : listen())}>
+        <Button size="sm" onClick={() => ask("Start my briefing.")}>Start</Button>
+        <Button variant={listening ? "primary" : "quiet"} size="sm" onClick={() => (s.current.recog ? s.current.recog.stop() : listen())}>
           {listening ? "Tap to send" : "Ask by voice"}
         </Button>
-        {busy && <Button variant="quiet" className="h-8 px-3 text-xs" onClick={stop}>Stop</Button>}
+        {busy && <Button variant="quiet" size="sm" onClick={stop}>Stop</Button>}
         <span className="ml-auto">
           <SpeedButton speed={speed} onChange={changeSpeed} label="Speaking speed" />
         </span>
@@ -330,9 +361,104 @@ function TalkPanel() {
         }}
       >
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Or type: check if Acme filed a new Form D" className="h-8 min-w-0 flex-1 rounded-full border border-rule-strong bg-surface px-3 text-xs text-ink placeholder:text-graphite" />
-        <Button type="submit" variant="quiet" className="h-8 px-3 text-xs">Send</Button>
+        <Button type="submit" variant="quiet" size="sm">Send</Button>
       </form>
     </section>
+  );
+}
+
+/** One company in the digest: its flags as a ranked bar, the differences behind a tap, and the top question. */
+function DigestCompany({
+  company: c,
+  scale,
+  index,
+  onOpen,
+}: {
+  company: Digest["companies"][number];
+  scale: number;
+  index: number;
+  onOpen: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  const flags = c.discrepancies.length + c.contradictions;
+  const delay = 0.2 + index * STAGGER;
+  return (
+    <motion.section
+      className="fragment px-3.5 py-3"
+      initial={{ opacity: 0, y: RISE }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => onOpen(c.id)}
+          className="min-w-0 truncate text-left font-serif text-lg leading-6 text-ink underline decoration-transparent underline-offset-4 transition-colors duration-150 hover:decoration-current"
+        >
+          {c.name}
+          {c.fictional ? " (fictional)" : ""}
+        </button>
+        <span className="flex shrink-0 items-center gap-2">
+          {c.new_items.length > 0 && <KindIcons kinds={[...new Set(c.new_items.map((i) => i.kind))]} />}
+          <CountUp value={flags} delay={delay} className={cn("font-serif text-lg leading-6", flags ? "text-signal" : "text-graphite")} />
+        </span>
+      </div>
+      <DitherBar
+        className="mt-2"
+        delay={delay + 0.1}
+        total={scale}
+        segments={[
+          { value: c.discrepancies.length, tone: "signal" },
+          { value: c.contradictions, tone: "signal-soft" },
+        ]}
+      />
+      {flags > 0 ? (
+        <>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={id}
+            onClick={() => setOpen((value) => !value)}
+            className="mt-2 inline-flex min-h-6 items-center gap-1 text-xs font-medium text-graphite transition-colors duration-150 hover:text-ink"
+          >
+            {c.discrepancies.length > 0 && `${c.discrepancies.length} with public records`}
+            {c.discrepancies.length > 0 && c.contradictions > 0 && " · "}
+            {c.contradictions > 0 && `${c.contradictions} between your items`}
+            {c.discrepancies.length > 0 && (
+              <CaretDown aria-hidden="true" size={12} weight="light" className={cn("transition-transform duration-300", open && "rotate-180")} />
+            )}
+          </button>
+          {c.discrepancies.length > 0 && (
+            <Collapse id={id} open={open}>
+              <ul className="space-y-1.5 pt-1.5 text-[13px] leading-5">
+                {c.discrepancies.map((d) => (
+                  <li key={d.signal} className="flex items-start gap-2 text-signal">
+                    <XCircle aria-hidden="true" size={14} weight="light" className="mt-[3px] shrink-0" />
+                    <span className="min-w-0 flex-1 text-ink">{d.signal}</span>
+                    {d.short && <span className="shrink-0">{d.short}</span>}
+                  </li>
+                ))}
+              </ul>
+            </Collapse>
+          )}
+        </>
+      ) : (
+        <p className="mt-2 flex items-center gap-1.5 text-xs leading-4 text-steady">
+          <CheckCircle aria-hidden="true" size={14} weight="light" className="shrink-0" />
+          Nothing new flagged
+        </p>
+      )}
+      {c.questions[0] && (
+        <p className="mt-3 flex gap-2.5 rounded-md bg-tray px-3 py-2 text-[13px] leading-5 text-ink">
+          <span className="w-3 shrink-0 text-right font-serif text-base leading-5 text-data">1</span>
+          <span className="min-w-0">
+            <span className="sr-only">Ask: </span>
+            {c.questions[0].question}
+          </span>
+        </p>
+      )}
+    </motion.section>
   );
 }
 
@@ -345,10 +471,23 @@ export function DigestScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (
     getDigest(period).then(setDigest).catch((e) => setError(e.message));
   }, [period]);
   const current = digest?.period === period ? digest : null;
+  const ranked = current
+    ? [...current.companies].sort(
+        (a, b) => b.discrepancies.length + b.contradictions - (a.discrepancies.length + a.contradictions),
+      )
+    : [];
+  const scale = Math.max(1, ...ranked.map((c) => c.discrepancies.length + c.contradictions));
 
   return (
     <>
-      <button type="button" onClick={onBack} className="micro-label mb-4 inline-flex min-h-6 items-center text-graphite hover:text-ink">← Inbox</button>
+      <button
+        type="button"
+        onClick={onBack}
+        className="group mb-3 inline-flex min-h-6 items-center gap-1 text-[13px] text-graphite transition-colors duration-150 hover:text-ink"
+      >
+        <ArrowLeft aria-hidden="true" size={14} weight="light" className="transition-transform duration-150 ease-out group-hover:-translate-x-0.5" />
+        Inbox
+      </button>
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">{period === "day" ? "Today" : "This week"}</h1>
         <div className="flex rounded-full bg-tray p-0.5 text-xs font-medium">
@@ -358,72 +497,49 @@ export function DigestScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (
               type="button"
               aria-pressed={period === p}
               onClick={() => setPeriod(p)}
-              className={cn("h-7 rounded-full px-3", period === p ? "fragment text-ink" : "text-graphite hover:text-ink")}
+              className={cn("relative h-7 rounded-full px-3 transition-colors duration-150", period === p ? "text-ink" : "text-graphite hover:text-ink")}
             >
-              {p === "day" ? "Today" : "Week"}
+              {period === p && (
+                <motion.span layoutId="digest-period" className="fragment absolute inset-0 z-0" style={{ borderRadius: 9999 }} transition={SPRING} />
+              )}
+              <span className="relative z-10">{p === "day" ? "Today" : "Week"}</span>
             </button>
           ))}
         </div>
       </div>
       {error && <p className="mt-4 text-[13px] text-graphite">{error}</p>}
-      {!current && !error && <p className="mt-4 text-[13px] text-graphite">Building your briefing…</p>}
+      {!current && !error && (
+        <>
+          <p role="status" className="sr-only">Building your briefing</p>
+          <div aria-hidden="true" className="tray mt-5 h-24" />
+        </>
+      )}
       {current && (
         <>
-          {/* The digest's one hero tray: the written brief and its audio. */}
-          <div className="tray mt-5">
-            <p className="text-sm leading-5 text-ink">{current.summary}</p>
+          {/* The digest's one hero tray: the headline and the brief's audio; the full text appears as it's read. */}
+          <motion.div
+            key={current.script}
+            className="tray mt-5"
+            initial={{ opacity: 0, y: RISE }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: DUR.reveal, ease: EASE_ENTER }}
+          >
+            <p className="font-serif text-lg leading-6 text-ink">{sentences(current.summary)[0]}</p>
             {current.companies.length > 0 && (
               <div className="fragment mt-3 px-3 py-2.5">
                 <BriefPlayer key={current.script} script={current.script} />
               </div>
             )}
-          </div>
-          <Totals totals={current.totals} />
-          {current.companies.length > 0 && (
+          </motion.div>
+          <Glance totals={current.totals} />
+          {ranked.length > 0 && (
             <section className="mt-6">
               <h2 className="text-sm leading-5 font-medium text-ink">
-                Companies <span className="text-data">{current.companies.length}</span>
+                By company <span className="text-data">{ranked.length}</span>
               </h2>
               <div className="mt-3 space-y-2">
-                {current.companies.map((c) => (
-                  <section key={c.id} className="fragment px-3.5 py-3">
-                    <button type="button" onClick={() => onOpen(c.id)} className="block max-w-full truncate text-left font-serif text-lg leading-6 text-ink hover:underline hover:underline-offset-4">
-                      {c.name}{c.fictional ? " (fictional)" : ""}
-                    </button>
-                    {c.new_items.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">{c.new_items.map((i) => <ItemTag key={i.id} kind={i.kind} />)}</div>
-                    )}
-                    {c.discrepancies.length > 0 ? (
-                      <ul className="mt-3 space-y-1.5 text-[13px] leading-5">
-                        {c.discrepancies.slice(0, 3).map((d) => (
-                          <li key={d.signal} className="flex items-start gap-2 text-signal">
-                            <XCircle aria-hidden="true" size={14} weight="light" className="mt-[3px] shrink-0" />
-                            <span className="min-w-0 flex-1 text-ink">{d.signal}</span>
-                            {d.short && <span className="shrink-0">{d.short}</span>}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : c.contradictions > 0 ? (
-                      <p className="mt-3 flex items-center gap-2 text-[13px] leading-5 text-signal">
-                        <XCircle aria-hidden="true" size={14} weight="light" className="shrink-0" />
-                        {c.contradictions} contradiction{c.contradictions === 1 ? "" : "s"} between your sources
-                      </p>
-                    ) : (
-                      <p className="mt-3 flex items-center gap-2 text-[13px] leading-5 text-steady">
-                        <CheckCircle aria-hidden="true" size={14} weight="light" className="shrink-0" />
-                        No discrepancies in the new items
-                      </p>
-                    )}
-                    {c.questions[0] && (
-                      <p className="mt-3 flex gap-2.5 rounded-md bg-tray px-3 py-2 text-[13px] leading-5 text-ink">
-                        <span className="w-3 shrink-0 text-right font-serif text-base leading-5 text-data">1</span>
-                        <span className="min-w-0">
-                          <span className="sr-only">Ask: </span>
-                          {c.questions[0].question}
-                        </span>
-                      </p>
-                    )}
-                  </section>
+                {ranked.map((c, i) => (
+                  <DigestCompany key={c.id} company={c} scale={scale} index={i} onOpen={onOpen} />
                 ))}
               </div>
             </section>

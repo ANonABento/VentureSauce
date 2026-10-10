@@ -1,6 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
+import { motion } from "motion/react";
+import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
 import type { Claim, DeltaRow as DeltaRowData, Source } from "@/lib/types";
 import { cn } from "./cn";
 import { Collapse } from "./collapse";
@@ -17,11 +19,14 @@ export function DeltaRow({
   row,
   size = "panel",
   divided = false,
+  index = 0,
 }: {
   row: DeltaRowData;
   size?: "panel" | "page";
   /** Draws the single hairline that sets the discrepancies apart. */
   divided?: boolean;
+  /** Position in the list, for the staggered entrance. */
+  index?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [allReasons, setAllReasons] = useState(false);
@@ -34,7 +39,12 @@ export function DeltaRow({
   const [topReason, ...moreReasons] = row.likelyReasons;
 
   return (
-    <li className={cn("fragment px-3 py-3", divided && "mt-5")}>
+    <motion.li
+      className={cn("fragment px-3 py-3", divided && "mt-5")}
+      initial={{ opacity: 0, y: RISE }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.2 + index * STAGGER }}
+    >
       {/* The 2px mark is the one place status is shown; the text is ink. */}
       <div className="relative pl-3">
         <span
@@ -151,7 +161,7 @@ export function DeltaRow({
           )}
         </Collapse>
       </div>
-    </li>
+    </motion.li>
   );
 }
 

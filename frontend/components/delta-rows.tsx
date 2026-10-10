@@ -22,6 +22,7 @@ export function DeltaRows({
           key={row.signal}
           row={row}
           size={size}
+          index={index}
           divided={index === discrepancies.length && index > 0}
         />
       ))}

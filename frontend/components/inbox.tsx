@@ -2,20 +2,21 @@
 
 import { type DragEvent, useRef, useState } from "react";
 import {
-  CheckCircle,
   EnvelopeSimple,
   FileText,
   Image as ImageIcon,
   Note,
   Notepad,
   UploadSimple,
-  WarningDiamond,
-  XCircle,
 } from "@phosphor-icons/react/dist/ssr";
+import { motion } from "motion/react";
 import { type CompanySummary, type ItemKind, KIND_NAME } from "@/lib/api";
+import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
 import { Button } from "./button";
 import { cn } from "./cn";
+import { JOB_FLOW } from "./loading-steps";
 import { formatDate } from "./report-utils";
+import { SignalStrip, SourceFlow } from "./viz";
 
 const KIND_ICON: Record<string, typeof FileText> = {
   pdf: FileText,
@@ -38,6 +39,81 @@ export function ItemTag({ kind }: { kind: ItemKind | string }) {
   );
 }
 
+/** Item kinds as icons only (names in the tooltip and for screen readers): the row stays a glance. */
+export function KindIcons({ kinds }: { kinds: (ItemKind | string)[] }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-graphite">
+      {kinds.map((kind) => {
+        const Icon = KIND_ICON[kind] ?? FileText;
+        const name = KIND_NAME[kind] ?? kind;
+        return (
+          <span key={kind} title={name} className="inline-flex">
+            <Icon aria-hidden="true" size={14} weight="duotone" />
+            <span className="sr-only">{name}</span>
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+type DropInput = { file?: File; text?: string; kind?: "email" | "notes" };
+
+/** Paste a founder email or call notes. Shared by the drop strip and the first-run card. */
+export function PasteForm({
+  onDrop,
+  busy,
+  kind,
+  onKind,
+  onDone,
+}: {
+  onDrop: (input: DropInput) => void;
+  busy?: boolean;
+  kind: "email" | "notes";
+  onKind: (kind: "email" | "notes") => void;
+  onDone: () => void;
+}) {
+  const [text, setText] = useState("");
+  return (
+    <form
+      className="text-left"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!text.trim()) return;
+        onDrop({ text: text.trim(), kind });
+        setText("");
+        onDone();
+      }}
+    >
+      <div className="flex gap-1 text-xs">
+        {(["email", "notes"] as const).map((option) => (
+          <label
+            key={option}
+            className={cn(
+              "inline-flex h-6 cursor-pointer items-center rounded-full px-3 font-medium transition-colors duration-150",
+              kind === option ? "bg-ink text-paper" : "bg-tray text-graphite",
+            )}
+          >
+            <input type="radio" className="sr-only" checked={kind === option} onChange={() => onKind(option)} />
+            {option === "email" ? "Founder email" : "My call notes"}
+          </label>
+        ))}
+      </div>
+      <textarea
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        rows={5}
+        aria-label={kind === "email" ? "Founder email" : "Call notes"}
+        placeholder={kind === "email" ? "Paste the founder's email…" : "Paste your notes from the call…"}
+        className="mt-2 block w-full rounded-lg border border-rule-strong bg-surface p-3 text-[13px] leading-5 text-ink placeholder:text-graphite"
+      />
+      <Button type="submit" size="sm" className="mt-2" disabled={busy}>
+        File it
+      </Button>
+    </form>
+  );
+}
+
 /**
  * Drop a file, or paste an email / call notes. v2 always draws the dashed drop
  * outline, so `dashed` is accepted for compatibility but no longer changes the look.
@@ -45,17 +121,19 @@ export function ItemTag({ kind }: { kind: ItemKind | string }) {
 export function DropStrip({
   onDrop,
   busy,
-  label = "Drop a deck, email, screenshot or notes",
+  step,
+  label = "Drop a deck or email",
 }: {
-  onDrop: (input: { file?: File; text?: string; kind?: "email" | "notes" }) => void;
+  onDrop: (input: DropInput) => void;
   busy?: boolean;
+  /** The running job's JOB_FLOW step; while busy the strip becomes the source flow. */
+  step?: number;
   label?: string;
   dashed?: boolean;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [pasting, setPasting] = useState<null | "email" | "notes">(null);
-  const [text, setText] = useState("");
 
   function onDropFile(event: DragEvent) {
     event.preventDefault();
@@ -74,23 +152,29 @@ export function DropStrip({
         onDragLeave={() => setOver(false)}
         onDrop={onDropFile}
         className={cn(
-          "flex items-center justify-between gap-3 rounded-xl border border-dashed px-3 py-3 transition-colors duration-150 ease-out",
+          "flex min-h-[58px] items-center justify-between gap-3 rounded-xl border border-dashed px-3 py-3 transition-colors duration-150 ease-out",
           // Drag-over is one of amber's four sanctioned uses.
-          over ? "border-accent bg-accent-wash" : "border-rule-strong bg-surface",
+          over ? "border-accent bg-accent-wash" : busy ? "border-transparent bg-tray" : "border-rule-strong bg-surface",
         )}
       >
+        {busy ? (
+          <SourceFlow steps={JOB_FLOW} current={step ?? 0} className="mx-1" />
+        ) : (
+        <>
         <span className="flex min-w-0 items-center gap-2">
           <UploadSimple aria-hidden="true" size={18} weight="light" className="shrink-0 text-data" />
-          <span className="text-[13px] leading-5 text-graphite">{busy ? "Reading…" : label}</span>
+          <span className="text-[13px] leading-5 text-graphite">{label}</span>
         </span>
         <span className="flex shrink-0 gap-1.5">
-          <Button variant="quiet" className="h-7 px-3 text-xs" disabled={busy} onClick={() => fileRef.current?.click()}>
+          <Button variant="quiet" size="xs" disabled={busy} onClick={() => fileRef.current?.click()}>
             Choose
           </Button>
-          <Button variant="quiet" className="h-7 px-3 text-xs" disabled={busy} onClick={() => setPasting(pasting ? null : "email")}>
+          <Button variant="quiet" size="xs" disabled={busy} onClick={() => setPasting(pasting ? null : "email")}>
             Paste
           </Button>
         </span>
+        </>
+        )}
         <input
           ref={fileRef}
           type="file"
@@ -103,78 +187,16 @@ export function DropStrip({
           }}
         />
       </div>
-      {pasting && (
-        <form
-          className="mt-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!text.trim()) return;
-            onDrop({ text: text.trim(), kind: pasting });
-            setText("");
-            setPasting(null);
-          }}
-        >
-          <div className="flex gap-1 text-xs">
-            {(["email", "notes"] as const).map((kind) => (
-              <label
-                key={kind}
-                className={cn(
-                  "inline-flex h-6 cursor-pointer items-center rounded-full px-3 font-medium",
-                  pasting === kind ? "bg-ink text-paper" : "bg-tray text-graphite",
-                )}
-              >
-                <input type="radio" className="sr-only" checked={pasting === kind} onChange={() => setPasting(kind)} />
-                {kind === "email" ? "Founder email" : "My call notes"}
-              </label>
-            ))}
-          </div>
-          <textarea
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            rows={5}
-            placeholder={pasting === "email" ? "Paste the founder's email…" : "Paste your notes from the call…"}
-            className="mt-2 block w-full rounded-lg border border-rule-strong bg-surface p-3 text-[13px] leading-5 text-ink placeholder:text-graphite"
-          />
-          <Button type="submit" className="mt-2 h-8" disabled={busy}>
-            File it
-          </Button>
-        </form>
+      {pasting && !busy && (
+        <div className="mt-2">
+          <PasteForm onDrop={onDrop} busy={busy} kind={pasting} onKind={setPasting} onDone={() => setPasting(null)} />
+        </div>
       )}
     </div>
   );
 }
 
-const PILL = "inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs leading-4 font-medium";
-
-/** Status as word + icon, never colour alone: brick for discrepancies and contradictions, neutral otherwise. */
-function StatusPills({ company: c }: { company: CompanySummary }) {
-  if (!c.discrepancies && !c.contradictions) {
-    return (
-      <span className={cn(PILL, "bg-tray text-graphite")}>
-        <CheckCircle aria-hidden="true" size={14} weight="light" />
-        Nothing flagged
-      </span>
-    );
-  }
-  return (
-    <>
-      {c.discrepancies > 0 && (
-        <span className={cn(PILL, "bg-signal-wash text-signal")}>
-          <XCircle aria-hidden="true" size={14} weight="light" />
-          {c.discrepancies} discrepanc{c.discrepancies === 1 ? "y" : "ies"}
-        </span>
-      )}
-      {c.contradictions > 0 && (
-        <span className={cn(PILL, "bg-signal-wash text-signal")}>
-          <WarningDiamond aria-hidden="true" size={14} weight="light" />
-          {c.contradictions} contradiction{c.contradictions === 1 ? "" : "s"}
-        </span>
-      )}
-    </>
-  );
-}
-
-/** Inbox rows (v2): one white fragment per company with serif name, unseen dot, kinds and status pills. */
+/** Inbox rows (v2 + decision 30): serif name, unseen dot, signal strip and kind icons. No sentences. */
 export function CompanyList({
   companies,
   seen,
@@ -182,49 +204,58 @@ export function CompanyList({
 }: {
   companies: CompanySummary[];
   seen: Record<string, string>;
-  onOpen: (id: string) => void;
+  onOpen: (company: CompanySummary) => void;
 }) {
-  if (!companies.length) {
-    return (
-      <p className="mt-6 text-[13px] leading-5 text-graphite">
-        Nothing filed yet. Drop a deck, a founder email or your call notes above: each item is filed under its company
-        and every claim is checked.
-      </p>
-    );
-  }
+  if (!companies.length) return null;
   return (
     <section className="mt-6">
       <h2 className="text-sm leading-5 font-medium text-ink">
         Companies <span className="text-data">{companies.length}</span>
       </h2>
       <ul className="mt-3 space-y-2">
-        {companies.map((c) => {
+        {companies.map((c, index) => {
           const unseen = c.last_item_at && (!seen[c.id] || seen[c.id] < c.last_item_at);
+          const flags = c.discrepancies + c.contradictions;
           return (
-            <li key={c.id} className="fragment">
-              <button type="button" onClick={() => onOpen(c.id)} className="group block w-full px-3.5 py-3 text-left">
+            <motion.li
+              key={c.id}
+              className="fragment"
+              initial={{ opacity: 0, y: RISE }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.1 + index * STAGGER }}
+            >
+              <button
+                type="button"
+                onClick={() => onOpen(c)}
+                className="group block w-full rounded-lg px-3.5 py-3 text-left transition-[background-color,box-shadow] duration-150 ease-out hover:bg-paper"
+              >
                 <span className="flex items-center justify-between gap-3">
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="truncate font-serif text-lg leading-6 text-ink underline decoration-transparent underline-offset-4 group-hover:decoration-current">
+                    <motion.span
+                      layoutId={`company-name-${c.id}`}
+                      className="truncate font-serif text-lg leading-[21px] text-ink underline decoration-transparent underline-offset-4 group-hover:decoration-current"
+                    >
                       {c.name}
-                    </span>
+                    </motion.span>
                     {unseen && <span aria-label="new items" className="h-1.5 w-1.5 shrink-0 rounded-full bg-data" />}
                   </span>
-                  <span className="shrink-0 text-xs leading-4 text-graphite">{formatDate(c.updated_at)}</span>
+                  {flags > 0 && (
+                    <span aria-hidden="true" className="shrink-0 font-serif text-lg leading-6 text-signal">
+                      {flags}
+                    </span>
+                  )}
                 </span>
-                {(c.domain || c.item_kinds.length > 0) && (
-                  <span className="mt-1 flex flex-wrap items-center gap-1 text-xs leading-4 text-graphite">
-                    {c.domain && <span className="mr-1 truncate">{c.domain}</span>}
-                    {c.item_kinds.map((kind) => (
-                      <ItemTag key={kind} kind={kind} />
-                    ))}
+                <span className="mt-2 flex items-center justify-between gap-3">
+                  <motion.span layoutId={`company-strip-${c.id}`} className="flex">
+                    <SignalStrip discrepancies={c.discrepancies} contradictions={c.contradictions} delay={0.2 + index * STAGGER} />
+                  </motion.span>
+                  <span className="flex shrink-0 items-center gap-2 text-[11px] leading-4 text-graphite">
+                    <KindIcons kinds={c.item_kinds} />
+                    {formatDate(c.updated_at)}
                   </span>
-                )}
-                <span className="mt-2.5 flex flex-wrap gap-1.5">
-                  <StatusPills company={c} />
                 </span>
               </button>
-            </li>
+            </motion.li>
           );
         })}
       </ul>

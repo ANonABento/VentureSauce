@@ -1,11 +1,13 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { CaretRight, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/button";
 import { ErrorState } from "@/components/error-state";
-import { LoadingSteps } from "@/components/loading-steps";
+import { FirstRun } from "@/components/first-run";
+import { LoadingSteps, jobStep } from "@/components/loading-steps";
 import { ReportHeader } from "@/components/report-header";
 import { ReportView } from "@/components/report-view";
 import { ThemeParam } from "@/components/theme-param";
@@ -14,6 +16,7 @@ import { CompanyScreen } from "@/components/company";
 import { DigestScreen } from "@/components/digest";
 import { CompanyList, DropStrip } from "@/components/inbox";
 import { type CompanySummary, dropItem, getReport, listCompanies } from "@/lib/api";
+import { DUR, EASE_ENTER } from "@/lib/motion";
 import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
 
@@ -37,7 +40,13 @@ export function Panel() {
   );
 }
 
-type Screen = { kind: "inbox" } | { kind: "company"; id: string; filed?: string | null } | { kind: "digest" };
+type Screen =
+  | { kind: "inbox" }
+  | { kind: "company"; id: string; filed?: string | null; summary?: CompanySummary }
+  | { kind: "digest" };
+
+const DEPTH: Record<Screen["kind"], number> = { inbox: 0, digest: 1, company: 2 };
+const screenKey = (screen: Screen) => (screen.kind === "company" ? `company-${screen.id}` : screen.kind);
 
 const JOB_STEP: Record<string, string> = {
   parsing: "Reading the item",
@@ -48,15 +57,51 @@ const JOB_STEP: Record<string, string> = {
   ready: "Filed",
 };
 
+/**
+ * Screen changes (decision 33): content slides 12px in the direction of
+ * travel and exits with a short blur-fade; shared elements (company name,
+ * signal strip) glide between screens via their layoutId.
+ */
+function ScreenTransition({ id, direction, children }: { id: string; direction: number; children: ReactNode }) {
+  return (
+    // popLayout takes the exiting screen out of flow; it positions against this box.
+    <div className="relative">
+    <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+      <motion.div
+        key={id}
+        custom={direction}
+        variants={{
+          enter: (dir: number) => ({ opacity: 0, x: dir * 12 }),
+          center: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: DUR.base, ease: EASE_ENTER } },
+          exit: { opacity: 0, filter: "blur(4px)", transition: { duration: 0.2, ease: EASE_ENTER } },
+        }}
+        initial="enter"
+        animate="center"
+        exit="exit"
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+    </div>
+  );
+}
+
 /** The deal inbox: Inbox → Company (Checks / Items / Questions) → Digest. */
 function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   const detected = detectCompany(pageUrl);
-  const [screen, setScreen] = useState<Screen>({ kind: "inbox" });
+  const [screen, setScreenState] = useState<Screen>({ kind: "inbox" });
+  const [direction, setDirection] = useState(1);
   const [companies, setCompanies] = useState<CompanySummary[] | null>(null);
   const [seen, setSeen] = useState<Record<string, string>>({});
-  const [progress, setProgress] = useState<string | null>(null);
+  const [job, setJob] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notInInbox, setNotInInbox] = useState(false);
+
+  function setScreen(next: Screen) {
+    setDirection(DEPTH[next.kind] >= DEPTH[screen.kind] ? 1 : -1);
+    setScreenState(next);
+    window.scrollTo({ top: 0 });
+  }
 
   useEffect(() => {
     if (screen.kind !== "inbox") return;
@@ -81,7 +126,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     getReport({ url: pageUrl })
       .then((r) => {
         const id = (r.company as { id?: string }).id;
-        if (id) setScreen({ kind: "company", id });
+        if (id) setScreenState({ kind: "company", id });
       })
       .catch(() => setNotInInbox(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -89,78 +134,117 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
 
   async function onDrop(input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string }) {
     setError(null);
-    setProgress("Reading the item");
+    setJob("parsing");
     try {
-      const job = await dropItem(input, (j) => setProgress(JOB_STEP[j.status] ?? "Working"));
-      setScreen({ kind: "company", id: job.company_id!, filed: job.item_id });
+      const done = await dropItem(input, (j) => setJob(j.status));
+      // Fake mode replays a fixture without filing it, so there may be no company to open.
+      if (done.company_id) setScreen({ kind: "company", id: done.company_id, filed: done.item_id });
+      else setError("Checked, but it wasn't filed under a company.");
     } catch (e) {
       setError((e as Error).message);
     }
-    setProgress(null);
+    setJob(null);
   }
 
-  const busy = progress !== null;
+  async function onLookup(name: string): Promise<string | null> {
+    try {
+      const report = await getReport({ company: name });
+      const id = (report.company as { id?: string }).id;
+      if (id) {
+        setScreen({ kind: "company", id });
+        return null;
+      }
+    } catch {}
+    return `${name} isn't in your inbox yet. Drop its deck or a founder email above.`;
+  }
+
+  const busy = job !== null;
+  const step = jobStep(job);
+  const status = job && (
+    <p role="status" className="sr-only">
+      {JOB_STEP[job] ?? "Working"}
+    </p>
+  );
+  const firstRun = companies !== null && companies.length === 0;
+
   return (
     <PanelFrame>
-      {screen.kind === "inbox" && (
-        <>
-          <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">Deal inbox</h1>
-          {/* The inbox's one hero tray: the way into today's digest. */}
-          <button
-            type="button"
-            onClick={() => setScreen({ kind: "digest" })}
-            className="tray group mt-4 flex w-full items-center gap-3 text-left"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm leading-5 font-medium text-ink group-hover:underline group-hover:underline-offset-4">
-                Today&apos;s digest
+      <ScreenTransition id={screenKey(screen)} direction={direction}>
+        {screen.kind === "inbox" && firstRun && (
+          <>
+            {status}
+            {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
+            <FirstRun onDrop={onDrop} busy={busy} step={step} onLookup={onLookup} />
+          </>
+        )}
+        {screen.kind === "inbox" && !firstRun && (
+          <>
+            <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">Deal inbox</h1>
+            {/* The inbox's one hero tray: the way into today's digest. */}
+            <button
+              type="button"
+              onClick={() => setScreen({ kind: "digest" })}
+              className="tray group mt-4 flex w-full items-center gap-3 text-left transition-colors duration-150 ease-out hover:bg-tray-strong"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm leading-5 font-medium text-ink">Today&apos;s digest</span>
+                <span className="block text-xs leading-4 text-graphite">
+                  {companies ? (
+                    <>
+                      <span className="font-serif text-base text-data">{companies.length}</span>{" "}
+                      {companies.length === 1 ? "company" : "companies"}, read aloud or skimmed
+                    </>
+                  ) : (
+                    "Read aloud or skimmed"
+                  )}
+                </span>
               </span>
-              <span className="block text-xs leading-4 text-graphite">
-                {companies ? (
-                  <>
-                    Your briefing across{" "}
-                    <span className="font-serif text-base text-data">{companies.length}</span>{" "}
-                    {companies.length === 1 ? "company" : "companies"}
-                  </>
-                ) : (
-                  "Your briefing, read aloud or skimmed"
-                )}
-              </span>
-            </span>
-            <CaretRight aria-hidden="true" size={16} weight="light" className="shrink-0 text-graphite" />
-          </button>
-          {notInInbox && detected && (
-            <p className="mt-2 text-[13px] leading-5 text-graphite">
-              Nothing about <span className="text-ink">{detected.domain}</span> in your inbox yet. Drop its deck or a founder email.
-            </p>
-          )}
-          <div className="mt-4">
-            <DropStrip onDrop={onDrop} busy={busy} />
-          </div>
-          {progress && <p role="status" className="mt-2 text-xs text-graphite">{progress}…</p>}
-          {error && <p role="alert" className="mt-2 text-xs text-signal">{error}</p>}
-          {companies && (
-            <CompanyList companies={companies} seen={seen} onOpen={(id) => setScreen({ kind: "company", id })} />
-          )}
-        </>
-      )}
-      {screen.kind === "company" && (
-        <>
-          {progress && <p role="status" className="mb-3 text-xs text-graphite">{progress}…</p>}
-          {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
-          <CompanyScreen
-            companyId={screen.id}
-            filedItemId={screen.filed}
-            busy={busy}
-            onBack={() => setScreen({ kind: "inbox" })}
-            onOpen={(id, filed) => setScreen({ kind: "company", id, filed })}
-            onDrop={onDrop}
-          />
-        </>
-      )}
-      {screen.kind === "digest" && (
-        <DigestScreen onBack={() => setScreen({ kind: "inbox" })} onOpen={(id) => setScreen({ kind: "company", id })} />
-      )}
+              <CaretRight
+                aria-hidden="true"
+                size={16}
+                weight="light"
+                className="shrink-0 text-graphite transition-transform duration-150 ease-out group-hover:translate-x-0.5"
+              />
+            </button>
+            {notInInbox && detected && (
+              <p className="mt-2 text-[13px] leading-5 text-graphite">
+                <span className="text-ink">{detected.domain}</span> isn&apos;t in your inbox yet.
+              </p>
+            )}
+            <div className="mt-4">
+              {status}
+              <DropStrip onDrop={onDrop} busy={busy} step={step} />
+            </div>
+            {error && <p role="alert" className="mt-2 text-xs text-signal">{error}</p>}
+            {companies && (
+              <CompanyList
+                companies={companies}
+                seen={seen}
+                onOpen={(company) => setScreen({ kind: "company", id: company.id, summary: company })}
+              />
+            )}
+          </>
+        )}
+        {screen.kind === "company" && (
+          <>
+            {status}
+            {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
+            <CompanyScreen
+              companyId={screen.id}
+              filedItemId={screen.filed}
+              summary={screen.summary}
+              busy={busy}
+              step={step}
+              onBack={() => setScreen({ kind: "inbox" })}
+              onOpen={(id, filed) => setScreen({ kind: "company", id, filed })}
+              onDrop={onDrop}
+            />
+          </>
+        )}
+        {screen.kind === "digest" && (
+          <DigestScreen onBack={() => setScreen({ kind: "inbox" })} onOpen={(id) => setScreen({ kind: "company", id })} />
+        )}
+      </ScreenTransition>
     </PanelFrame>
   );
 }
@@ -256,7 +340,7 @@ export function PanelView({
       {status === "loading" && (
         <>
           {subjectHeader}
-          <div className="mt-5 border-t border-rule pt-4">
+          <div className="mt-5">
             <LoadingSteps current={step} />
           </div>
         </>
@@ -267,7 +351,7 @@ export function PanelView({
       {status === "error" && (
         <>
           {subjectHeader}
-          <div className="mt-5 border-t border-rule pt-4">
+          <div className="mt-5">
             <ErrorState onRetry={() => onRun?.()} />
           </div>
         </>

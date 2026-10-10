@@ -1,13 +1,30 @@
-import type { CSSProperties } from "react";
+"use client";
+
 import type { DeltaRow, DeltaStatus } from "@/lib/types";
 import { cn } from "./cn";
+import { CountUp } from "./motion";
 import { STATUS } from "./status";
+import { DitherBar, type Tone } from "./viz";
 
-const OTHER: DeltaStatus[] = ["consistent", "not_disclosed", "unverified"];
+const ORDER: DeltaStatus[] = ["discrepancy", "consistent", "not_disclosed", "unverified"];
+
+const TONE: Record<DeltaStatus, Tone> = {
+  discrepancy: "signal",
+  consistent: "data",
+  not_disclosed: "muted",
+  unverified: "muted",
+};
+
+const KEY: Record<DeltaStatus, string> = {
+  discrepancy: "bg-signal",
+  consistent: "bg-data",
+  not_disclosed: "bg-graphite/55",
+  unverified: "bg-graphite/55",
+};
 
 /**
- * The glance layer, and the screen's one hero tray: how many discrepancies,
- * out of how many signals, with a dithered bar showing the share.
+ * The glance layer and the screen's one hero tray (decision 31): the count
+ * counts up, then one dithered bar split by status replaces the legend text.
  */
 export function Verdict({
   rows,
@@ -16,49 +33,44 @@ export function Verdict({
   rows: DeltaRow[];
   size?: "panel" | "page";
 }) {
-  const count = (status: DeltaStatus) =>
-    rows.filter((row) => row.status === status).length;
+  const count = (status: DeltaStatus) => rows.filter((row) => row.status === status).length;
   const discrepancies = count("discrepancy");
-  const rest = OTHER.filter((status) => count(status) > 0);
-  const share = rows.length ? Math.round((discrepancies / rows.length) * 100) : 0;
+  const present = ORDER.filter((status) => count(status) > 0);
 
   return (
     <div className="tray">
-      <p className="flex items-center gap-3">
-        <span
+      <p className="flex items-end gap-3">
+        <CountUp
+          value={discrepancies}
           className={cn(
             "font-serif leading-none tracking-[-0.03em]",
             size === "page" ? "text-[64px]" : "text-[48px]",
             discrepancies > 0 ? "text-signal" : "text-ink",
           )}
-        >
-          {discrepancies}
-        </span>
-        <span className="flex flex-col">
+        />
+        <span className="flex flex-col pb-1">
           <span className="text-sm leading-5 font-medium text-ink">
-            {discrepancies === 1 ? "discrepancy" : "discrepancies"} found
+            {discrepancies === 1 ? "discrepancy" : "discrepancies"}
           </span>
           <span className="text-xs leading-4 text-graphite">
-            of {rows.length} {rows.length === 1 ? "signal" : "signals"} checked
+            of {rows.length} {rows.length === 1 ? "signal" : "signals"}
           </span>
         </span>
       </p>
-      {/* Decorative: the legend below carries the same numbers as text. */}
-      <div
-        aria-hidden="true"
-        className="dither mt-3"
-        style={{ "--dither-on": "var(--signal)", "--dither-fill": `${share}%` } as CSSProperties}
+      <DitherBar
+        className="mt-3"
+        delay={0.15}
+        segments={present.map((status) => ({ value: count(status), tone: TONE[status] }))}
       />
-      <p className="mt-2 text-xs leading-4 text-graphite">
-        <span className="font-medium text-signal">{discrepancies}</span>{" "}
-        {discrepancies === 1 ? "discrepancy" : "discrepancies"}
-        {rest.map((status) => (
-          <span key={status}>
-            {" · "}
-            <span className="font-medium text-ink">{count(status)}</span> {STATUS[status].label}
-          </span>
+      <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] leading-4 text-graphite">
+        {present.map((status) => (
+          <li key={status} className="inline-flex items-center gap-1.5">
+            <span aria-hidden="true" className={cn("h-1.5 w-1.5 rounded-full", KEY[status])} />
+            <span className="font-medium text-ink">{count(status)}</span>{" "}
+            {status === "discrepancy" && count(status) !== 1 ? "discrepancies" : STATUS[status].label}
+          </li>
         ))}
-      </p>
+      </ul>
     </div>
   );
 }

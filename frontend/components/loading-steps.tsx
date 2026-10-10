@@ -1,54 +1,31 @@
-import { CheckCircle, MinusCircle } from "@phosphor-icons/react/dist/ssr";
-import { cn } from "./cn";
+import { SourceFlow } from "./viz";
 
-export const LOADING_STEPS = [
-  "Reading SEC filings",
-  "Reading the web",
-  "Comparing",
-];
+/** The single-company check (the /panel/states flow). */
+export const LOADING_STEPS = ["SEC filings", "The web", "Compare"];
+
+/** A dropped item's job, one node per source it is checked against. */
+export const JOB_FLOW = ["Item", "SEC", "LinkedIn", "Press", "Your items"];
+
+const JOB_INDEX: Record<string, number> = {
+  parsing: 0,
+  checking_sec: 1,
+  checking_linkedin: 2,
+  checking_press: 3,
+  comparing_sources: 4,
+  ready: 5,
+};
+
+/** Which JOB_FLOW node a job status is on. Unknown statuses stay on the first node. */
+export const jobStep = (status: string | null | undefined) => JOB_INDEX[status ?? ""] ?? 0;
 
 /**
- * The live status log (v2): one mono line per step in a mist tray. `current`
- * is the index of the step in progress; every step before it is complete.
- * The running step's spinner is one of amber's four sanctioned uses.
+ * Loading as a source-flow diagram in a mist tray (decision 28). `current` is
+ * the index of the step in progress; every step before it is complete.
  */
-export function LoadingSteps({ current }: { current: number }) {
+export function LoadingSteps({ current, steps = LOADING_STEPS }: { current: number; steps?: string[] }) {
   return (
-    <div className="tray py-2.5">
-      <p role="status" className="sr-only">
-        {LOADING_STEPS[Math.min(current, LOADING_STEPS.length - 1)]}
-      </p>
-      <ol>
-        {LOADING_STEPS.map((label, index) => {
-          const done = index < current;
-          const active = index === current;
-          return (
-            <li
-              key={label}
-              aria-current={active ? "step" : undefined}
-              className={cn(
-                "flex items-center gap-2.5 py-1.5 font-mono text-xs leading-[18px] transition-colors duration-200 ease-out",
-                done || active ? "text-ink" : "text-graphite",
-              )}
-            >
-              {done ? (
-                <CheckCircle aria-hidden="true" size={16} weight="light" className="shrink-0 text-data" />
-              ) : active ? (
-                <span
-                  aria-hidden="true"
-                  className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-[1.5px] border-tray-strong border-t-accent motion-reduce:animate-none"
-                />
-              ) : (
-                <MinusCircle aria-hidden="true" size={16} weight="light" className="shrink-0 text-rule-strong" />
-              )}
-              <span>
-                {label}
-                {active && "…"}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+    <div className="tray px-4 pt-4 pb-3">
+      <SourceFlow steps={steps} current={current} />
     </div>
   );
 }

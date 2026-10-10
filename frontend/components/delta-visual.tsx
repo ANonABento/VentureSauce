@@ -1,4 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { motion } from "motion/react";
+import { DUR, EASE_ENTER, EASE_STATE, SPRING } from "@/lib/motion";
 import type { DeltaVisual as DeltaVisualData } from "@/lib/types";
 import { cn } from "./cn";
 import { formatDate, formatUsd } from "./report-utils";
@@ -60,23 +64,32 @@ function RaiseBar({
     <div>
       <div aria-hidden="true" className="relative h-3">
         <span className="absolute inset-x-0 top-[3px] h-1.5 bg-rule" />
-        <span
-          className="absolute top-[3px] left-0 h-1.5 bg-ink"
+        <motion.span
+          className="absolute top-[3px] left-0 h-1.5 origin-left bg-ink"
           style={{ width: percent(low) }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: DUR.reveal, ease: EASE_ENTER }}
         />
-        <span
+        <motion.span
           className={cn(
-            "absolute top-[3px] h-1.5",
+            "absolute top-[3px] h-1.5 origin-left",
             discrepancy ? "bg-signal" : "bg-graphite",
           )}
           style={{
             left: percent(low),
             width: `calc(${percent(high)} - ${percent(low)})`,
           }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: DUR.reveal * 0.6 }}
         />
-        <span
+        <motion.span
           className="absolute top-0 h-3 w-px bg-ink"
           style={{ left: percent(said) }}
+          initial={{ opacity: 0, scaleY: 0 }}
+          animate={{ opacity: 1, scaleY: 1 }}
+          transition={{ duration: DUR.base, ease: EASE_STATE, delay: DUR.reveal }}
         />
       </div>
       <Caption>
@@ -106,8 +119,11 @@ function InvestorDots({ filed, named }: { filed: number; named: number }) {
         )}
       >
         {Array.from({ length: shown }, (_, index) => (
-          <span
+          <motion.span
             key={index}
+            initial={{ opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ ...SPRING, delay: Math.min(index, 28) * 0.015 }}
             className={cn(
               "h-2 w-2 rounded-full",
               index < named ? "bg-ink" : "border border-graphite",
@@ -160,7 +176,13 @@ function HeadcountSparkline({
           stroke="currentColor"
           strokeWidth="1.25"
         >
-          <polyline points={points} vectorEffect="non-scaling-stroke" />
+          <motion.polyline
+            points={points}
+            vectorEffect="non-scaling-stroke"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: DUR.signature, ease: EASE_ENTER }}
+          />
         </svg>
         <span
           className="absolute right-0 h-1.5 w-1.5 translate-x-1/2 -translate-y-1/2 rounded-full bg-ink"
@@ -226,9 +248,19 @@ function Timeline({
   return (
     <div>
       <div aria-hidden="true" className="relative h-3">
-        <span className="absolute inset-x-1 top-1/2 h-px bg-graphite" />
+        <motion.span
+          className="absolute inset-x-1 top-1/2 h-px origin-left bg-graphite"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: DUR.reveal, ease: EASE_ENTER }}
+        />
         <span className="absolute top-0.5 left-0 h-2 w-2 rounded-full border border-graphite bg-paper" />
-        <span className="absolute top-0.5 right-0 h-2 w-2 rounded-full bg-ink" />
+        <motion.span
+          className="absolute top-0.5 right-0 h-2 w-2 rounded-full bg-ink"
+          initial={{ opacity: 0, scale: 0.4 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ ...SPRING, delay: DUR.reveal * 0.8 }}
+        />
       </div>
       <Caption>
         <span>{formatDate(filedOn)} filed</span>

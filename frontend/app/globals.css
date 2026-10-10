@@ -99,6 +99,49 @@
   }
 }
 
+/* One row of dither dots in currentColor: the source flow's connecting line. */
+@utility dot-line {
+  background: radial-gradient(circle, currentColor 0.8px, transparent 0.95px) 0 0 / 3px 3px repeat-x;
+}
+
+/*
+ * The first-run dissolve (decision 32): the landscape breaks into its own dot
+ * grid. A 3px dot mask shrinks from full coverage (r 2.2px covers the tile) to
+ * nothing. Reduced motion gets a short crossfade instead.
+ */
+@property --dot-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 2.2px;
+}
+
+@keyframes dot-dissolve {
+  0% {
+    --dot-r: 2.2px;
+  }
+  100% {
+    --dot-r: 0px;
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@utility dissolve {
+  mask-image: radial-gradient(circle, #000 var(--dot-r), transparent calc(var(--dot-r) + 0.4px));
+  mask-size: 3px 3px;
+  animation: dot-dissolve 560ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    mask-image: none;
+    animation: fade-out 200ms ease-out forwards;
+  }
+}
+
 /*
  * Small labels ("Filed", "Said", section titles). v2 retires uppercase mono:
  * sentence case, Geist medium. Set the color at the call site.
