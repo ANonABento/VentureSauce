@@ -197,6 +197,26 @@ Lead with a user's voice, not ours. The bracketed quotes get replaced with real 
 | Interviews don't happen in time | Medium | Book Sense slots at hour 0; everyone does one call before hour 3 | Research |
 | Judges raise privacy or confidentiality concerns | Medium | Decks never leave our backend, nothing is published, cached data is deleted on request | Kevin |
 
+## Demo companies and prize strategy
+
+Pulled from EDGAR on 2026-10-10. Data re-verifies these before anything goes on a slide.
+
+| Company | Role in demo | Latest Form D | Notes |
+| --- | --- | --- | --- |
+| **Daytona** (Daytona Platforms Inc., CIK 1977563) | Primary | Filed 2026-08-17: $60M offering, **$48.27M sold, $11.73M remaining**, first sale 2026-07-31, 6 investors. Earlier: filed 2026-02-05, $23.80M offering, $23.26M sold | Related persons: Ivan Burazin, Vedran Jukic, Kevin Zhang, Matt Turck. "Round still open" is a neutral, interesting finding. **Not yet checked against Daytona's press numbers** |
+| **Clerk** (Clerk, Inc., CIK 1959758) | Backup | Filed 2025-07-03: $50M offering, ~$50M sold, first sale 2025-06-17, 8 investors | Related persons: Braden Sidoti, Colin Sidoti, Shvetank Jain, Karan Mehandru |
+| Fictional company (e.g. "Acme AI") | The dramatic gaps | Pre-loaded ground truth in Mongo, clearly labeled fictional | Shows the full set of red flags without accusing a real company |
+
+No usable Form D was found for Cognition, Bright Data, Base44 or Fish Audio under those names.
+
+**Rules for using sponsors:** we only check a sponsor's *real public claims* (website, press), so their results come back mostly verified. We never put invented claims under a sponsor's name.
+
+**Prize plays**
+
+- **Bright Data (grand prize):** Bright Data is visibly the engine. Every LinkedIn or press row is labeled "via Bright Data", and the pitch says it out loud.
+- **Cognition:** use Devin for real work (EDGAR parser, tests) and mention it in the pitch.
+- **Base44 track:** skip unless someone has spare time for a landing page.
+
 ## Sponsor credits
 
 Claim everything we use in the first 30 minutes so nobody gets stuck waiting for billing mid-build. Codes are kept out of this public repo; see the hacker pack.
@@ -216,7 +236,8 @@ Claim everything we use in the first 30 minutes so nobody gets stuck waiting for
 
 - [ ] Which LLM for extraction and verdicts? (Recommend Claude with structured JSON output.)
 - [ ] Is the hackathon really 12 hours, and when is the submission deadline? Adjust the timeline gates.
-- [ ] Which 2–3 real companies for the demo? Must have a public Form D, press coverage and a LinkedIn page.
+- [x] Demo companies: Daytona (primary), Clerk (backup), plus one fictional company. See Demo companies above.
+- Each person's brief is in [`docs/roles/`](roles/).
 - [ ] Keep Fish Audio at all? Only if there's a sponsor prize for it.
 - [ ] Backend on localhost or Daytona for the live demo?
 - [ ] Final product name: SignalEngine, or something about "receipts"/"truth table"?
