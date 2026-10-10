@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 _FIXTURES = Path(__file__).parent.parent / "fixtures"
+IS_STUB = True  # the real module (Data) won't define this; research.py uses it to say when lookups are not live yet
 
 
 def get_ground_truth(company: str, domain: str | None = None, use_cache: bool = True) -> dict:
