@@ -67,6 +67,22 @@
 - **Amber discipline:** exactly the 4 sanctioned uses appear across all screens.
 - **Layout:** his layout is kept intact. The kit only reskins it, so applying it to code is low-risk.
 
+## Fix status (same day)
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Idle company input | **Fixed in Figma.** Labeled `Input` plus Check button under the drop card. New `Input` component (Default/Focus). |
+| 2 | Dark mode mismatch | **Code fix pending.** `tokens.css` now sets `color-scheme: light`. The dark block in `globals.css` still has to be deleted, which is a teammate's file. |
+| 3 | Chip target size | **Fixed.** 26px tall. |
+| 4 | Error used brick red | **Fixed.** Pine-ink ✕. |
+| 5 | Row toggle | **Fixed in spec.** Figma annotation on the Report row header, plus the pill description and handoff #10. |
+| 6 | Header truncation | **Fixed.** Right text is fixed at 187px, right-aligned, ellipsis, one line, on all 6 screens. |
+| 7 | Pill heights | **Fixed.** All 4 variants are 24px. |
+| 8 | Not-disclosed contrast | **Fixed.** New `stone/700` `#5F6B63`, 4.99:1. |
+| 9 | Header logo | **Fixed.** New `Brand/Wordmark compact` style (Geist SemiBold 13) in all headers. |
+
+Expected score after the code applies #2: **19/20**.
+
 ## Recommended order
 1. [P1] /impeccable onboard: restore the Idle company input
 2. [P1] /impeccable harden: make dark mode a deliberate choice

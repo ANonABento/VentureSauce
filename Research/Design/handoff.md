@@ -29,7 +29,7 @@ Variables live in the Primitives, Color and Dimension collections. The WEB code 
    - Done is a slate ✓ with the elapsed time.
    - Running is an **amber** arc spinning over 800ms.
    - Pending is a hollow steel dot.
-   - Error is a brick ✕.
+   - Error is a pine-ink ✕. Brick red is reserved for discrepancies.
    - Example copy: `Form D · 2 filings · 0.8s`.
 7. **Expanded row** adds four things:
    - SAID → FILED as Number/L, with the observed value in brick on discrepancy rows
@@ -37,8 +37,14 @@ Variables live in the Primitives, Color and Dimension collections. The WEB code 
    - A source chip and the confidence label
    - A mono receipt line (`SEC · Form D · item 13 · checked 2026-10-10`)
 8. **Ask the founder** (from the pivot): a subtle-bg block under an expanded discrepancy, holding one quoted question.
-9. **Idle and drop:** a 2:3 art band, with the drop card overlapping it and the one allowed shadow. Copy: "Drop anything about a company". Use `assets/landscape-2x3.webp` (375 KB) **bundled locally**, never loaded from a URL.
-10. **Motion:**
+9. **Header:**
+   - Use `Logo/Mark` plus "VentureSauce" in Geist SemiBold 13, not the mono label.
+   - The company name or domain on the right truncates with an ellipsis, capped at 55% of the width, with the full text in `title`.
+10. **Rows:** the whole row header is the `<button aria-expanded>`, at least 44px tall. The chevron is only a visual cue.
+11. **Source chip:** 4px vertical padding, so it's 26px tall. That's above the 24px minimum target size.
+12. **Idle and drop:** a 2:3 art band, with the drop card overlapping it and the one allowed shadow. Copy: "Drop anything about a company". Use `assets/landscape-2x3.webp` (375 KB) **bundled locally**, never loaded from a URL.
+    Below the drop card, keep the teammate's company lookup: a labeled "Or look up a company" input with a **Check** button (Figma `Input`).
+13. **Motion:**
     - Rows fade in and rise 4px over 180ms.
     - The glance count and each observed value **scramble-resolve** from random ASCII (`#@%&*0-9`) to the real value over 400ms, once.
     - All of it is skipped under `prefers-reduced-motion`.

@@ -10,6 +10,11 @@
  */
 
 :root {
+  /* Light only for the hackathon. Also delete the
+     @media (prefers-color-scheme: dark) block in globals.css, or a dark-mode
+     Mac shows the old Marginalia palette next to this one (audit P1 #2). */
+  color-scheme: light;
+
   /* ---- Existing names, new values ---- */
   --paper: #fbfaf7;        /* bg/canvas */
   --surface: #ffffff;      /* bg/surface */
@@ -36,7 +41,7 @@
 
   /* Status (matches backend DeltaStatus) */
   --vs-status-consistent-bg: #e6f1ea;
-  --vs-status-not-disclosed-fg: #66726a;
+  --vs-status-not-disclosed-fg: #5f6b63; /* 4.99:1 on its bg */
   --vs-status-not-disclosed-bg: #f5f2ec;
   --vs-status-not-disclosed-border: #d4cec2;
   --vs-status-unverified-fg: #536055;
