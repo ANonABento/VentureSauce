@@ -114,6 +114,35 @@ Surya's verdict: the tabs, contradiction card and question card feel generic and
 - **[Monarch budget](https://mobbin.com/screens/4b4fd393-259f-4382-84d3-2246a5702984):** a tinted hero card with one huge figure. This is the model for the glance count and the digest totals.
 - Most of Mobbin is competent but generic. Studio references (Outpace, Metalab, Instrument) are needed for the step up in craft.
 
+## Round 3: Lasso-led redesign (grill session, 2026-10-10)
+
+**Primary reference: [lassocommerce.com](https://lassocommerce.com/).** Measured on the live site:
+- Bespoke Serif headlines (75px, −3px tracking) in two tones, with inline line icons
+- Inter 15–16px UI text at −0.3px tracking
+- Serif numerals (7.35%, 1,432, 65.43%) in its single blue accent
+- Bento trays (pale blue, about 16px radius, no border) holding white "UI fragment" cards with soft shadows
+- Item rows with an outlined, red "Blocked" problem row
+- Dithered progress bars over a misty mountain photo
+
+**Rejected sources:**
+- **The Ramp "skill"** (mcpmarket zip and `zeoel-framework`, which are the same file). It was scraped by a bot and its values are wrong: body text `#B8B8B8` at about 2:1 contrast, chartreuse cards, a 1920px layout. Only its generic interaction rules hold up.
+- **The "Mercury" Figma community file.** It's a generic template with purple and mint gradients, not Mercury's real brand.
+
+**Decisions** (these override earlier ones where they conflict):
+
+| # | Topic | Decision |
+|---|---|---|
+| 15 | Serif | **Bespoke Serif** (Fontshare, free) for display and key numbers: company name, the glance count, claimed → observed values, digest totals. Geist for all UI text. Geist Mono only for receipts, the status log and timestamps. *Reverses decision 12's "Geist only".* |
+| 16 | Surfaces | Lasso two-layer construction. Sections sit on a **tray** (12px radius, no border). Content goes in white **fragment** cards (8px radius, one soft shadow). Hairlines are mostly removed, and pills are fully rounded. *Replaces the 4/6/8px hairline system.* |
+| 17 | Tray tint | **Mist `#EEF3F4`**, derived from the art's `#B4CCD4` |
+| 18 | Number color | **Deep mist blue `#3F6E7C`** for neutral data figures and source links. Brick for discrepancy figures. Amber keeps its 4 uses. |
+| 19 | Section headers | **Geist sentence case** (Medium 13px, with counts). The uppercase mono labels are retired. |
+| 20 | Icons | **Phosphor**: Light for UI, Duotone with a mist tint for emphasis. Bundled as local SVGs. They replace the typed ✕ ✓ – ? and the default chevrons. |
+| 21 | Contradiction card | Big serif numbers up top (`25 · 40 · 12`, then "spread of 28 people" in brick). Below them, white fragment cards per source item, each quoting its line. |
+| 22 | Questions | One fragment card holding a ruled list: serif index in mist blue, the question in Geist 14 ink, a slate "why" line, and a copy icon on hover or focus |
+| 23 | Tabs | A segmented pill on a tray track, with the active tab as a white fragment. Counts in mist blue. |
+| 24 | Data marks | **Dithered dot-grid bars** for proportions: status bar, raise bar, progress, digest. Mist blue for neutral, brick for discrepancy. Sparklines and lines stay solid. |
+
 ## Pending
 
 - **Layout is parked.** A teammate is building the panel layout mockup. Once it's committed, pull it and apply the kit on top. Row layout, screen structure and density decisions wait for it, and parts of that layout may change afterward. The draft recommendation for the truth-table row is a three-line stack (pill and page, quote, then a big CLAIMED → OBSERVED line with confidence, then the source).
