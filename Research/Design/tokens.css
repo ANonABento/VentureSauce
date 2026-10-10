@@ -48,6 +48,17 @@
   --vs-status-unverified-bg: #eef0ec;
   --vs-status-unverified-border: #a9b1a8; /* dashed */
 
+  /* ---- v2 (Lasso-led redesign) ---- */
+  --vs-bg-tray: #eef3f4;            /* section trays: mist tint, no border */
+  --vs-bg-tray-strong: #e2ebed;     /* tab track, skeletons */
+  --vs-data: #3f6e7c;               /* neutral serif figures + source links */
+  --vs-radius-xl: 12px;             /* trays */
+  --vs-radius-full: 999px;          /* pills, buttons, tabs, toast */
+  --vs-shadow-fragment: 0 1px 2px rgb(31 43 48 / 0.04), 0 6px 16px -4px rgb(31 43 48 / 0.07);
+  /* Dithered proportion bar: 2 staggered rows of 1.6px dots on a 3px pitch */
+  --vs-dither-on: var(--vs-data);   /* or var(--signal) for discrepancy */
+  --vs-dither-off: var(--vs-border-strong);
+
   /* Spacing (4px grid) */
   --vs-space-2xs: 2px;
   --vs-space-xs: 4px;
@@ -89,6 +100,31 @@
 }
 
 /*
+ * v2 TYPE (supersedes the "no serif" note below):
+ *   Bespoke Serif (Fontshare, free license, bundle locally) for display + key numbers:
+ *     Serif/Title 26/30 -2% (company name) · Serif/Number XL 48/48 -3% (glance count,
+ *     contradiction values, digest totals) · Serif/Number L 28/32 (said → filed) ·
+ *     Serif/Number M 18/22 (question index, item counts, company names in lists)
+ *   Geist: UI/Heading 500 14/20 -1% (sentence case; no uppercase mono labels) ·
+ *     UI/Body 400 14/20 -1% · UI/Small 400 12/16 -0.5%
+ *   Geist Mono: receipts, status log, timestamps only.
+ *
+ *   @font-face {
+ *     font-family: "Bespoke Serif";
+ *     src: url("/fonts/BespokeSerif-Regular.woff2") format("woff2");
+ *     font-weight: 400; font-display: swap;
+ *   }
+ *   (In layout.tsx: swap Newsreader for next/font/local pointing at the same files.)
+ *
+ * Dithered bar in CSS:
+ *   background:
+ *     radial-gradient(circle, var(--vs-dither-on) 0.8px, transparent 0.9px) 0 1px / 3px 3px repeat-x,
+ *     radial-gradient(circle, var(--vs-dither-on) 0.8px, transparent 0.9px) 1.5px 4px / 3px 3px repeat-x;
+ *   Draw the full width in --vs-dither-off underneath and clip the "on" layer to the % width.
+ */
+
+/*
+ * v1 type note. Superseded by the v2 block above for serif usage.
  * Type: Geist + Geist Mono only (no serif). Already loaded via next/font.
  * Bundle the font files locally for the extension (wifi-off demo).
  *   Number/XL   Geist 600 28/32 -1%   (glance count uses 40/44)
