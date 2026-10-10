@@ -94,6 +94,26 @@ The teammate built a full Next.js panel ("Filing Delta", "Marginalia" tokens, si
     Rename "Filing Delta" to "VentureSauce".
 14. **The deal inbox pivot (PLAN.md) isn't designed yet.** The company list, item timeline, contradictions and founder questions screens still need kit coverage.
 
+## Feedback round 2: "it looks vibe-designed" (Surya, 2026-10-10)
+
+Surya's verdict: the tabs, contradiction card and question card feel generic and AI-made, close to the Claude look rather than studio work. A redesign of the components is planned once more studio and fintech references arrive.
+
+### Anti-references: patterns we drop
+
+- Uppercase mono micro-labels on every section ("ASK THE FOUNDER", "PUBLIC RECORDS"). Mono is an accent, not a default.
+- Hairline rules and bordered boxes doing all the layout work, with every card built as the same label → text → grey footer stack.
+- One type size (Geist 12–13px) everywhere, with no scale contrast.
+- Glyphs typed as characters (✕ ✓ –), default chevrons, and generic data marks such as a row of circles or a plain line.
+- The safest version of every component.
+
+### Mobbin pass 2: patterns worth taking
+
+- **[QuickBooks reconcile](https://mobbin.com/screens/869dfa1d-8c53-4dac-96a1-6fd98999d1b8):** numbers laid out as an equation, with big figures, small captions and the operators between them. This is the model for the contradiction card: `25 · 40 · 12` → spread.
+- **[Mercury](https://mobbin.com/screens/2a9877cf-2b59-42c1-b143-ae4ee6e27841):** superscript cents, a tiny bordered status tag inline with the name, an underline for the active tab, and lots of space with no boxes.
+- **[Lightfield](https://mobbin.com/screens/a77b052b-5612-4588-895a-6cc553d5b18d)** and **[Fireflies](https://mobbin.com/screens/2047129f-d283-45ef-81bb-09aa79a32ffe):** questions as plain ruled rows or numbered bold quotes rather than cards. This is the model for Questions.
+- **[Monarch budget](https://mobbin.com/screens/4b4fd393-259f-4382-84d3-2246a5702984):** a tinted hero card with one huge figure. This is the model for the glance count and the digest totals.
+- Most of Mobbin is competent but generic. Studio references (Outpace, Metalab, Instrument) are needed for the step up in craft.
+
 ## Pending
 
 - **Layout is parked.** A teammate is building the panel layout mockup. Once it's committed, pull it and apply the kit on top. Row layout, screen structure and density decisions wait for it, and parts of that layout may change afterward. The draft recommendation for the truth-table row is a three-line stack (pill and page, quote, then a big CLAIMED → OBSERVED line with confidence, then the source).
