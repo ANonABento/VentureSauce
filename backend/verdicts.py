@@ -72,6 +72,7 @@ def _check(claim: dict | None, **kw) -> dict:
         # Which of the user's items the claim came from (deal inbox); absent for single-deck runs.
         "item_label": claim.get("item_label") if claim else None,
         "item_kind": claim.get("item_kind") if claim else None,
+        "metric": claim.get("metric") if claim else None,
     }
     base.update(kw)
     base.setdefault("label", LABELS[base["verdict"]])
@@ -154,8 +155,9 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
     ceiling = "low" if weak else ("high" if confirmed else "medium")
     caveat = f" Matched filer {entity}, but none of its listed people are in the deck, so it may be a different company." if weak else ""
 
-    def add(c, verdict, conf, note, observed):
-        out.append(_check(c, **common, observed_value=observed, verdict=verdict, confidence=_cap(conf, ceiling), note=note + caveat))
+    def add(c, verdict, conf, note, observed, offered=None):
+        out.append(_check(c, **common, observed_value=observed, verdict=verdict, confidence=_cap(conf, ceiling),
+                          note=note + caveat, offered=offered or observed))
 
     # Total raised to date vs. all distinct Form D offerings.
     all_sold = sum(f.get("total_sold") or 0 for f in _filings(form_d))
@@ -178,12 +180,12 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
         still_open = (f" Round still open: {usd(remaining)} of {usd(offering)} unsold as of {filed}."
                       if remaining > 0 and offering else "")
         if (offering and _close(claimed, offering)) or _close(claimed, sold):
-            add(c, "match", "high", f"Latest Form D: {usd(offering)} offering, {usd(sold)} sold." + still_open, sold)
+            add(c, "match", "high", f"Latest Form D: {usd(offering)} offering, {usd(sold)} sold." + still_open, sold, offering)
         elif sold > claimed:
-            add(c, *_higher_than_claim(claimed, sold), sold)
+            add(c, *_higher_than_claim(claimed, sold), sold, offering)
         else:
             verdict, conf, note = _lower_than_claim(claimed, sold, filed, today)
-            add(c, verdict, conf, note + still_open, sold)
+            add(c, verdict, conf, note + still_open, sold, offering)
 
     # Board: deck names vs. Form D related persons (executive officers, directors, promoters).
     if board and persons:

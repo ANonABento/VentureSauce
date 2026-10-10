@@ -78,6 +78,21 @@ def update_company(company_id: str, **fields) -> None:
         _save(db)
 
 
+def find_company(company_id: str | None = None, name: str | None = None, url: str | None = None) -> dict | None:
+    """Lookup without creating: by id, by the domain of a page URL, then by name."""
+    cos = _load()["companies"]
+    if company_id:
+        return cos.get(company_id)
+    if url:
+        host = re.sub(r"^https?://", "", url.lower()).split("/")[0].removeprefix("www.")
+        co = next((c for c in cos.values() if c.get("domain") and (host == c["domain"] or host.endswith("." + c["domain"]))), None)
+        if co:
+            return co
+    if name and _key(name):
+        return next((c for c in cos.values() if _key(c["name"]) == _key(name)), None)
+    return None
+
+
 def get_company(company_id: str) -> dict | None:
     return _load()["companies"].get(company_id)
 

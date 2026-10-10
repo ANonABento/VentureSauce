@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+import delta
 import jobs
 import store
 
@@ -97,6 +98,16 @@ def company(company_id: str):
     if not co:
         raise HTTPException(404, "unknown company")
     return co.get("view") or {"company": {k: co.get(k) for k in ("id", "name", "domain")}, "items": [], "checks": [], "questions": []}
+
+
+@app.get("/api/delta")
+def delta_report(company_id: str | None = None, company: str | None = None, url: str | None = None):
+    """The frontend's DeltaReport (frontend/lib/types.ts) for a company in the inbox, found by id, page URL or name.
+    Extra fields: questions, items, company.id. 404 = not in the inbox yet (drop something about it first)."""
+    co = store.find_company(company_id=company_id, name=company, url=url)
+    if not co or not co.get("view"):
+        raise HTTPException(404, "No items for this company yet. Drop a deck, email or notes about it first.")
+    return delta.to_report(co["view"])
 
 
 @app.delete("/companies/{company_id}")

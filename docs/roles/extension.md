@@ -2,6 +2,24 @@
 
 **Your job:** the thing judges see. Drop a deck, watch it work, trust the table.
 
+## Connecting the Next.js frontend to real data (andiyin)
+
+The backend now serves your `DeltaReport` shape: `GET http://localhost:8000/api/delta?url=<page url>` (or `?company=<name>` / `?company_id=<id>`).
+In `frontend/app/panel/get-delta-report.ts`, replace the mock body with:
+
+```ts
+const q = new URLSearchParams(query.url ? { url: query.url } : { company: query.company ?? "" });
+const r = await fetch(`${process.env.NEXT_PUBLIC_API ?? "http://localhost:8000"}/api/delta?${q}`);
+if (!r.ok) throw new Error(r.status === 404 ? "Nothing about this company in your inbox yet." : "Comparison failed.");
+return r.json();
+```
+
+Notes:
+- `source.url === "#item"` means the claim came from the user's own item (deck, email, notes): render a plain chip, not a link.
+- Extra fields you can use: `questions` ([{question, why}]: "Ask the founder" list), `items` (the company's inbox timeline), `company.id`, `company.formDEntity`, and per row `confidence`.
+- Rows with signal "… across your sources" are contradictions between the user's own items (the deal inbox's key feature).
+- To add items: `POST /analyze` (FormData `file` or `text`, optional `kind`, `company_id`), poll `GET /jobs/{id}`, then refetch `/api/delta?company_id=…`.
+
 ## Hour 0–1: skeleton
 
 - [ ] `extension/manifest.json`:
