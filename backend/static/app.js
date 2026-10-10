@@ -5,9 +5,10 @@ const STEPS = [
   ["checking_sec", "Checking SEC Form D"],
   ["checking_linkedin", "Checking LinkedIn"],
   ["checking_press", "Checking press"],
+  ["comparing_sources", "Comparing your sources"],
   ["ready", "Ready"],
 ];
-const SOURCE = { form_d: "SEC Form D", linkedin: "LinkedIn via Bright Data", press: "Press via Bright Data" };
+const SOURCE = { form_d: "SEC Form D", linkedin: "LinkedIn via Bright Data", press: "Press via Bright Data", your_sources: "Your sources" };
 const ORDER = { gap: 0, match: 1, unverifiable: 2 };
 const $ = (id) => document.getElementById(id);
 let jobId = null;
@@ -134,7 +135,6 @@ $("feedback").addEventListener("submit", async (ev) => {
 });
 
 function sendFile(f) {
-  if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) return fail("Please drop a PDF.");
   const form = new FormData(); form.append("file", f); start(form);
 }
 
