@@ -9,9 +9,9 @@
 ```json
 {
   "manifest_version": 3,
-  "name": "SignalEngine",
+  "name": "VentureSauce",
   "version": "0.1.0",
-  "action": { "default_title": "SignalEngine" },
+  "action": { "default_title": "VentureSauce" },
   "side_panel": { "default_path": "panel.html" },
   "background": { "service_worker": "background.js" },
   "permissions": ["sidePanel", "storage"],

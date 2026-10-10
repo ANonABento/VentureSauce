@@ -1,6 +1,6 @@
 # AGENTS.md: read this first
 
-Hackathon project **SignalEngine**: drop a pitch deck into a Chrome side panel and get a claim-by-claim truth table (match / gap / unverifiable) checked against SEC Form D, LinkedIn and press, with a source link on every row. 4-person team, ~12 hours. Speed matters, but **every number shown must be traceable to a source.**
+Hackathon project **VentureSauce**: drop a pitch deck into a Chrome side panel and get a claim-by-claim truth table (match / gap / unverifiable) checked against SEC Form D, LinkedIn and press, with a source link on every row. 4-person team, ~12 hours. Speed matters, but **every number shown must be traceable to a source.**
 
 - Plan: [docs/PLAN.md](docs/PLAN.md) (job contract, timeline, scope)
 - Your human's role brief: [docs/roles/](docs/roles/) (`kevin.md`, `data.md`, `extension.md`, `research.md`)
@@ -43,4 +43,4 @@ uv sync --python 3.12
 uv run uvicorn main:app --reload --port 8000
 ```
 
-`SIGNALENGINE_FAKE=1` replays the Acme fixture with realistic timing, so you can build the UI without keys.
+`VENTURESAUCE_FAKE=1` replays the Acme fixture with realistic timing, so you can build the UI without keys.

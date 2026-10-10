@@ -1,10 +1,10 @@
-# SignalEngine — Hackathon Plan
+# VentureSauce — Hackathon Plan
 
 _As of 2026-10-10 · Kevin Jiang_
 
 ## TL;DR
 
-We build **SignalEngine: drop a pitch deck into a Chrome side panel and get a claim-by-claim truth table with receipts in under 60 seconds.** Each claim the founder makes (headcount, money raised, customers, team) is checked against LinkedIn, SEC Form D and the press, and comes back marked match, gap or unverifiable, with a source link.
+We build **VentureSauce: drop a pitch deck into a Chrome side panel and get a claim-by-claim truth table with receipts in under 60 seconds.** Each claim the founder makes (headcount, money raised, customers, team) is checked against LinkedIn, SEC Form D and the press, and comes back marked match, gap or unverifiable, with a source link.
 
 - **Theme:** Catch what humans miss (primary), Build trust (secondary: every verdict links to its source, so the analyst doesn't have to re-check).
 - **Finance user:** Investment. Specifically seed-to-Series-A VC associates and angels doing first-pass screening.
@@ -240,4 +240,4 @@ Claim everything we use in the first 30 minutes so nobody gets stuck waiting for
 - Each person's brief is in [`docs/roles/`](roles/).
 - [ ] Keep Fish Audio at all? Only if there's a sponsor prize for it.
 - [ ] Backend on localhost or Daytona for the live demo?
-- [ ] Final product name: SignalEngine, or something about "receipts"/"truth table"?
+- [ ] Final product name: VentureSauce, or something about "receipts"/"truth table"?

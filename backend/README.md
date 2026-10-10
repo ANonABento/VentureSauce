@@ -1,8 +1,8 @@
-# SignalEngine backend
+# VentureSauce backend
 
 ```bash
 cd backend
-cp .env.example .env          # fill in keys; leave SIGNALENGINE_FAKE=1 until the real pipeline lands
+cp .env.example .env          # fill in keys; leave VENTURESAUCE_FAKE=1 until the real pipeline lands
 uv sync --python 3.12
 uv run uvicorn main:app --reload --port 8000
 ```

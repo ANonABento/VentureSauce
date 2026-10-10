@@ -8,9 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import jobs
 
 load_dotenv()
-FAKE = os.getenv("SIGNALENGINE_FAKE", "1") == "1"
+FAKE = os.getenv("VENTURESAUCE_FAKE", "1") == "1"
 
-app = FastAPI(title="SignalEngine")
+app = FastAPI(title="VentureSauce")
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"^(chrome-extension://.*|http://localhost(:\d+)?|http://127\.0\.0\.1(:\d+)?)$",
