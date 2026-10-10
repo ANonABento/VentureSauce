@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
+/* "Marginalia" design tokens — filing-delta-context.md, section 7. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  color-scheme: light dark;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --paper: #f7f5f0;
+  --surface: #ffffff;
+  --ink: #161616;
+  --graphite: #5c5a55;
+  --rule: #e2ded6;
+  /* Discrepancies only. */
+  --signal: #b4441c;
+  --signal-wash: #f6e7df;
+  --steady: #3f6b4f;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --paper: #121211;
+    --surface: #1a1a19;
+    --ink: #edebe6;
+    --graphite: #a3a09a;
+    --rule: #2c2b29;
+    --signal: #e0794f;
+    --signal-wash: #2a1d17;
+    --steady: #7faf8e;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-graphite: var(--graphite);
+  --color-rule: var(--rule);
+  --color-signal: var(--signal);
+  --color-signal-wash: var(--signal-wash);
+  --color-steady: var(--steady);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-newsreader), Georgia, serif;
+}
+
+@layer base {
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    /* Figures align and read as data everywhere, not only in mono. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0ms !important;
+    }
+  }
+}
+
+/* "FILED", "SAID", "SOURCE" — set the color at the call site. */
+@utility micro-label {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
