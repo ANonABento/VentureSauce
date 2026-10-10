@@ -234,7 +234,7 @@ Claim everything we use in the first 30 minutes so nobody gets stuck waiting for
 
 ## Open decisions for the team
 
-- [ ] Which LLM for extraction and verdicts? (Recommend Claude with structured JSON output.)
+- [x] LLM: Nebius `openai/gpt-oss-120b` (2.7s, 8/8 on our extraction test), fallback `deepseek-ai/DeepSeek-V4.1-Flash`, Claude as last resort.
 - [ ] Is the hackathon really 12 hours, and when is the submission deadline? Adjust the timeline gates.
 - [x] Demo companies: Daytona (primary), Clerk (backup), plus one fictional company. See Demo companies above.
 - Each person's brief is in [`docs/roles/`](roles/).

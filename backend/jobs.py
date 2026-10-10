@@ -6,6 +6,10 @@ import json
 import uuid
 from pathlib import Path
 
+import extract
+import verdicts
+from sources.ground_truth import get_ground_truth
+
 FIXTURES = Path(__file__).parent / "fixtures"
 
 # Order the panel shows them in. Each check's source decides which step adds it.
@@ -46,8 +50,25 @@ async def run_fake(job: dict, step_seconds: float = 1.5) -> None:
 
 
 async def run_real(job: dict, pdf_bytes: bytes | None, text: str | None) -> None:
-    # Filled in once extract.py and verdicts.py land.
-    raise NotImplementedError("real pipeline not built yet; set SIGNALENGINE_FAKE=1")
+    extracted = await asyncio.to_thread(extract.extract, pdf_bytes, text)
+    company, claims = extracted["company"], extracted["claims"]
+    job["company"] = {**company, "cik": None}
+
+    job["status"] = "checking_sec"
+    gt = await asyncio.to_thread(get_ground_truth, company["name"], company["domain"])
+    if gt.get("fictional"):
+        job["company"]["fictional"] = True
+    if gt.get("form_d"):
+        job["company"]["cik"] = gt["form_d"].get("cik")
+    job["checks"] += verdicts.form_d_checks(claims, gt.get("form_d"))
+
+    job["status"] = "checking_linkedin"
+    job["checks"] += verdicts.headcount_checks(claims, gt.get("linkedin"))
+
+    job["status"] = "checking_press"
+    job["checks"] += verdicts.press_checks(claims, gt.get("press") or [])
+
+    job["status"] = "ready"
 
 
 async def run(job: dict, pdf_bytes: bytes | None, text: str | None, fake: bool) -> None:
