@@ -45,3 +45,6 @@ a founder's investor portal, a read-later list), switched from an auto-hiding do
 demoed next to something that feels real. Every downloadable item is a file in `samples/`, and email and note bodies are
 read from those same files (the "(FICTIONAL ...)" markers are hidden on screen only). Familiar layouts, but no real
 product names or logos. Fictional data, except the quoted public claims, which link to their source. The deck's source is `samples/src/acme_deck.html`.
+
+**Running the demo:** PageDown/PageUp (or a clicker, or `]`/`[`) steps through the script in `static/demo/script.js`, and `N` opens
+presenter notes in a second window (do/say per step, timer, 2-minute toggle). The printable copy is `docs/DEMO_SCRIPT.md`.

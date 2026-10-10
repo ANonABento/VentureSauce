@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Presenter notes</title>
+  <link rel="stylesheet" href="/static/demo/presenter.css">
+</head>
+<body>
+  <header>
+    <span id="pos"></span>
+    <label class="core"><input type="checkbox" id="core"> 2-minute version</label>
+    <span id="clock">0:00</span>
+    <button id="reset" title="Back to step 1 and restart the timer">Restart</button>
+  </header>
+  <main>
+    <h1 id="title"></h1>
+    <section><h2>Do</h2><p id="do"></p></section>
+    <section class="say"><h2>Say</h2><p id="say"></p></section>
+    <p class="next" id="next"></p>
+  </main>
+  <ol id="steps"></ol>
+  <footer>
+    <button id="prev">← Prev</button>
+    <span class="hint">PageUp/PageDown, [ ] or ←/→ here; PageUp/PageDown or [ ] on the desk</span>
+    <button id="nextBtn" class="pri">Next →</button>
+  </footer>
+  <p id="lost" hidden>Not connected to the demo desk. Open <a href="/demo" target="_blank">/demo</a> in this browser, then press N there.</p>
+  <script src="/static/demo/script.js"></script>
+  <script src="/static/demo/presenter.js"></script>
+</body>
+</html>

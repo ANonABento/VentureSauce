@@ -1,0 +1,26 @@
+:root { --bg: #14161a; --panel: #1d2026; --ink: #eef0f3; --muted: #9aa1ad; --rule: #2d3139; --accent: #7aa7ff; --say: #ffd479; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { display: grid; grid-template-rows: auto 1fr auto auto; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+button { font: inherit; color: inherit; cursor: pointer; border: 1px solid var(--rule); background: var(--panel); border-radius: 8px; padding: 6px 12px; }
+button:hover { border-color: var(--muted); }
+header, footer { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--rule); }
+footer { border-top: 1px solid var(--rule); border-bottom: 0; }
+#pos { font-weight: 600; }
+#clock { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; }
+.core { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+main { padding: 18px 20px; overflow: auto; }
+h1 { margin: 0 0 14px; font-size: 26px; letter-spacing: -.01em; }
+h2 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+section { margin-bottom: 16px; }
+section p { margin: 0; font-size: 17px; }
+.say p { font-size: 21px; line-height: 1.45; color: var(--say); }
+.next { color: var(--muted); margin: 8px 0 0; }
+ol { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 10px 16px; list-style: none; border-top: 1px solid var(--rule); }
+ol button { font-size: 12px; padding: 4px 8px; color: var(--muted); }
+ol .star button::before { content: "★ "; color: var(--say); }
+ol .on button { border-color: var(--accent); color: var(--ink); }
+.hint { flex: 1; text-align: center; color: var(--muted); font-size: 12px; }
+.pri { background: var(--accent); border-color: var(--accent); color: #0b1220; font-weight: 600; }
+#lost { position: fixed; inset: auto 16px 70px; margin: 0; padding: 12px 14px; border-radius: 8px; background: #3a2f12; color: #f5d48a; }
+#lost a { color: inherit; }

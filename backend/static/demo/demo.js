@@ -438,8 +438,53 @@ async function route() {
   dock(app);
 }
 
-window.addEventListener("hashchange", route);
+/* ───────────── Run-through: step the demo script (script.js) with a clicker or keys, notes in a second window ───────────── */
+const STEPS = window.DEMO_STEPS || [];
+const chan = "BroadcastChannel" in window ? new BroadcastChannel("venturesauce-demo") : null;
+let step = 0;
+try { step = Number(sessionStorage.getItem("demo-step")) || 0; } catch {}
+
+/** Keep the step in line with the screen when it was reached some other way (dock, links, back button). */
+function syncStep() {
+  const here = location.hash.slice(1) || "mail";
+  if (STEPS[step]?.hash !== here) {
+    // The nearest step showing this screen (the inbox is both the first and the last step).
+    const near = STEPS.map((s, i) => (s.hash === here ? i : -1)).filter((i) => i >= 0)
+      .sort((a, b) => Math.abs(a - step) - Math.abs(b - step))[0];
+    if (near != null) step = near;
+  }
+  try { sessionStorage.setItem("demo-step", step); } catch {}
+  chan?.postMessage({ at: step });
+}
+function goStep(i) {
+  if (!STEPS.length) return;
+  step = Math.max(0, Math.min(STEPS.length - 1, i));
+  const hash = "#" + STEPS[step].hash;
+  if (location.hash === hash) syncStep();
+  else location.hash = hash;
+}
+/** The next/previous step, skipping the extras when the presenter window has "2-minute version" ticked. */
+function neighbour(dir) {
+  let core = false;
+  try { core = localStorage.getItem("demo-core") === "1"; } catch {}
+  for (let i = step + dir; i >= 0 && i < STEPS.length; i += dir) if (!core || STEPS[i].core) return i;
+  return step;
+}
+chan?.addEventListener("message", (e) => {
+  if (e.data?.go != null) goStep(e.data.go);
+  if (e.data?.hello) chan.postMessage({ at: step });
+});
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.("input, textarea, [contenteditable]")) return;
+  // Presentation clickers send PageDown/PageUp.
+  if (e.key === "PageDown" || e.key === "]") { e.preventDefault(); goStep(neighbour(1)); }
+  else if (e.key === "PageUp" || e.key === "[") { e.preventDefault(); goStep(neighbour(-1)); }
+  else if (e.key === "n" || e.key === "N") window.open("/static/demo/presenter.html", "venturesauce-presenter", "width=560,height=720");
+});
+
+window.addEventListener("hashchange", () => route().then(syncStep));
 route().then(() => {
+  syncStep();
   // Show the dock briefly so the presenter knows it's there, then let it tuck away.
   $("#dock").classList.add("show");
   setTimeout(() => $("#dock").classList.remove("show"), 2500);
