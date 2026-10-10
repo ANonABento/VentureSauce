@@ -32,31 +32,33 @@ export function ReportHeader({
         {company.name}
       </h1>
 
-      <p
-        className={cn(
-          "font-mono text-xs leading-5 text-graphite",
-          page ? "mt-3" : "mt-2",
-        )}
-      >
-        <span>{company.domain}</span>
-        {company.cik && (
-          <>
-            <span aria-hidden="true"> · </span>
-            <span className="whitespace-nowrap">CIK {company.cik}</span>
-          </>
-        )}
-        {checkedAt && (
-          // Own line in the panel so the row never wraps mid-separator.
-          <span className={cn("block", page && "sm:inline")}>
-            {page && (
-              <span aria-hidden="true" className="hidden sm:inline">
-                {" · "}
-              </span>
-            )}
-            checked {formatDate(checkedAt)}
-          </span>
-        )}
-      </p>
+      {(company.domain || company.cik || checkedAt) && (
+        <p
+          className={cn(
+            "font-mono text-xs leading-5 text-graphite",
+            page ? "mt-3" : "mt-2",
+          )}
+        >
+          {company.domain && <span>{company.domain}</span>}
+          {company.cik && (
+            <>
+              {company.domain && <span aria-hidden="true"> · </span>}
+              <span className="whitespace-nowrap">CIK {company.cik}</span>
+            </>
+          )}
+          {checkedAt && (
+            // Own line in the panel so the row never wraps mid-separator.
+            <span className={cn("block", page && "sm:inline")}>
+              {page && (
+                <span aria-hidden="true" className="hidden sm:inline">
+                  {" · "}
+                </span>
+              )}
+              checked {formatDate(checkedAt)}
+            </span>
+          )}
+        </p>
+      )}
 
       {headline && (
         <p
