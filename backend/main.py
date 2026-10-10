@@ -11,7 +11,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -284,7 +284,17 @@ async def asr(request: Request, audio: UploadFile = File(...)):
 
 # Tester page: same API the extension uses, served at / so remote testers need only a URL.
 @app.get("/", include_in_schema=False)
+def home():
+    """The real UI lives in frontend/: with FRONTEND_URL set, the backend's own URL sends people there."""
+    front = os.getenv("FRONTEND_URL", "").rstrip("/")
+    if front:
+        return RedirectResponse(f"{front}/panel")
+    return FileResponse(HERE / "static" / "index.html")
+
+
+@app.get("/tester", include_in_schema=False)
 def tester_page():
+    """The original single-page tester (fallback when the frontend isn't running)."""
     return FileResponse(HERE / "static" / "index.html")
 
 
@@ -298,7 +308,7 @@ def samples_index():
                    for f in sorted(SAMPLES.iterdir()) if f.is_file())
     return HTMLResponse(f"<!doctype html><meta name=viewport content='width=device-width'><title>Test items</title>"
                         f"<body style='font:15px system-ui;margin:24px'><h1>Test items</h1><p>Download, then drop them in "
-                        f"<a href='/'>the tester</a> in order.</p><ul>{rows}</ul>")
+                        f"<a href='/'>the app</a> in order.</p><ul>{rows}</ul>")
 
 
 app.mount("/samples", StaticFiles(directory=SAMPLES), name="samples")
