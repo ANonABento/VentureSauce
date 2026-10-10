@@ -57,6 +57,20 @@ Variables live in the Primitives, Color and Dimension collections. The WEB code 
 - **Copy is plain and factual.** No "AI-powered," no exclamation marks, no "Oops." "Discrepancies are differences between sources, not findings of wrongdoing."
 - **The art never sits behind data.** It appears on brand surfaces only.
 
-## Not designed yet (deal inbox pivot)
+## Deal inbox screens (pivot)
 
-The company list, the per-company item timeline (deck, email and notes), the contradictions view across items, and the digest.
+These are in Figma under Screens › "Deal inbox (pivot)", all at 380px. They use the new components `Item tag`, `Company tabs`, `Contradiction card`, `Question card`, `Filed toast` and `Brief player`.
+
+| Screen | API | What it shows |
+|---|---|---|
+| 7 Inbox | `GET /companies` | A compact drop strip, a link to today's digest, and the company list. Each company row shows its name, a dot for unseen items, the item-kind tags, a status summary ("2 discrepancies · 2 contradictions") and when it was last updated. Rows use the same colored edge bar as status rows. |
+| 8 Company · Checks | `GET /companies/{id}` → `checks` | "Filed under…" toast, then **Your sources disagree** (contradiction cards, `source=your_sources`), then **Public records** rows |
+| 9 Company · Items | `items` | A timeline with newest first: kind tag, date, label, and claim count with how many disagree. Ends with a dashed "Drop another item for this company" area. |
+| 10 Company · Questions | `questions[]` (`question`, `why`) | Numbered question cards, each with Copy and "Mark asked". There's also a **Copy all** button. |
+| 11 Digest | `GET /digest`, `POST /digest/audio` | 2×2 totals that scramble-resolve, the brief player (hidden if there's no `audio_url`), the summary text, and a block per company with its new items, the top lines and the top question |
+
+How these screens should behave:
+- **Item kinds** (Deck, Email, Call notes, Screenshot, Slides, Note) are never colored. Neutral mono tags only.
+- **A contradiction is a discrepancy**, so it uses the brick edge bar. Its values are plotted on one number line so the spread is visible at a glance. Every value names its item and date.
+- **The Filed toast** always offers "Change", because filing to the wrong company is the costliest mistake in the inbox.
+- **The brief player** uses ink for the play button and progress, never amber. The transcript (`summary`) is always shown, so the digest works without audio.
