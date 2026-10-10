@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { type DragEvent, useRef, useState } from "react";
-import { API, type CompanySummary, type ItemKind, KIND_NAME } from "@/lib/api";
+import { type DragEvent, useEffect, useRef, useState } from "react";
+import { API, type CompanySummary, type ItemKind, KIND_NAME, getHealth } from "@/lib/api";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { formatDate } from "./report-utils";
@@ -113,6 +113,10 @@ export function DropStrip({
 
 /** First visit (empty inbox): what this is, and a one-click example so nobody starts from a blank page. */
 export function Welcome({ onExample, loading }: { onExample: () => void; loading: boolean }) {
+  const [live, setLive] = useState(true);
+  useEffect(() => {
+    getHealth().then((h) => setLive(h.sources === "live")).catch(() => {});
+  }, []);
   return (
     <section className="mt-4 overflow-hidden rounded-xl bg-tray">
       <Image src="/art/hero.webp" alt="" width={760} height={380} priority className="h-36 w-full object-cover" />
@@ -134,6 +138,7 @@ export function Welcome({ onExample, loading }: { onExample: () => void; loading
         <p className="mt-3 text-[11px] leading-4 text-graphite">
           The example is a fictional company (Acme AI) plus public funding claims from two real startups. This inbox is
           private to this browser.
+          {!live && " Public-record lookups for real companies are still being connected; your own items are still compared with each other."}
         </p>
       </div>
     </section>

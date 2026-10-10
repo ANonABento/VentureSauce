@@ -143,6 +143,7 @@ async function json<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export const getHealth = () => call(`/health`).then((r) => json<{ ok: boolean; fake: boolean; sources: "stub" | "live" }>(r));
 export const listCompanies = () => call(`/companies`).then((r) => json<CompanySummary[]>(r));
 export const getCompany = (id: string) => call(`/companies/${id}`).then((r) => json<CompanyView>(r));
 export const getReport = (q: { companyId?: string; url?: string; company?: string }) => {

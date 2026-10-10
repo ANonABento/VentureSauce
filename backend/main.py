@@ -65,7 +65,8 @@ _tasks: set[asyncio.Task] = set()
 
 @app.get("/health")
 def health():
-    return {"ok": True, "fake": FAKE}
+    # sources: "stub" until Data's live public-record lookups replace sources/ground_truth.py
+    return {"ok": True, "fake": FAKE, "sources": "stub" if getattr(jobs.ground_truth, "IS_STUB", False) else "live"}
 
 
 # Public tester links run on our LLM credits: cap decks per client IP.
