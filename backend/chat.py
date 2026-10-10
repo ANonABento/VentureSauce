@@ -9,7 +9,10 @@ import logging
 import os
 from collections.abc import Iterator
 
+import re
+
 import delta
+import factcheck
 import digest
 import store
 from llm import client
@@ -58,9 +61,38 @@ def context(period: str = "week") -> str:
     return "\n".join(lines) if lines else "The inbox is empty. Nothing has been dropped in yet."
 
 
+SENTENCE = re.compile(r"^([\s\S]{25,}?[.!?])(\s+)")
+FALLBACK_LINE = "I don't have a reliable figure for that in your inbox, so I won't guess."
+
+
 def stream(messages: list[dict], period: str = "week") -> Iterator[str]:
+    """Yields whole sentences, each fact-checked: a sentence with a number that isn't in the inbox data (or in what
+    the investor said) is replaced before it can be spoken."""
+    ctx = context(period)
+    ok = factcheck.allowed(ctx, *(m["content"] for m in messages if m.get("role") == "user"))
+    pending = ""
+    for delta_text in _raw_stream(messages, ctx):
+        pending += delta_text
+        while (m := SENTENCE.match(pending)):
+            yield _checked(m.group(1), ok) + m.group(2)
+            pending = pending[m.end():]
+    if pending.strip():
+        yield _checked(pending, ok)
+
+
+def _checked(sentence: str, ok: set[float]) -> str:
+    # It's spoken: drop markdown bullets/bold the model sometimes slips in.
+    sentence = re.sub(r"(?m)^\s*(?:[-*•]|\d+\.)\s+", "", sentence).replace("**", "")
+    bad = factcheck.unsupported(sentence, ok)
+    if bad:
+        log.warning("chat: replaced sentence with unsupported numbers %s: %r", bad, sentence)
+        return FALLBACK_LINE
+    return sentence
+
+
+def _raw_stream(messages: list[dict], ctx: str) -> Iterator[str]:
     """Yields text deltas. Tries the primary model, then the fallback, if the stream fails before any text."""
-    convo = [{"role": "system", "content": SYSTEM + "\n\n# Inbox data\n" + context(period)}]
+    convo = [{"role": "system", "content": SYSTEM + "\n\n# Inbox data\n" + ctx}]
     convo += [{"role": m["role"], "content": m["content"]} for m in messages[-20:] if m.get("role") in ("user", "assistant")]
     models = [os.getenv("CHAT_MODEL") or os.getenv("LLM_MODEL", "openai/gpt-oss-120b"),
               os.getenv("LLM_FALLBACK_MODEL", "deepseek-ai/DeepSeek-V4.1-Flash")]

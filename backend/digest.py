@@ -14,6 +14,7 @@ import httpx
 
 import analysis
 import delta
+import factcheck
 import store
 from llm import chat_json
 
@@ -92,8 +93,18 @@ def write_script(digest: dict) -> dict:
         lines.append("New items: " + ", ".join(f"{i['kind_name']} ({i['label']})" for i in c["new_items"]))
         lines += [f"- {d['signal']}: {d['summary']}" for d in c["discrepancies"][:4]]
         lines += [f"? {q['question']}" for q in c["questions"][:2]]
+    data = "\n".join(lines)
+    ok = factcheck.allowed(data)
+    prompt = data
     try:
-        return chat_json(SCRIPT_SYSTEM, "\n".join(lines), SCRIPT_SCHEMA, "briefing")
+        for _ in range(2):  # one retry with the offending numbers pointed out
+            out = chat_json(SCRIPT_SYSTEM, prompt, SCRIPT_SCHEMA, "briefing")
+            bad = factcheck.unsupported(out["script"] + " " + out["summary"], ok)
+            if not bad:
+                return out
+            log.warning("digest script used unsupported numbers %s; retrying", bad)
+            prompt = data + f"\n\nYour last draft used numbers that are NOT in the data: {bad}. Use only numbers from the data."
+        raise ValueError(f"unsupported numbers {bad}")
     except Exception as e:
         log.warning("digest script failed: %s", e)
         parts = [f"S: {len(digest['companies'])} companies had new material."]

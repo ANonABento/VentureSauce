@@ -2,6 +2,7 @@
 
 import logging
 
+import factcheck
 import verdicts
 from llm import chat_json
 
@@ -136,14 +137,20 @@ def questions(company: str, checks: list[dict], claims: list[dict]) -> list[dict
     issues = _issues(checks, claims)
     if not issues:
         return []
+    templates = [{"question": f"Can you walk me through this? {i.split('] ', 1)[-1]}", "why": i.split("]")[0].strip("[")}
+                 for i in issues[:8]]
     try:
         out = chat_json(QUESTION_SYSTEM, f"Company: {company}\nIssues:\n" + "\n".join(f"- {i}" for i in issues[:20]),
                         QUESTION_SCHEMA, "questions")
-        return out["questions"][:8]
     except Exception as e:  # never lose the view over the questions
         log.warning("question generation failed: %s", e)
-        return [{"question": f"Can you walk me through this? {i.split('] ', 1)[-1]}", "why": i.split("]")[0].strip("[")}
-                for i in issues[:8]]
+        return templates
+    # Fact-check: a question quoting a number that isn't in the issues is dropped, not shown.
+    ok = factcheck.allowed(*issues)
+    good = [q for q in out["questions"] if not factcheck.unsupported(q["question"], ok)]
+    if len(good) < len(out["questions"]):
+        log.warning("dropped %d question(s) with unsupported numbers", len(out["questions"]) - len(good))
+    return (good + templates[len(good):])[:8] if len(good) < min(4, len(issues)) else good[:8]
 
 
 def item_summary(item: dict) -> dict:
