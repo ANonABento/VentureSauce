@@ -7,6 +7,7 @@ import { ErrorState } from "@/components/error-state";
 import { LoadingSteps } from "@/components/loading-steps";
 import { ReportHeader } from "@/components/report-header";
 import { ReportView } from "@/components/report-view";
+import { ThemeParam } from "@/components/theme-param";
 import type { DeltaReport } from "@/lib/types";
 import { CompanyScreen } from "@/components/company";
 import { DigestScreen } from "@/components/digest";
@@ -27,7 +28,12 @@ export type Subject = { name?: string; domain?: string };
 export function Panel() {
   const pageUrl = useSearchParams().get("url");
   // Start over whenever the extension points the panel at another page.
-  return <InboxApp key={pageUrl ?? ""} pageUrl={pageUrl} />;
+  return (
+    <>
+      <ThemeParam />
+      <InboxApp key={pageUrl ?? ""} pageUrl={pageUrl} />
+    </>
+  );
 }
 
 type Screen = { kind: "inbox" } | { kind: "company"; id: string; filed?: string | null } | { kind: "digest" };
@@ -170,10 +176,7 @@ export function PanelView({
   );
 
   return (
-    <PanelFrame
-      embedded={embedded}
-      company={hasReport ? report?.company.name : title}
-    >
+    <PanelFrame embedded={embedded}>
       {status === "idle" && (
         <>
           <h1 className="font-serif text-xl leading-6 font-medium tracking-tight text-ink">
