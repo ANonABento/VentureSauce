@@ -37,3 +37,10 @@ Backups go to `data/backups/`. The running server sees the new inbox immediately
 
 Saved company views carry a `checked` marker (code version + stub/live sources). Views made by older code, or before
 Data's live sources landed, are recomputed when next read; `POST /companies/refresh` recomputes everything now.
+
+## Demo desk
+
+`/demo` is a stand-in for an investor's daily tools (mail, decks, notes, a founder portal, saved press), so the
+extension can be demoed next to something familiar. Every downloadable item is a file in `samples/`, and email and note
+bodies are read from those same files. Generic look-alikes on purpose: no real product branding. Fictional data, except
+the quoted public claims, which link to their source. The deck's source is `samples/src/acme_deck.html`.

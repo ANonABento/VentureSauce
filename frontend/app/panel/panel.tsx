@@ -100,6 +100,33 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageUrl]);
 
+  // ⌘V anywhere on the inbox or a company: a screenshot or copied file is filed as-is; copied text (outside a text
+  // box) is filed as an email when it has mail headers, else as a note. In a text box, only images are taken over.
+  useEffect(() => {
+    if (screen.kind === "digest") return;
+    function onPaste(event: ClipboardEvent) {
+      if (progress !== null || !event.clipboardData) return;
+      const target = event.target as HTMLElement | null;
+      const typing = !!target && (target.isContentEditable || ["INPUT", "TEXTAREA"].includes(target.tagName));
+      const companyId = screen.kind === "company" ? screen.id : undefined;
+      const file = Array.from(event.clipboardData.files)[0];
+      if (file) {
+        event.preventDefault();
+        const named = file.type.startsWith("image/") && /^image\.\w+$/.test(file.name)
+          ? new File([file], `pasted-screenshot.${file.type.split("/")[1] || "png"}`, { type: file.type })
+          : file;
+        onDrop({ file: named, companyId });
+        return;
+      }
+      const text = event.clipboardData.getData("text/plain").trim();
+      if (typing || text.length < 20) return;
+      event.preventDefault();
+      onDrop({ text, kind: /^(from|subject):/im.test(text) ? "email" : undefined, companyId });
+    }
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  });
+
   async function onDrop(input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string }) {
     setError(null);
     setProgress(0);
@@ -157,7 +184,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           )}
           {companies?.length === 0 && !busy && <Welcome onExample={onExample} loading={loadingExample} />}
           <div className="mt-4">
-            <DropStrip onDrop={onDrop} busy={busy} />
+            <DropStrip onDrop={onDrop} busy={busy} label="Drop or paste (⌘V) a deck, email, screenshot or notes" />
           </div>
           {statusLog}
           {error && <p role="alert" className="mt-2 text-xs text-ink">{error}</p>}

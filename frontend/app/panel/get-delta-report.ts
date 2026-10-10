@@ -14,6 +14,9 @@ export type DetectedCompany = { name?: string; domain: string };
 /**
  * What the panel can tell from the page URL before any comparison runs.
  */
+const NOT_A_COMPANY =
+  /(^|\.)(trycloudflare\.com|hf\.space|vercel\.app|google\.com|docsend\.com|notion\.so|slack\.com|outlook\.(com|office\.com)|linkedin\.com|dropbox\.com|box\.com|zoom\.us)$|^127\.0\.0\.1$/;
+
 export function detectCompany(pageUrl: string | null): DetectedCompany | null {
   if (!pageUrl) return null;
 
@@ -23,8 +26,9 @@ export function detectCompany(pageUrl: string | null): DetectedCompany | null {
   } catch {
     return null;
   }
-  // New-tab pages, chrome:// URLs and local hosts are not a company.
-  if (!/^https?:$/.test(url.protocol) || !url.hostname.includes(".")) {
+  // New-tab pages, chrome:// URLs and local hosts are not a company. Neither are tools an investor reads deals in
+  // (mail, docs, our own demo desk and tunnels): the panel shows the inbox there instead of "nothing about mail.google.com".
+  if (!/^https?:$/.test(url.protocol) || !url.hostname.includes(".") || NOT_A_COMPANY.test(url.hostname)) {
     return null;
   }
 

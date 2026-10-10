@@ -324,6 +324,14 @@ def home():
     return FileResponse(HERE / "static" / "index.html")
 
 
+@app.get("/demo", include_in_schema=False)
+@app.get("/demo/", include_in_schema=False)
+def demo_desk():
+    """Stand-ins for an investor's daily tools (mail, decks, notes, a founder portal, saved press), each item
+    downloadable or copyable, for demoing the extension next to them. Fictional data except quoted public claims."""
+    return FileResponse(HERE / "static" / "demo" / "index.html")
+
+
 @app.get("/tester", include_in_schema=False)
 def tester_page():
     """The original single-page tester (fallback when the frontend isn't running)."""
