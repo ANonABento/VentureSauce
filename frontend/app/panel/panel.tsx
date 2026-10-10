@@ -22,8 +22,14 @@ import { PanelFrame } from "./panel-frame";
 // last one stays in progress until the report arrives.
 const STEP_MS = 800;
 
-type Status = "idle" | "detected" | "loading" | "report" | "empty" | "error";
-type Subject = { name?: string; domain?: string };
+export type Status =
+  | "idle"
+  | "detected"
+  | "loading"
+  | "report"
+  | "empty"
+  | "error";
+export type Subject = { name?: string; domain?: string };
 
 export function Panel() {
   const pageUrl = useSearchParams().get("url");
@@ -72,6 +78,42 @@ function PanelFlow({ pageUrl }: { pageUrl: string | null }) {
     if (company) run({ company }, { name: company });
   }
 
+  return (
+    <PanelView
+      status={status}
+      subject={subject}
+      report={report}
+      step={step}
+      name={name}
+      onNameChange={setName}
+      onSubmitName={submitName}
+      onRun={() => run(query, subject)}
+    />
+  );
+}
+
+/** One panel state, rendered from props. Also used by /panel/states. */
+export function PanelView({
+  status,
+  subject = {},
+  report = null,
+  step = 0,
+  name = "",
+  embedded = false,
+  onNameChange,
+  onSubmitName,
+  onRun,
+}: {
+  status: Status;
+  subject?: Subject;
+  report?: DeltaReport | null;
+  step?: number;
+  name?: string;
+  embedded?: boolean;
+  onNameChange?: (value: string) => void;
+  onSubmitName?: (event: FormEvent<HTMLFormElement>) => void;
+  onRun?: () => void;
+}) {
   const hasReport = status === "report" || status === "empty";
   const title = subject.name ?? subject.domain ?? "";
   const subjectHeader = (
@@ -81,7 +123,10 @@ function PanelFlow({ pageUrl }: { pageUrl: string | null }) {
   );
 
   return (
-    <PanelFrame company={hasReport ? report?.company.name : title}>
+    <PanelFrame
+      embedded={embedded}
+      company={hasReport ? report?.company.name : title}
+    >
       {status === "idle" && (
         <>
           <h1 className="font-serif text-[22px] leading-7 font-medium tracking-tight text-ink">
@@ -91,7 +136,7 @@ function PanelFlow({ pageUrl }: { pageUrl: string | null }) {
             Type a company name to compare what it filed with the SEC against
             what it says publicly.
           </p>
-          <form onSubmit={submitName} className="mt-6">
+          <form onSubmit={onSubmitName} className="mt-6">
             <label htmlFor="company" className="micro-label block text-graphite">
               Company name
             </label>
@@ -99,7 +144,7 @@ function PanelFlow({ pageUrl }: { pageUrl: string | null }) {
               id="company"
               name="company"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => onNameChange?.(event.target.value)}
               required
               autoComplete="off"
               placeholder="e.g. Quillfeather Robotics"
@@ -119,7 +164,7 @@ function PanelFlow({ pageUrl }: { pageUrl: string | null }) {
             Compare what this company filed with the SEC against what it says
             publicly.
           </p>
-          <Button className="mt-6" onClick={() => run(query, subject)}>
+          <Button className="mt-6" onClick={onRun}>
             Compare filings
           </Button>
         </>
@@ -164,7 +209,7 @@ function PanelFlow({ pageUrl }: { pageUrl: string | null }) {
         <>
           {subjectHeader}
           <div className="mt-6 border-t border-rule pt-4">
-            <ErrorState onRetry={() => run(query, subject)} />
+            <ErrorState onRetry={() => onRun?.()} />
           </div>
         </>
       )}
