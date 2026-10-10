@@ -62,7 +62,7 @@ body { background: #e4e7ec; }
 .gm-tabs svg { width: 20px; height: 20px; }
 .gm-tabs .pill { font-size: 11px; color: #fff; background: #188038; border-radius: 9px; padding: 0 6px; font-weight: 500; }
 .gm-list { overflow: auto; }
-.gm-row { display: grid; grid-template-columns: 28px 28px 200px 1fr auto; align-items: center; gap: 4px; min-height: 40px; padding: 0 16px 0 10px; border-bottom: 1px solid #f0f0f0; text-decoration: none; color: #202124; background: #f2f6fc; cursor: pointer; }
+.gm-row { display: grid; grid-template-columns: 28px 28px 200px 1fr auto; align-items: center; gap: 4px; min-height: 40px; padding: 8px 16px 8px 10px; border-bottom: 1px solid #f0f0f0; text-decoration: none; color: #202124; background: #f2f6fc; cursor: pointer; }
 .gm-row.unread { background: #fff; }
 .gm-row:hover { box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); position: relative; z-index: 1; }
 .gm-row .chk { width: 18px; height: 18px; border: 2px solid #9aa0a6; border-radius: 2px; margin: auto; }
@@ -75,7 +75,7 @@ body { background: #e4e7ec; }
 .gm-row.unread .who, .gm-row.unread .what b, .gm-row.unread .when { font-weight: 700; color: #202124; }
 .gm-row .when { font-size: 12px; color: #5f6368; padding-left: 16px; }
 .gm-row .lab { display: inline-block; font-size: 12px; padding: 0 6px; border-radius: 4px; margin-right: 6px; color: #444; background: #e8eaed; }
-.gm-row .chips { grid-column: 4; display: flex; gap: 6px; padding: 0 0 8px; margin-top: -4px; }
+.gm-row .chips { grid-column: 4; display: flex; gap: 6px; margin-top: 4px; }
 .chipfile { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 6px; border: 1px solid #dadce0; border-radius: 14px; font-size: 13px; color: #3c4043; background: #fff; max-width: 220px; }
 .chipfile i { font-style: normal; font-size: 9px; font-weight: 700; color: #fff; padding: 2px 3px; border-radius: 2px; }
 .chipfile span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
