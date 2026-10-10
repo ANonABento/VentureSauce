@@ -1,10 +1,40 @@
 import type { DeltaStatus } from "@/lib/types";
 
-// The row's 2px mark is the one place status is encoded visually; the label
-// is for the summary line and for screen readers. Signal is discrepancies only.
-export const STATUS: Record<DeltaStatus, { label: string; mark: string }> = {
-  discrepancy: { label: "discrepancy", mark: "bg-signal" },
-  consistent: { label: "consistent", mark: "bg-graphite" },
-  not_disclosed: { label: "not disclosed", mark: "bg-graphite/40" },
-  unverified: { label: "unverified", mark: "bg-graphite/40" },
+/** Display order: discrepancies first. */
+export const STATUS_ORDER: DeltaStatus[] = [
+  "discrepancy",
+  "consistent",
+  "not_disclosed",
+  "unverified",
+];
+
+// Status is always a text label next to the color, never color alone.
+export const STATUS: Record<
+  DeltaStatus,
+  { label: string; group: string; text: string; fill: string }
+> = {
+  discrepancy: {
+    label: "discrepancy",
+    group: "Discrepancies",
+    text: "text-signal",
+    fill: "bg-signal",
+  },
+  consistent: {
+    label: "consistent",
+    group: "Consistent",
+    text: "text-steady",
+    fill: "bg-steady",
+  },
+  not_disclosed: {
+    label: "not disclosed",
+    group: "Not disclosed",
+    text: "text-graphite",
+    fill: "bg-graphite/40",
+  },
+  unverified: {
+    label: "unverified",
+    group: "Unverified",
+    text: "text-graphite",
+    fill: "bg-graphite/40",
+  },
 };

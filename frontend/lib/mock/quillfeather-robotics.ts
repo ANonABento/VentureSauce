@@ -12,7 +12,7 @@ export const quillfeatherRobotics: DeltaReport = {
   },
   generatedAt: "2026-10-10T16:30:00Z",
   headline:
-    "Four discrepancies between what was filed and what is said publicly.",
+    "Two discrepancies between what was filed and what is said publicly.",
   rows: [
     {
       signal: "Headcount",
@@ -58,7 +58,7 @@ export const quillfeatherRobotics: DeltaReport = {
         field: "latest_raise",
         value: "$25M Series A",
         source: {
-          label: "The Daily Ledger",
+          label: "Press",
           url: "https://dailyledger.example/quillfeather-series-a",
           checkedAt,
         },
@@ -98,8 +98,8 @@ export const quillfeatherRobotics: DeltaReport = {
           checkedAt,
         },
       },
-      status: "discrepancy",
-      summary: "One director in the filing is not on the team page.",
+      status: "not_disclosed",
+      summary: "Board change not yet public.",
       summaryShort: "1 not on site",
       likelyReasons: [
         "An investor took a board seat with the new round.",
@@ -129,12 +129,12 @@ export const quillfeatherRobotics: DeltaReport = {
         field: "first_sale",
         value: "Announced Mar 4",
         source: {
-          label: "The Daily Ledger",
+          label: "Press",
           url: "https://dailyledger.example/quillfeather-series-a",
           checkedAt,
         },
       },
-      status: "discrepancy",
+      status: "consistent",
       summary: "Filed three weeks before the press announcement.",
       summaryShort: "Filed 3 wks before press",
       likelyReasons: ["Rounds are often closed and filed before they are announced."],
@@ -159,7 +159,7 @@ export const quillfeatherRobotics: DeltaReport = {
         field: "investors",
         value: "4 named investors",
         source: {
-          label: "Press page",
+          label: "Press",
           url: "https://quillfeather.example/press",
           checkedAt,
         },

@@ -8,7 +8,6 @@ import { LOADING_STEPS, LoadingSteps } from "@/components/loading-steps";
 import { ReportHeader } from "@/components/report-header";
 import { hasFiling } from "@/components/report-utils";
 import { ReportView } from "@/components/report-view";
-import { ThemeParam } from "@/components/theme-param";
 import type { DeltaReport } from "@/lib/types";
 import {
   type DeltaQuery,
@@ -33,12 +32,7 @@ export type Subject = { name?: string; domain?: string };
 export function Panel() {
   const pageUrl = useSearchParams().get("url");
   // Start over whenever the extension points the panel at another page.
-  return (
-    <>
-      <ThemeParam />
-      <PanelFlow key={pageUrl ?? ""} pageUrl={pageUrl} />
-    </>
-  );
+  return <PanelFlow key={pageUrl ?? ""} pageUrl={pageUrl} />;
 }
 
 function PanelFlow({ pageUrl }: { pageUrl: string | null }) {
@@ -127,7 +121,10 @@ export function PanelView({
   );
 
   return (
-    <PanelFrame embedded={embedded}>
+    <PanelFrame
+      embedded={embedded}
+      company={hasReport ? report?.company.name : title}
+    >
       {status === "idle" && (
         <>
           <h1 className="font-serif text-xl leading-6 font-medium tracking-tight text-ink">
