@@ -41,6 +41,7 @@
   1. Download the font from fontshare.com/fonts/bespoke-serif and put the `.woff2` files in `frontend/public/fonts/`.
   2. In `layout.tsx`, replace `Newsreader` with `next/font/local`.
   3. Keep the `--font-serif` variable name.
+- **Figures:** Bespoke Serif ships with **old-style figures only**. It has no lining or tabular OpenType features, which was verified in Figma. Don't set `font-variant-numeric: lining-nums tabular-nums` on serif numbers, because it has no effect. Keep big serif numbers standalone, as Lasso does. Right-align any serif numbers that sit in a column (item counts, question index) in fixed-width slots. Geist text keeps `tabular-nums`.
 
 ---
 
