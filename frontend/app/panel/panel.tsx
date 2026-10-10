@@ -15,7 +15,7 @@ import type { DeltaReport } from "@/lib/types";
 import { CompanyScreen } from "@/components/company";
 import { DigestScreen } from "@/components/digest";
 import { CompanyList, DropStrip } from "@/components/inbox";
-import { type CompanySummary, dropItem, getReport, listCompanies } from "@/lib/api";
+import { type CompanySummary, dropItem, getReport, listCompanies, loadExample } from "@/lib/api";
 import { DUR, EASE_ENTER } from "@/lib/motion";
 import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
@@ -96,6 +96,19 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   const [job, setJob] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notInInbox, setNotInInbox] = useState(false);
+  const [loadingExample, setLoadingExample] = useState(false);
+
+  async function onExample() {
+    setError(null);
+    setLoadingExample(true);
+    try {
+      await loadExample();
+      setCompanies(await listCompanies());
+    } catch (e) {
+      setError((e as Error).message);
+    }
+    setLoadingExample(false);
+  }
 
   function setScreen(next: Screen) {
     setDirection(DEPTH[next.kind] >= DEPTH[screen.kind] ? 1 : -1);
@@ -131,6 +144,33 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
       .catch(() => setNotInInbox(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageUrl]);
+
+  // ⌘V anywhere on the inbox or a company: a screenshot or copied file is filed as-is; copied text (outside a text
+  // box) is filed as an email when it has mail headers, else as a note. In a text box, only images are taken over.
+  useEffect(() => {
+    if (screen.kind === "digest") return;
+    function onPaste(event: ClipboardEvent) {
+      if (job !== null || !event.clipboardData) return;
+      const target = event.target as HTMLElement | null;
+      const typing = !!target && (target.isContentEditable || ["INPUT", "TEXTAREA"].includes(target.tagName));
+      const companyId = screen.kind === "company" ? screen.id : undefined;
+      const file = Array.from(event.clipboardData.files)[0];
+      if (file) {
+        event.preventDefault();
+        const named = file.type.startsWith("image/") && /^image\.\w+$/.test(file.name)
+          ? new File([file], `pasted-screenshot.${file.type.split("/")[1] || "png"}`, { type: file.type })
+          : file;
+        onDrop({ file: named, companyId });
+        return;
+      }
+      const text = event.clipboardData.getData("text/plain").trim();
+      if (typing || text.length < 20) return;
+      event.preventDefault();
+      onDrop({ text, kind: /^(from|subject):/im.test(text) ? "email" : undefined, companyId });
+    }
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  });
 
   async function onDrop(input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string }) {
     setError(null);
@@ -174,7 +214,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           <>
             {status}
             {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
-            <FirstRun onDrop={onDrop} busy={busy} step={step} onLookup={onLookup} />
+            <FirstRun onDrop={onDrop} busy={busy} step={step} onLookup={onLookup} onExample={onExample} loadingExample={loadingExample} />
           </>
         )}
         {screen.kind === "inbox" && !firstRun && (
@@ -213,7 +253,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
             )}
             <div className="mt-4">
               {status}
-              <DropStrip onDrop={onDrop} busy={busy} step={step} />
+              <DropStrip onDrop={onDrop} busy={busy} step={step} label="Drop or ⌘V a deck or email" />
             </div>
             {error && <p role="alert" className="mt-2 text-xs text-signal">{error}</p>}
             {companies && (

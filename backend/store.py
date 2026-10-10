@@ -3,6 +3,7 @@
 Only extracted claims and metadata are stored; raw files and full text are not (legal-and-compliance.md).
 """
 
+import contextvars
 import json
 import os
 import re
@@ -14,22 +15,66 @@ from pathlib import Path
 PATH = Path(os.getenv("STORE_PATH", Path(__file__).parent / "data" / "store.json"))
 _lock = threading.Lock()
 
+# Workspaces: one inbox per tester (their browser sends X-Workspace). "default" is the original single inbox
+# (STORE_PATH); any other workspace is its own file next to it under ws/. Set per request by main.py.
+WORKSPACE: contextvars.ContextVar[str] = contextvars.ContextVar("workspace", default="default")
+WS_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
+
+
+def path_for(ws: str) -> Path:
+    return PATH if ws == "default" else PATH.parent / "ws" / f"{ws}.json"
+
+
+def current_path() -> Path:
+    return path_for(WORKSPACE.get())
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
 def _load() -> dict:
-    if PATH.exists():
-        return json.loads(PATH.read_text())
+    path = current_path()
+    if path.exists():
+        return json.loads(path.read_text())
     return {"companies": {}, "items": {}}
 
 
 def _save(db: dict) -> None:
-    PATH.parent.mkdir(exist_ok=True)
-    tmp = PATH.with_suffix(".tmp")
+    path = current_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(f".{threading.get_ident()}.tmp")
     tmp.write_text(json.dumps(db, indent=1))
-    tmp.replace(PATH)
+    tmp.replace(path)
+
+
+def copy_workspace(src: str, dest: str) -> bool:
+    """Seed `dest` with a copy of `src` (the example inbox), timestamps moved to now so the digest's "today" shows it.
+    Returns False if `src` doesn't exist."""
+    sp = path_for(src)
+    if not sp.exists():
+        return False
+    db = json.loads(sp.read_text())
+    stamps = [i["received_at"] for i in db["items"].values()] + [c.get("updated_at", "") for c in db["companies"].values()]
+    latest = max((t for t in stamps if t), default=None)
+    if latest:
+        shift = datetime.now(timezone.utc) - datetime.fromisoformat(latest)
+        move = lambda t: (datetime.fromisoformat(t) + shift).isoformat() if t else t  # noqa: E731
+        for i in db["items"].values():
+            i["received_at"] = move(i["received_at"])
+        for c in db["companies"].values():
+            c["updated_at"] = move(c.get("updated_at"))
+            if c.get("created_at"):
+                c["created_at"] = move(c["created_at"])
+            for i in (c.get("view") or {}).get("items", []):
+                i["received_at"] = move(i.get("received_at"))
+    token = WORKSPACE.set(dest)
+    try:
+        with _lock:
+            _save(db)
+    finally:
+        WORKSPACE.reset(token)
+    return True
 
 
 def _key(name: str) -> str:

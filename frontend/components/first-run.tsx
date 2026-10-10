@@ -1,8 +1,9 @@
 "use client";
 
-import { type DragEvent, type FormEvent, useRef, useState } from "react";
+import { type DragEvent, type FormEvent, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { MagnifyingGlass, UploadSimple } from "@phosphor-icons/react/dist/ssr";
+import { DownloadSimple, MagnifyingGlass, Sparkle, UploadSimple } from "@phosphor-icons/react/dist/ssr";
+import { API, getHealth } from "@/lib/api";
 import { DUR, EASE_ENTER, EASE_STATE, RISE, SPRING } from "@/lib/motion";
 import { Button } from "./button";
 import { cn } from "./cn";
@@ -22,12 +23,17 @@ export function FirstRun({
   busy,
   step,
   onLookup,
+  onExample,
+  loadingExample = false,
 }: {
   onDrop: (input: DropInput) => void;
   busy: boolean;
   step: number;
   /** Resolves to a message to show when the company isn't in the inbox. */
   onLookup: (name: string) => Promise<string | null>;
+  /** Copies the prebuilt example inbox into this workspace (a fictional company plus two real startups' public claims). */
+  onExample?: () => void;
+  loadingExample?: boolean;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
@@ -36,6 +42,13 @@ export function FirstRun({
   const [note, setNote] = useState<string | null>(null);
   const [looking, setLooking] = useState(false);
   const [filed, setFiled] = useState<string | null>(null);
+  // Say plainly when public-record lookups aren't connected yet (/health reports sources: stub | live).
+  const [live, setLive] = useState(true);
+  useEffect(() => {
+    getHealth()
+      .then((h) => setLive(h.sources === "live"))
+      .catch(() => {});
+  }, []);
 
   function drop(input: DropInput) {
     setFiled(input.file?.name ?? (input.kind === "notes" ? "Call notes" : "Founder email"));
@@ -152,6 +165,29 @@ export function FirstRun({
         />
       </motion.div>
 
+      {onExample && (
+        <motion.div
+          className="mt-4 flex items-center justify-center gap-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: busy ? 0.4 : 1 }}
+          transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.2 }}
+        >
+          <Button variant="quiet" onClick={onExample} disabled={busy || loadingExample}>
+            <Sparkle aria-hidden="true" size={14} weight="duotone" className="mr-1.5 text-data" />
+            {loadingExample ? "Loading…" : "Try an example"}
+          </Button>
+          <a
+            href={`${API}/samples/`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-medium text-graphite transition-colors duration-150 hover:text-ink"
+          >
+            <DownloadSimple aria-hidden="true" size={14} weight="light" />
+            Test files
+          </a>
+        </motion.div>
+      )}
+
       <motion.form
         onSubmit={lookup}
         className="mt-7"
@@ -195,6 +231,11 @@ export function FirstRun({
           </p>
         )}
       </motion.form>
+
+      <p className="mt-6 text-[11px] leading-4 text-graphite">
+        Private to this browser. The example is a fictional company plus two real startups&apos; public claims.
+        {!live && " Public-record lookups aren't connected yet; your items are still compared with each other."}
+      </p>
     </div>
   );
 }

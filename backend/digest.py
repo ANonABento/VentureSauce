@@ -3,10 +3,11 @@
 "What came in since X, what conflicts, what to ask": built from each touched company's saved view.
 """
 
+import hashlib
+import json
 import logging
 import os
 import re
-import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -20,6 +21,11 @@ from llm import chat_json
 
 log = logging.getLogger(__name__)
 AUDIO_DIR = Path(__file__).parent / "data" / "audio"
+SCRIPT_CACHE = Path(__file__).parent / "data" / "digest_scripts.json"
+
+
+def _sha(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()
 
 
 def since_for(period: str) -> str:
@@ -51,6 +57,7 @@ def build(period: str = "day", since: str | None = None, script: bool = True) ->
             "discrepancies": [{"signal": r["signal"], "short": r.get("summaryShort"), "summary": r["summary"]} for r in flagged],
             "contradictions": sum("across your sources" in r["signal"] for r in flagged),
             "questions": (view.get("questions") or [])[:3],
+            "records_checked": not any(c.get("not_checked") for c in view.get("checks") or []),
         })
     companies.sort(key=lambda c: (-len(c["discrepancies"]), c["name"]))
     digest = {
@@ -84,6 +91,28 @@ SCRIPT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["
 
 
 def write_script(digest: dict) -> dict:
+    """Same digest content → the same script (cached on disk), so a briefing recorded ahead of time is reused
+    instead of re-voiced on every play."""
+    # Timestamps and ids are left out: a copy of the example inbox (new ids, new times) reuses the same recording.
+    content = [{**c, "id": None, "new_items": [{k: v for k, v in i.items() if k not in ("id", "received_at")}
+                                               for i in c["new_items"]]} for c in digest["companies"]]
+    key = _sha(json.dumps({"period": digest["period"], "totals": digest["totals"], "companies": content},
+                          sort_keys=True, default=str))
+    try:
+        cache = json.loads(SCRIPT_CACHE.read_text())
+    except (OSError, ValueError):
+        cache = {}
+    if key in cache:
+        return cache[key]
+    out = _write_script(digest)
+    if not out.get("fallback"):
+        cache[key] = out
+        SCRIPT_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        SCRIPT_CACHE.write_text(json.dumps(dict(list(cache.items())[-50:])))
+    return {k: v for k, v in out.items() if k != "fallback"}
+
+
+def _write_script(digest: dict) -> dict:
     if not digest["companies"]:
         return {"summary": "Nothing new came in during this period.",
                 "script": "S: Quiet one today. Nothing new landed in your inbox, so enjoy the walk."}
@@ -91,6 +120,9 @@ def write_script(digest: dict) -> dict:
     for c in digest["companies"]:
         lines.append(f"\nCompany: {c['name']}{' (FICTIONAL demo company)' if c['fictional'] else ''}")
         lines.append("New items: " + ", ".join(f"{i['kind_name']} ({i['label']})" for i in c["new_items"]))
+        if not c.get("records_checked", True):
+            lines.append("Public records: NOT CHECKED (the lookup isn't connected yet). Don't say anything is missing "
+                         "from public records or unverified; just say the records check is still to come.")
         lines += [f"- {d['signal']}: {d['summary']}" for d in c["discrepancies"][:4]]
         lines += [f"? {q['question']}" for q in c["questions"][:2]]
     data = "\n".join(lines)
@@ -112,7 +144,7 @@ def write_script(digest: dict) -> dict:
             parts.append(f"R: {c['name']}: {c['headline']}")
             if c["questions"]:
                 parts.append(f"S: Ask them: {c['questions'][0]['question']}")
-        return {"summary": " ".join(p[3:] for p in parts), "script": "\n".join(parts)}
+        return {"summary": " ".join(p[3:] for p in parts), "script": "\n".join(parts), "fallback": True}
 
 
 def _fish_text(script: str, voices: list[str]) -> tuple[str, str | list[str] | None]:
@@ -126,11 +158,15 @@ def _fish_text(script: str, voices: list[str]) -> tuple[str, str | list[str] | N
 
 
 def synthesize(script: str) -> str:
-    """Script → mp3 under data/audio; returns its file name. Raises if Fish Audio isn't configured or fails."""
+    """Script → mp3 under data/audio; returns its file name. The name is a hash of the script and speed, so the
+    same briefing is voiced once (reset_demo.py pre-records it). Raises if Fish Audio isn't configured or fails."""
     key = os.getenv("FISH_API_KEY")
     if not key:
         raise RuntimeError("FISH_API_KEY is not set")
     voices = [v.strip() for v in os.getenv("FISH_VOICE_IDS", "").split(",") if v.strip()]
+    name = f"digest-{_sha(script + '|' + os.getenv('FISH_SPEED', '1.2') + '|' + ','.join(voices))[:10]}.mp3"
+    if (AUDIO_DIR / name).exists():
+        return name
     text, reference = _fish_text(script, voices)
     body = {"text": text, "format": "mp3", "mp3_bitrate": 128, "latency": "normal", "normalize": True,
             "prosody": {"speed": float(os.getenv("FISH_SPEED", "1.2")), "volume": 0}}
@@ -141,6 +177,5 @@ def synthesize(script: str) -> str:
     if r.status_code != 200:
         raise RuntimeError(f"Fish Audio {r.status_code}: {r.text[:200]}")
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
-    name = f"digest-{uuid.uuid4().hex[:10]}.mp3"
     (AUDIO_DIR / name).write_bytes(r.content)
     return name
