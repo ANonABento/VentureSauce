@@ -85,7 +85,10 @@ async def analyze(request: Request, file: UploadFile | None = File(None), text: 
 @app.get("/jobs/{job_id}")
 def get_job(job_id: str, replay: bool = False):
     if replay:
-        return jobs.replay(job_id)
+        cached = jobs.replay(job_id, FAKE)
+        if cached is None:
+            raise HTTPException(404, "unknown job")
+        return cached
     job = jobs.JOBS.get(job_id)
     if not job:
         raise HTTPException(404, "unknown job")
@@ -96,6 +99,7 @@ def get_job(job_id: str, replay: bool = False):
 def companies():
     """Deal inbox: every company with its item count, most recently updated first."""
     keys = ("id", "name", "domain", "updated_at", "item_count", "item_kinds", "discrepancies", "contradictions", "last_item_at")
+    jobs.refresh_stale()  # counts come from saved views: recompute any made by older code or other sources
     return [{k: c.get(k) for k in keys} for c in store.list_companies()]
 
 
@@ -105,7 +109,7 @@ def company(company_id: str):
     co = store.get_company(company_id)
     if not co:
         raise HTTPException(404, "unknown company")
-    return co.get("view") or {"company": {k: co.get(k) for k in ("id", "name", "domain")}, "items": [], "checks": [], "questions": []}
+    return jobs.fresh_view(company_id) or {"company": {k: co.get(k) for k in ("id", "name", "domain")}, "items": [], "checks": [], "questions": []}
 
 
 @app.get("/api/delta")
@@ -113,9 +117,10 @@ def delta_report(company_id: str | None = None, company: str | None = None, url:
     """The frontend's DeltaReport (frontend/lib/types.ts) for a company in the inbox, found by id, page URL or name.
     Extra fields: questions, items, company.id. 404 = not in the inbox yet (drop something about it first)."""
     co = store.find_company(company_id=company_id, name=company, url=url)
-    if not co or not co.get("view"):
+    view = co and jobs.fresh_view(co["id"])
+    if not view:
         raise HTTPException(404, "No items for this company yet. Drop a deck, email or notes about it first.")
-    return delta.to_report(co["view"])
+    return delta.to_report(view)
 
 
 class MoveRequest(BaseModel):
@@ -133,11 +138,18 @@ def move_item(item_id: str, req: MoveRequest):
     if not moved:
         raise HTTPException(404, "unknown item or company")
     for cid in set(moved):
-        if store.get_company(cid):
-            view = jobs.company_view(cid)
-            old = (store.get_company(cid) or {}).get("view") or {}
-            store.update_company(cid, view={**old, **{k: view[k] for k in ("company", "items", "checks")}})
+        jobs.refresh(cid, questions=False)
     return {"ok": True, "company_id": target}
+
+
+@app.post("/companies/refresh")
+def refresh_companies(request: Request):
+    """Recompute every company (e.g. right after Data's live sources land), founder questions included."""
+    _rate_limit(request, bucket="refresh", per_hour=20)
+    cos = [c["id"] for c in store.list_companies()]
+    for cid in cos:
+        jobs.refresh(cid, questions=True)
+    return {"ok": True, "refreshed": len(cos)}
 
 
 @app.delete("/companies/{company_id}")
@@ -154,6 +166,7 @@ def get_digest(period: str = "day", since: str | None = None):
     contradictions and top founder questions, plus an on-screen summary and a two-host podcast script."""
     if period not in ("day", "week"):
         raise HTTPException(400, "period must be day or week")
+    jobs.refresh_stale()
     return digest.build(period, since)
 
 

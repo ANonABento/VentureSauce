@@ -24,3 +24,16 @@ uv run uvicorn main:app --reload --port 8000
 
 Fake mode replays `fixtures/job_acme.json` (fictional company) with ~1.5s per step.
 `sources/ground_truth.py` is a stub until Data replaces it.
+
+## Demo reset
+
+```bash
+uv run python reset_demo.py            # back up the inbox, wipe, file samples/ through the real pipeline, pre-record briefings
+uv run python reset_demo.py --empty    # back up and wipe only
+```
+
+Backups go to `data/backups/`. The running server sees the new inbox immediately. Briefings are cached by content
+(`data/digest_scripts.json`, `data/audio/digest-<hash>.mp3`), so Play starts instantly after a reset.
+
+Saved company views carry a `checked` marker (code version + stub/live sources). Views made by older code, or before
+Data's live sources landed, are recomputed when next read; `POST /companies/refresh` recomputes everything now.

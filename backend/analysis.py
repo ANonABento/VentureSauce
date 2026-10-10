@@ -136,7 +136,8 @@ QUESTION_SCHEMA = {
 
 def _issues(checks: list[dict], claims: list[dict]) -> list[str]:
     rank = {"your_sources": 0}  # contradictions between the user's own sources first, then gaps, then unverifiable
-    flagged = sorted((c for c in checks if c["verdict"] in ("gap", "unverifiable")),
+    # "Not checked" (lookup not connected) is not an issue with the founder's claim: never turn it into a question.
+    flagged = sorted((c for c in checks if c["verdict"] in ("gap", "unverifiable") and not c.get("not_checked")),
                      key=lambda c: (rank.get(c["source"], 1), c["verdict"] != "gap"))
     issues = [f"[{c['label']}] {c['note']} (claim: \"{c['claim_text']}\", from {c.get('item_label') or 'the deck'})"
               for c in flagged]

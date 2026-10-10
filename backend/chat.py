@@ -15,6 +15,7 @@ import delta
 import factcheck
 import research
 import digest
+import jobs
 import store
 from llm import client
 
@@ -42,6 +43,7 @@ new question directly, then offer to pick the briefing back up."""
 
 def context(period: str = "week") -> str:
     """Compact, spoken-friendly snapshot of the inbox: the digest plus every company's checks and questions."""
+    jobs.refresh_stale()
     d = digest.build(period, script=False) if store.list_companies() else None
     lines = []
     if d:

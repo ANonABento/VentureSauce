@@ -81,6 +81,56 @@ def company_view(company_id: str, gt: dict | None = None) -> dict:
     return view
 
 
+# Bump when check logic or wording changes: saved views from older code are recomputed when next read.
+CHECKS_VERSION = 5
+
+
+def checked_marker() -> dict:
+    """What a saved view was computed with. A different marker (new code, or Data's live sources replacing the
+    stub) means the view is stale."""
+    return {"version": CHECKS_VERSION, "sources": "stub" if getattr(ground_truth, "IS_STUB", False) else "live"}
+
+
+def refresh(company_id: str, questions: bool | None = None) -> dict | None:
+    """Recompute a company's saved view from its items. Founder questions are regenerated (an LLM call) when the
+    view is stale (new check code or new sources) or when asked; otherwise the old ones are kept. Returns the view."""
+    co = store.get_company(company_id)
+    if not co:
+        return None
+    old = co.get("view") or {}
+    if not store.items_for(company_id):
+        return old or None
+    view = company_view(company_id)
+    if questions is None:
+        questions = old.get("checked") != checked_marker() or not old.get("questions")
+    qs = analysis.questions(co["name"], view["checks"], view["claims"]) if questions else old.get("questions", [])
+    saved = {"company": view["company"], "items": view["items"], "checks": view["checks"], "questions": qs,
+             "checked": checked_marker()}
+    store.update_company(company_id, view=saved)
+    return saved
+
+
+def fresh_view(company_id: str) -> dict | None:
+    """The saved view, recomputed first if it was computed by older code or against other sources."""
+    co = store.get_company(company_id)
+    if not co:
+        return None
+    view = co.get("view") or {}
+    if view and view.get("checked") == checked_marker():
+        return view
+    return refresh(company_id)
+
+
+def refresh_stale() -> int:
+    """Bring every company's saved view up to date (the inbox list, the digest). Returns how many were recomputed."""
+    n = 0
+    for co in store.list_companies():
+        if (co.get("view") or {}).get("checked") != checked_marker() and store.items_for(co["id"]):
+            refresh(co["id"])
+            n += 1
+    return n
+
+
 NOT_CONNECTED = "Public records aren't connected in this build yet, so this wasn't checked."
 
 
@@ -92,7 +142,7 @@ def _honest_unverifiable(checks: list[dict], gt: dict) -> list[dict]:
     for c in checks:
         if c["verdict"] == "unverifiable" and c["source"] != "your_sources":
             if stub:
-                c = {**c, "note": NOT_CONNECTED, "confidence": "low"}
+                c = {**c, "note": NOT_CONNECTED, "confidence": "low", "not_checked": True}
             key = (c["source"], c["claim_type"], c["note"])
             if key in seen:
                 continue
@@ -131,7 +181,8 @@ async def run_real(job: dict, upload: dict | None, text: str | None, kind: str |
 
     # 3. Questions for the founder, from every gap, contradiction and unverifiable metric.
     job["questions"] = await asyncio.to_thread(analysis.questions, co["name"], view["checks"], view["claims"])
-    store.update_company(co["id"], view={k: job[k] for k in ("company", "items", "checks", "questions")})
+    store.update_company(co["id"], view={**{k: job[k] for k in ("company", "items", "checks", "questions")},
+                                         "checked": checked_marker()})
     job["status"] = "ready"
 
 
@@ -147,8 +198,9 @@ async def run(job: dict, upload: dict | None, text: str | None, fake: bool,
         job["error"] = str(e)
 
 
-def replay(job_id: str) -> dict | None:
-    """Cached final result for the demo fallback: the job, else its company's saved view, else the fixture."""
+def replay(job_id: str, fake: bool = False) -> dict | None:
+    """Cached final result for the demo fallback: the job, else its company's saved view. Unknown jobs → None (404);
+    only fake mode falls back to the Acme fixture, so real data never gets the fixture's numbers."""
     job = JOBS.get(job_id)
     if job and job["status"] == "ready":
         return job
@@ -156,4 +208,6 @@ def replay(job_id: str) -> dict | None:
         co = store.get_company(job["company_id"])
         if co and co.get("view"):
             return {**job, **co["view"], "status": "ready", "error": None}
-    return {**copy.deepcopy(load_fixture("job_acme.json")), "job_id": job_id}
+    if fake:
+        return {**copy.deepcopy(load_fixture("job_acme.json")), "job_id": job_id}
+    return None
