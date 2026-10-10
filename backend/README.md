@@ -40,7 +40,8 @@ Data's live sources landed, are recomputed when next read; `POST /companies/refr
 
 ## Demo desk
 
-`/demo` is a stand-in for an investor's daily tools (mail, decks, notes, a founder portal, saved press), so the
-extension can be demoed next to something familiar. Every downloadable item is a file in `samples/`, and email and note
-bodies are read from those same files. Generic look-alikes on purpose: no real product branding. Fictional data, except
-the quoted public claims, which link to their source. The deck's source is `samples/src/acme_deck.html`.
+`/demo` mimics the apps an investor lives in (a mail inbox, a shared-deck viewer, a notes workspace, a CRM pipeline,
+a founder's investor portal, a read-later list), switched from an auto-hiding dock at the bottom, so the extension can be
+demoed next to something that feels real. Every downloadable item is a file in `samples/`, and email and note bodies are
+read from those same files (the "(FICTIONAL ...)" markers are hidden on screen only). Familiar layouts, but no real
+product names or logos. Fictional data, except the quoted public claims, which link to their source. The deck's source is `samples/src/acme_deck.html`.

@@ -3,22 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Demo Desk</title>
-  <meta name="description" content="A stand-in for an investor's daily tools (mail, decks, notes, a founder portal, saved press) to demo VentureSauce. Fictional data, except quoted public claims.">
+  <title>Inbox</title>
+  <link rel="icon" id="favicon" href="data:,">
   <link rel="stylesheet" href="/static/demo/demo.css">
 </head>
 <body>
-  <div class="banner">Demo desk: stand-ins for the tools an investor uses every day. All data is fictional, except quoted public claims, which link to their source.</div>
-  <div class="app">
-    <nav class="rail" aria-label="Apps">
-      <a href="#mail" data-app="mail"><span class="ico">✉</span><span>Mail</span></a>
-      <a href="#decks" data-app="decks"><span class="ico">▤</span><span>Decks</span></a>
-      <a href="#notes" data-app="notes"><span class="ico">✎</span><span>Notes</span></a>
-      <a href="#portal" data-app="portal"><span class="ico">◔</span><span>Portal</span></a>
-      <a href="#press" data-app="press"><span class="ico">❝</span><span>Saved</span></a>
-    </nav>
-    <main id="view" tabindex="-1"></main>
-  </div>
+  <div id="app"></div>
+  <nav class="dock" id="dock" aria-label="Apps"></nav>
+  <div class="dock-zone" aria-hidden="true"></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="/static/demo/demo.js"></script>
 </body>
