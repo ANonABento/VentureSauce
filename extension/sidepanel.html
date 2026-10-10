@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VentureSauce</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body data-view="loading">
+    <!-- The product UI lives in frontend/ (/panel). This shell only frames it.
+         allow: Copy (clipboard-write), the voice analyst (microphone) and the
+         audio brief (autoplay) are blocked in a cross-origin frame without it. -->
+    <iframe
+      id="panel"
+      title="VentureSauce"
+      allow="clipboard-write; microphone; autoplay"
+    ></iframe>
+
+    <p id="loading" class="view" role="status">Loading VentureSauce…</p>
+
+    <div id="error" class="view" role="alert">
+      <p class="message">
+        Can't reach VentureSauce at <span id="app-url"></span>. Is the frontend
+        running?
+      </p>
+      <p class="hint"><code>cd frontend &amp;&amp; npm run dev</code></p>
+      <button id="retry" type="button">Retry</button>
+    </div>
+
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>
