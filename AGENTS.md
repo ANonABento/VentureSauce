@@ -1,6 +1,8 @@
 # AGENTS.md: read this first
 
-Hackathon project **VentureSauce**: drop a pitch deck into a Chrome side panel and get a claim-by-claim truth table (match / gap / unverifiable) checked against SEC Form D, LinkedIn and press, with a source link on every row. 4-person team, ~12 hours. Speed matters, but **every number shown must be traceable to a source.**
+**Pivot (see top of docs/PLAN.md):** VentureSauce is now a **deal inbox**. Drop any item (deck, scanned PDF, image, slides, email, call notes); it's filed under its company; claims are checked against public records AND against the user's other items (contradictions), and turned into founder questions; a daily or weekly digest rolls it up. API additions (company memory, `/companies`, `/digest`) land in `backend/main.py` and are documented in `backend/README.md`. Existing endpoints stay backward compatible.
+
+Original framing: drop a pitch deck into a Chrome side panel and get a claim-by-claim truth table (match / gap / unverifiable) checked against SEC Form D, LinkedIn and press, with a source link on every row. 4-person team, ~12 hours. Speed matters, but **every number shown must be traceable to a source.**
 
 - Plan: [docs/PLAN.md](docs/PLAN.md) (job contract, timeline, scope)
 - Your human's role brief: [docs/roles/](docs/roles/) (`kevin.md`, `data.md`, `extension.md`, `research.md`)

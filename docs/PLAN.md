@@ -2,7 +2,24 @@
 
 _As of 2026-10-10 · Kevin Jiang_
 
-## TL;DR
+## Update (hour ~2): the deal inbox pivot
+
+**VentureSauce becomes a deal inbox.** Investors drop *anything* about a company as it arrives: deck (PDF, scanned PDF, slides), founder emails, screenshots, call notes. Each item is filed under its company. Every claim is checked three ways:
+
+1. **Against public records** (Form D, LinkedIn, press), as before.
+2. **Against your other sources** (new). For example, the deck says 25 people, the founder's email says 40 and your call notes say 12. Needs no public data, works for any company, and no competitor does it.
+3. **Turned into a question** (new). Every gap, contradiction or unverifiable claim (ARR, growth…) becomes "Ask the founder: …".
+
+At the end of the day or week: **a digest** across companies of what's new, what conflicts and what to ask. Optionally spoken via Fish Audio.
+
+**Build stages (Kevin):** Stage A: company memory, universal input, contradictions, questions (~3h). Stage B: digest (~1.5h), only if Stage A is working at the hour 7 gate.
+**Demo story:** drop the deck → drop the founder's email → drop your call notes → contradictions light up → "Generate digest".
+**Research:** test the hypothesis "nobody reconciles decks, emails and call notes" in the next Sense Check.
+**Extension:** the panel becomes a deal room (company list → company view: items timeline, checks, questions). Keep building the truth table; it's the core of the company view.
+
+The rest of this plan still applies. Where it says "deck", read "any item".
+
+## TL;DR (original)
 
 We build **VentureSauce: drop a pitch deck into a Chrome side panel and get a claim-by-claim truth table with receipts in under 60 seconds.** Each claim the founder makes (headcount, money raised, customers, team) is checked against LinkedIn, SEC Form D and the press, and comes back marked match, gap or unverifiable, with a source link.
 
