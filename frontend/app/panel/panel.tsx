@@ -1,17 +1,23 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
+import { CaretRight, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/button";
+import { cn } from "@/components/cn";
 import { ErrorState } from "@/components/error-state";
-import { LoadingSteps } from "@/components/loading-steps";
+import { FirstRun } from "@/components/first-run";
+import { LoadingSteps, jobStep } from "@/components/loading-steps";
 import { ReportHeader } from "@/components/report-header";
 import { ReportView } from "@/components/report-view";
+import { ThemeParam } from "@/components/theme-param";
 import type { DeltaReport } from "@/lib/types";
 import { CompanyScreen } from "@/components/company";
 import { DigestScreen } from "@/components/digest";
-import { CompanyList, DropStrip, Welcome } from "@/components/inbox";
-import { type CompanySummary, dropItem, getReport, listCompanies, loadExample } from "@/lib/api";
+import { History } from "@/components/history";
+import { type CompanySummary, dropItem, getReport, listCompanies } from "@/lib/api";
+import { DUR, EASE_ENTER } from "@/lib/motion";
 import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
 
@@ -27,47 +33,87 @@ export type Subject = { name?: string; domain?: string };
 export function Panel() {
   const pageUrl = useSearchParams().get("url");
   // Start over whenever the extension points the panel at another page.
-  return <InboxApp key={pageUrl ?? ""} pageUrl={pageUrl} />;
+  return (
+    <>
+      <ThemeParam />
+      <InboxApp key={pageUrl ?? ""} pageUrl={pageUrl} />
+    </>
+  );
 }
 
-type Screen = { kind: "inbox" } | { kind: "company"; id: string; filed?: string | null } | { kind: "digest" };
+type Screen =
+  | { kind: "inbox" }
+  | { kind: "company"; id: string; filed?: string | null; summary?: CompanySummary }
+  | { kind: "digest" };
 
-// The backend's job statuses, in order, as the lines of the status log.
-const JOB_STEPS: [status: string, label: string][] = [
-  ["parsing", "Reading the item"],
-  ["checking_sec", "Reading SEC filings"],
-  ["checking_linkedin", "Checking LinkedIn"],
-  ["checking_press", "Reading the press"],
-  ["comparing_sources", "Comparing with your other items"],
-];
-const JOB_LABELS = JOB_STEPS.map(([, label]) => label);
+const DEPTH: Record<Screen["kind"], number> = { inbox: 0, digest: 1, company: 2 };
+const screenKey = (screen: Screen) => (screen.kind === "company" ? `company-${screen.id}` : screen.kind);
+
+const JOB_STEP: Record<string, string> = {
+  parsing: "Reading the item",
+  checking_sec: "Reading SEC filings",
+  checking_linkedin: "Checking LinkedIn",
+  checking_press: "Reading the press",
+  comparing_sources: "Comparing with your other items",
+  ready: "Filed",
+};
+
+/**
+ * Screen changes (decision 33): content slides 12px in the direction of
+ * travel and exits with a short blur-fade; shared elements (company name,
+ * signal strip) glide between screens via their layoutId.
+ */
+function ScreenTransition({ id, direction, children }: { id: string; direction: number; children: ReactNode }) {
+  return (
+    // popLayout takes the exiting screen out of flow; it positions against this box.
+    <div className="relative">
+    <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+      <motion.div
+        key={id}
+        custom={direction}
+        variants={{
+          enter: (dir: number) => ({ opacity: 0, x: dir * 12 }),
+          center: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: DUR.base, ease: EASE_ENTER } },
+          exit: { opacity: 0, filter: "blur(4px)", transition: { duration: 0.2, ease: EASE_ENTER } },
+        }}
+        initial="enter"
+        animate="center"
+        exit="exit"
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+    </div>
+  );
+}
+
+/** A large serif figure over a one-word caption. */
+function BigFigure({ value, caption, signal = false }: { value: number; caption: string; signal?: boolean }) {
+  return (
+    <span className="flex flex-col">
+      <span className={cn("font-serif text-[40px] leading-10 tracking-[-0.03em]", signal ? "text-signal" : "text-data")}>
+        {value}
+      </span>
+      <span className="text-xs leading-4 text-graphite">{caption}</span>
+    </span>
+  );
+}
 
 /** The deal inbox: Inbox → Company (Checks / Items / Questions) → Digest. */
 function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   const detected = detectCompany(pageUrl);
-  const [screen, setScreen] = useState<Screen>({ kind: "inbox" });
+  const [screen, setScreenState] = useState<Screen>({ kind: "inbox" });
+  const [direction, setDirection] = useState(1);
   const [companies, setCompanies] = useState<CompanySummary[] | null>(null);
   const [seen, setSeen] = useState<Record<string, string>>({});
-  // Index into JOB_STEPS while an item is being read, otherwise null.
-  const [progress, setProgress] = useState<number | null>(null);
+  const [job, setJob] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notInInbox, setNotInInbox] = useState(false);
-  const [unreachable, setUnreachable] = useState(false);
-  const [reload, setReload] = useState(0);
-  const [lookup, setLookup] = useState("");
-  const [lookupMiss, setLookupMiss] = useState<string | null>(null);
-  const [loadingExample, setLoadingExample] = useState(false);
 
-  async function onExample() {
-    setError(null);
-    setLoadingExample(true);
-    try {
-      await loadExample();
-      setCompanies(await listCompanies());
-    } catch (e) {
-      setError((e as Error).message);
-    }
-    setLoadingExample(false);
+  function setScreen(next: Screen) {
+    setDirection(DEPTH[next.kind] >= DEPTH[screen.kind] ? 1 : -1);
+    setScreenState(next);
+    window.scrollTo({ top: 0 });
   }
 
   useEffect(() => {
@@ -83,10 +129,9 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           } catch {}
         }
         setSeen(marks);
-        setUnreachable(false);
       })
-      .catch(() => setUnreachable(true));
-  }, [screen, reload]);
+      .catch(() => setError("Can't reach the VentureSauce backend."));
+  }, [screen]);
 
   // Opened on a company's site: jump to it if it's already in the inbox.
   useEffect(() => {
@@ -94,160 +139,116 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     getReport({ url: pageUrl })
       .then((r) => {
         const id = (r.company as { id?: string }).id;
-        if (id) setScreen({ kind: "company", id });
+        if (id) setScreenState({ kind: "company", id });
       })
       .catch(() => setNotInInbox(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageUrl]);
 
-  // ⌘V anywhere on the inbox or a company: a screenshot or copied file is filed as-is; copied text (outside a text
-  // box) is filed as an email when it has mail headers, else as a note. In a text box, only images are taken over.
-  useEffect(() => {
-    if (screen.kind === "digest") return;
-    function onPaste(event: ClipboardEvent) {
-      if (progress !== null || !event.clipboardData) return;
-      const target = event.target as HTMLElement | null;
-      const typing = !!target && (target.isContentEditable || ["INPUT", "TEXTAREA"].includes(target.tagName));
-      const companyId = screen.kind === "company" ? screen.id : undefined;
-      const file = Array.from(event.clipboardData.files)[0];
-      if (file) {
-        event.preventDefault();
-        const named = file.type.startsWith("image/") && /^image\.\w+$/.test(file.name)
-          ? new File([file], `pasted-screenshot.${file.type.split("/")[1] || "png"}`, { type: file.type })
-          : file;
-        onDrop({ file: named, companyId });
-        return;
-      }
-      const text = event.clipboardData.getData("text/plain").trim();
-      if (typing || text.length < 20) return;
-      event.preventDefault();
-      onDrop({ text, kind: /^(from|subject):/im.test(text) ? "email" : undefined, companyId });
-    }
-    document.addEventListener("paste", onPaste);
-    return () => document.removeEventListener("paste", onPaste);
-  });
-
   async function onDrop(input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string }) {
     setError(null);
-    setProgress(0);
+    setJob("parsing");
     try {
-      const job = await dropItem(input, (j) => {
-        const step = JOB_STEPS.findIndex(([status]) => status === j.status);
-        // "ready" and unknown statuses leave the log where it is.
-        if (step >= 0) setProgress(step);
-      });
-      setScreen({ kind: "company", id: job.company_id!, filed: job.item_id });
+      const done = await dropItem(input, (j) => setJob(j.status));
+      // Fake mode replays a fixture without filing it, so there may be no company to open.
+      if (done.company_id) setScreen({ kind: "company", id: done.company_id, filed: done.item_id });
+      else setError("Checked, but it wasn't filed under a company.");
     } catch (e) {
       setError((e as Error).message);
     }
-    setProgress(null);
+    setJob(null);
   }
 
-  /** Open a company that is already in the inbox, found by name. */
-  async function onLookup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const company = lookup.trim();
-    if (!company) return;
-    setLookupMiss(null);
+  async function onLookup(name: string): Promise<string | null> {
     try {
-      const report = await getReport({ company });
+      const report = await getReport({ company: name });
       const id = (report.company as { id?: string }).id;
-      if (id) setScreen({ kind: "company", id });
-      else setLookupMiss(company);
-    } catch (e) {
-      // A failed fetch is a TypeError; anything else is the backend's 404.
-      if (e instanceof TypeError) setUnreachable(true);
-      else setLookupMiss(company);
-    }
+      if (id) {
+        setScreen({ kind: "company", id });
+        return null;
+      }
+    } catch {}
+    return `${name} isn't in your inbox yet. Drop its deck or a founder email above.`;
   }
 
-  const busy = progress !== null;
-  const statusLog = progress !== null && (
-    <div className="mt-4">
-      <LoadingSteps steps={JOB_LABELS} current={progress} />
-    </div>
+  const busy = job !== null;
+  const step = jobStep(job);
+  const status = job && (
+    <p role="status" className="sr-only">
+      {JOB_STEP[job] ?? "Working"}
+    </p>
   );
+  const firstRun = companies !== null && companies.length === 0;
+  const differences = (companies ?? []).reduce((sum, c) => sum + c.discrepancies + c.contradictions, 0);
+
   return (
     <PanelFrame>
-      {screen.kind === "inbox" && (
-        <>
-          <div className="flex items-baseline justify-between">
-            <h1 className="font-serif text-xl leading-6 font-medium tracking-tight text-ink">Deal inbox</h1>
-            <button type="button" onClick={() => setScreen({ kind: "digest" })} className="text-xs text-ink underline underline-offset-4">
-              Today&apos;s digest →
-            </button>
-          </div>
-          {notInInbox && detected && (
-            <p className="mt-2 text-[13px] leading-5 text-graphite">
-              Nothing about <span className="text-ink">{detected.domain}</span> in your inbox yet. Drop its deck or a founder email.
-            </p>
-          )}
-          {companies?.length === 0 && !busy && <Welcome onExample={onExample} loading={loadingExample} />}
-          <div className="mt-4">
-            <DropStrip onDrop={onDrop} busy={busy} label="Drop or paste (⌘V) a deck, email, screenshot or notes" />
-          </div>
-          {statusLog}
-          {error && <p role="alert" className="mt-2 text-xs text-ink">{error}</p>}
-
-          <form onSubmit={onLookup} className="mt-5">
-            <label htmlFor="lookup" className="micro-label block text-graphite">
-              Or look up a company
-            </label>
-            <div className="mt-2 flex gap-2">
-              <input
-                id="lookup"
-                name="company"
-                value={lookup}
-                onChange={(event) => setLookup(event.target.value)}
-                required
-                autoComplete="off"
-                placeholder="Company name"
-                className="block h-9 min-w-0 flex-1 rounded-md border border-border-strong bg-surface px-3 text-[13px] text-ink placeholder:text-graphite"
-              />
-              <Button type="submit" variant="quiet">
-                Check
-              </Button>
-            </div>
-            {lookupMiss && (
-              <p role="status" className="mt-2 text-[13px] leading-5 text-graphite">
-                Nothing about <span className="text-ink">{lookupMiss}</span> in your inbox yet. Drop its deck or a
-                founder email.
+      <ScreenTransition id={screenKey(screen)} direction={direction}>
+        {screen.kind === "inbox" && (
+          <>
+            {status}
+            {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
+            {/* The drop card is the page. The lookup only shows while there is no history to pick from. */}
+            <FirstRun
+              onDrop={onDrop}
+              busy={busy}
+              step={step}
+              compact={!firstRun}
+              onLookup={firstRun ? onLookup : undefined}
+            />
+            {notInInbox && detected && (
+              <p className="mt-4 text-center text-xs leading-4 text-graphite">
+                <span className="text-ink">{detected.domain}</span> isn&apos;t in your inbox yet.
               </p>
             )}
-          </form>
-
-          {unreachable ? (
-            <div className="mt-6 border-t border-rule pt-4">
-              <ErrorState
-                message="Can't reach the VentureSauce backend."
-                onRetry={() => setReload((n) => n + 1)}
-              />
-            </div>
-          ) : (
-            companies &&
-            companies.length > 0 && (
-              <CompanyList companies={companies} seen={seen} onOpen={(id) => setScreen({ kind: "company", id })} />
-            )
-          )}
-        </>
-      )}
-      {screen.kind === "company" && (
-        <>
-          {statusLog && <div className="mb-5">{statusLog}</div>}
-          {error && <p role="alert" className="mb-3 text-xs text-ink">{error}</p>}
-          <CompanyScreen
-            companyId={screen.id}
-            filedItemId={screen.filed}
-            busy={busy}
-            onBack={() => setScreen({ kind: "inbox" })}
-            onOpen={(id, filed) => setScreen({ kind: "company", id, filed })}
-            onDrop={onDrop}
-          />
-        </>
-      )}
-      {screen.kind === "digest" && (
-        <DigestScreen onBack={() => setScreen({ kind: "inbox" })} onOpen={(id) => setScreen({ kind: "company", id })} />
-      )}
+            {companies && companies.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setScreen({ kind: "digest" })}
+                  className="tray group mt-6 flex w-full items-end gap-6 text-left transition-colors duration-150 ease-out hover:bg-tray-strong"
+                >
+                  <BigFigure value={companies.length} caption={companies.length === 1 ? "company" : "companies"} />
+                  <BigFigure value={differences} caption={differences === 1 ? "difference" : "differences"} signal={differences > 0} />
+                  <span className="ml-auto flex items-center gap-1 pb-0.5 text-xs leading-4 text-graphite">
+                    Today&apos;s digest
+                    <CaretRight
+                      aria-hidden="true"
+                      size={14}
+                      weight="light"
+                      className="transition-transform duration-150 ease-out group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </button>
+                <History
+                  companies={companies}
+                  seen={seen}
+                  onOpen={(company) => setScreen({ kind: "company", id: company.id, summary: company })}
+                />
+              </>
+            )}
+          </>
+        )}
+        {screen.kind === "company" && (
+          <>
+            {status}
+            {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
+            <CompanyScreen
+              companyId={screen.id}
+              filedItemId={screen.filed}
+              summary={screen.summary}
+              busy={busy}
+              step={step}
+              onBack={() => setScreen({ kind: "inbox" })}
+              onOpen={(id, filed) => setScreen({ kind: "company", id, filed })}
+              onDrop={onDrop}
+            />
+          </>
+        )}
+        {screen.kind === "digest" && (
+          <DigestScreen onBack={() => setScreen({ kind: "inbox" })} onOpen={(id) => setScreen({ kind: "company", id })} />
+        )}
+      </ScreenTransition>
     </PanelFrame>
   );
 }
@@ -294,22 +295,35 @@ export function PanelView({
             what it says publicly.
           </p>
           <form onSubmit={onSubmitName} className="mt-6">
-            <label htmlFor="company" className="micro-label block text-graphite">
+            <label htmlFor="company" className="block text-sm leading-5 font-medium text-ink">
               Company name
             </label>
-            <input
-              id="company"
-              name="company"
-              value={name}
-              onChange={(event) => onNameChange?.(event.target.value)}
-              required
-              autoComplete="off"
-              placeholder="e.g. Quillfeather Robotics"
-              className="mt-2 block h-9 w-full rounded-md border border-border-strong bg-surface px-3 text-sm text-ink placeholder:text-graphite"
-            />
-            <Button type="submit" className="mt-3">
-              Compare filings
-            </Button>
+            {/* One row when there's room for the full placeholder; stacked full-width in a narrow panel. */}
+            <div className="@container mt-2">
+              <div className="flex flex-col gap-2 @[24rem]:flex-row">
+                <span className="relative block min-w-0 flex-1">
+                  <MagnifyingGlass
+                    aria-hidden="true"
+                    size={16}
+                    weight="light"
+                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-graphite"
+                  />
+                  <input
+                    id="company"
+                    name="company"
+                    value={name}
+                    onChange={(event) => onNameChange?.(event.target.value)}
+                    required
+                    autoComplete="off"
+                    placeholder="e.g. Quillfeather Robotics"
+                    className="block h-9 w-full rounded-full border border-rule-strong bg-surface pr-3 pl-9 text-sm text-ink placeholder:text-graphite"
+                  />
+                </span>
+                <Button type="submit" className="shrink-0">
+                  Compare filings
+                </Button>
+              </div>
+            </div>
           </form>
         </>
       )}
@@ -330,7 +344,7 @@ export function PanelView({
       {status === "loading" && (
         <>
           {subjectHeader}
-          <div className="mt-5 border-t border-rule pt-4">
+          <div className="mt-5">
             <LoadingSteps current={step} />
           </div>
         </>
@@ -341,7 +355,7 @@ export function PanelView({
       {status === "error" && (
         <>
           {subjectHeader}
-          <div className="mt-5 border-t border-rule pt-4">
+          <div className="mt-5">
             <ErrorState onRetry={() => onRun?.()} />
           </div>
         </>

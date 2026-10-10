@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   type Check,
   type CompanySummary,
@@ -12,13 +13,18 @@ import {
   moveItem,
 } from "@/lib/api";
 import type { DeltaReport } from "@/lib/types";
+import { ArrowLeft, CaretDown, CheckCircle, Copy, WarningDiamond } from "@phosphor-icons/react/dist/ssr";
+import { DUR, EASE_ENTER, EASE_STATE, RISE, SPRING, STAGGER } from "@/lib/motion";
 import { Button } from "./button";
 import { cn } from "./cn";
+import { Collapse } from "./collapse";
 import { DeltaRows } from "./delta-rows";
+import { CountUp } from "./motion";
+import { Verdict } from "./verdict";
 import { DropStrip, ItemTag } from "./inbox";
 import { ReportHeader } from "./report-header";
 import { formatDate, formatUsd } from "./report-utils";
-import { Verdict } from "./verdict";
+import { RangePlot, SignalStrip } from "./viz";
 
 type Tab = "checks" | "items" | "questions";
 
@@ -49,21 +55,24 @@ export function FiledToast({
   }
 
   return (
-    <div role="status" className="mb-5 rounded-md border border-border-strong bg-surface px-3 py-2 text-[13px] leading-5">
+    <div role="status" className={cn("mb-4 bg-ink px-4 py-2 text-[13px] leading-5 text-paper", changing ? "rounded-xl" : "rounded-full")}>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-graphite">
-          Filed under <span className="font-medium text-ink">{company}</span>
+        <span className="flex min-w-0 items-center gap-2 text-paper/80">
+          <CheckCircle aria-hidden="true" size={16} weight="light" className="shrink-0 text-paper" />
+          <span className="truncate">
+            Filed under <span className="font-medium text-paper">{company}</span>
+          </span>
         </span>
-        <button type="button" className="text-xs text-ink underline underline-offset-4" onClick={() => setChanging(!changing)}>
+        <button type="button" className="shrink-0 text-xs font-medium text-paper underline underline-offset-4" onClick={() => setChanging(!changing)}>
           {changing ? "Cancel" : "Change"}
         </button>
       </div>
       {changing && (
-        <div className="mt-2 space-y-1 border-t border-rule pt-2">
+        <div className="mt-2 space-y-1 border-t border-paper/20 pt-2">
           {companies
             .filter((c) => c.name !== company)
             .map((c) => (
-              <button key={c.id} type="button" className="block text-left text-ink hover:underline" onClick={() => move({ companyId: c.id })}>
+              <button key={c.id} type="button" className="block text-left text-paper hover:underline" onClick={() => move({ companyId: c.id })}>
                 {c.name}
               </button>
             ))}
@@ -78,9 +87,9 @@ export function FiledToast({
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="New company name"
-              className="h-7 min-w-0 flex-1 rounded-[2px] border border-rule bg-paper px-2 text-xs"
+              className="h-7 min-w-0 flex-1 rounded-full border border-paper/30 bg-paper px-3 text-xs text-ink"
             />
-            <Button type="submit" variant="quiet" className="h-7 px-2 text-xs">
+            <Button type="submit" variant="quiet" size="xs">
               Move
             </Button>
           </form>
@@ -90,13 +99,19 @@ export function FiledToast({
   );
 }
 
-/** A contradiction between the investor's own sources: every value on one number line, each naming its item and date. */
-export function ContradictionCard({ check }: { check: Check }) {
+/**
+ * A contradiction between the investor's own sources (decision 29): the
+ * spread counts up, every value sits on one number line naming its item, and
+ * the quotes wait behind a tap.
+ */
+export function ContradictionCard({ check, index = 0 }: { check: Check; index?: number }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
   const values = check.values ?? [];
   const nums = values.map((v) => v.value);
   const lo = Math.min(...nums);
   const hi = Math.max(...nums);
-  const pos = (v: number) => (hi === lo ? 50 : 4 + ((v - lo) / (hi - lo)) * 92);
+  const format = (n: number) => fmt(n, check.unit);
   const title = check.metric
     ? check.metric.length <= 4
       ? check.metric.toUpperCase()
@@ -104,38 +119,59 @@ export function ContradictionCard({ check }: { check: Check }) {
     : check.claim_type === "headcount"
       ? "Headcount"
       : "Total raised";
+  const delay = 0.1 + index * STAGGER;
 
   return (
-    <li className="relative border-b border-rule py-5">
-      <span aria-hidden="true" className="absolute top-5 bottom-5 -left-3 w-0.5 bg-signal" />
-      <div className="flex items-baseline justify-between gap-3 text-[13px] leading-5">
-        <span className="font-medium text-ink">{title}</span>
-        <span className="font-medium text-signal">{values.length} sources disagree</span>
+    <motion.li
+      className="tray"
+      initial={{ opacity: 0, y: RISE }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-1.5 text-sm leading-5 font-medium text-ink">
+          <WarningDiamond aria-hidden="true" size={16} weight="duotone" className="shrink-0 text-signal" />
+          {title}
+        </span>
+        <span className="flex items-baseline gap-1.5 text-xs text-graphite">
+          spread
+          <CountUp value={hi - lo} format={format} delay={delay + 0.3} className="font-serif text-xl leading-6 text-signal" />
+        </span>
       </div>
-      <div className="relative mt-4 h-6" aria-hidden="true">
-        <div className="absolute top-3 right-0 left-0 h-px bg-rule" />
-        {values.map((v) => (
-          <span
-            key={`${v.item_label}-${v.value}`}
-            title={`${v.item_label}: ${fmt(v.value, check.unit)}`}
-            className="absolute top-[9px] h-[7px] w-[7px] -translate-x-1/2 rounded-full border border-signal bg-surface"
-            style={{ left: `${pos(v.value)}%` }}
-          />
-        ))}
+      <div className="fragment mt-3 px-3 pt-4 pb-1">
+        <RangePlot values={values.map((v) => ({ value: v.value, label: v.item_label.split(" · ")[0] }))} format={format} delay={delay + 0.1} />
       </div>
-      <ul className="mt-2 space-y-1 text-xs leading-4">
-        {[...values]
-          .sort((a, b) => a.value - b.value)
-          .map((v) => (
-            <li key={`${v.item_label}-${v.value}`} className="flex justify-between gap-3">
-              <span className="truncate text-graphite">
-                {v.item_label} · {formatDate(v.item_day)}
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((value) => !value)}
+        className="mt-2.5 inline-flex min-h-6 items-center gap-1 text-xs font-medium text-graphite transition-colors duration-150 hover:text-ink"
+      >
+        {values.length} sources
+        <CaretDown
+          aria-hidden="true"
+          size={12}
+          weight="light"
+          className={cn("transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]", open && "rotate-180")}
+        />
+      </button>
+      <Collapse id={id} open={open}>
+        <ul className="space-y-1.5 pt-2">
+          {values.map((v) => (
+            <li key={`${v.item_label}-${v.value}`} className="fragment flex items-center gap-3 px-3 py-2.5">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] leading-5 font-medium text-ink">
+                  {v.item_label} <span className="font-normal text-graphite">· {formatDate(v.item_day)}</span>
+                </span>
+                {v.claim_text && <span className="block truncate text-xs leading-4 text-graphite">&ldquo;{v.claim_text}&rdquo;</span>}
               </span>
-              <span className="shrink-0 font-mono text-ink">{fmt(v.value, check.unit)}</span>
+              <span className="shrink-0 font-serif text-lg leading-6 text-ink">{format(v.value)}</span>
             </li>
           ))}
-      </ul>
-    </li>
+        </ul>
+      </Collapse>
+    </motion.li>
   );
 }
 
@@ -169,23 +205,30 @@ function QuestionCards({ companyId, questions }: { companyId: string; questions:
   return (
     <>
       <div className="flex justify-end">
-        <Button variant="quiet" className="h-7 px-2 text-xs" onClick={() => copy(questions.map((q, i) => `${i + 1}. ${q.question}`).join("\n"), "all")}>
+        <Button variant="quiet" size="xs" onClick={() => copy(questions.map((q, i) => `${i + 1}. ${q.question}`).join("\n"), "all")}>
           {copied === "all" ? "Copied" : "Copy all"}
         </Button>
       </div>
-      <ol className="mt-3 space-y-3">
+      {/* One fragment, ruled rows (v2): serif index in data blue, the "why" names the sources. */}
+      <ol className="fragment mt-3 divide-y divide-rule px-3">
         {questions.map((q, i) => {
           const done = asked.includes(q.question);
           return (
-            <li key={q.question} className={cn("rounded-md border border-border-strong bg-surface p-3", done && "opacity-60")}>
-              <p className="text-[13px] leading-5 text-ink">
-                <span className="mr-2 font-mono text-graphite">{i + 1}</span>
-                {q.question}
-              </p>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <span className="micro-label text-graphite">{q.why}</span>
-                <span className="flex gap-3 text-xs">
-                  <button type="button" className="text-ink underline-offset-4 hover:underline" onClick={() => copy(q.question, i)}>
+            <motion.li
+              key={q.question}
+              className={cn("flex gap-3 py-3 transition-opacity duration-300", done && "opacity-60")}
+              initial={{ opacity: 0, y: RISE / 2 }}
+              animate={{ opacity: done ? 0.6 : 1, y: 0 }}
+              transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.05 + i * STAGGER }}
+            >
+              <span className="w-4 shrink-0 text-right font-serif text-lg leading-5 text-data">{i + 1}</span>
+              <div className="min-w-0 flex-1">
+              <p className="text-sm leading-5 text-ink">{q.question}</p>
+              <div className="mt-1.5 flex items-center justify-between gap-3">
+                <span className="text-xs leading-4 text-graphite">{q.why}</span>
+                <span className="flex shrink-0 gap-3 text-xs">
+                  <button type="button" className="inline-flex min-h-6 items-center gap-1 text-ink underline-offset-4 hover:underline" onClick={() => copy(q.question, i)}>
+                    <Copy aria-hidden="true" size={14} weight="light" />
                     {copied === i ? "Copied" : "Copy"}
                   </button>
                   <button type="button" className="text-ink underline-offset-4 hover:underline" onClick={() => toggle(q.question)}>
@@ -193,7 +236,8 @@ function QuestionCards({ companyId, questions }: { companyId: string; questions:
                   </button>
                 </span>
               </div>
-            </li>
+              </div>
+            </motion.li>
           );
         })}
       </ol>
@@ -205,17 +249,22 @@ function QuestionCards({ companyId, questions }: { companyId: string; questions:
 export function CompanyScreen({
   companyId,
   filedItemId,
+  summary,
   onBack,
   onOpen,
   onDrop,
   busy,
+  step,
 }: {
   companyId: string;
   filedItemId?: string | null;
+  /** The inbox row it was opened from: lets the name and strip glide in before the data loads. */
+  summary?: CompanySummary;
   onBack: () => void;
   onOpen: (id: string, filedItemId?: string | null) => void;
   onDrop: (input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string }) => void;
   busy?: boolean;
+  step?: number;
 }) {
   const [view, setView] = useState<CompanyView | null>(null);
   const [report, setReport] = useState<DeltaReport | null>(null);
@@ -239,53 +288,85 @@ export function CompanyScreen({
     };
   }, [companyId, filedItemId]);
 
+  const back = (
+    <button
+      type="button"
+      onClick={onBack}
+      className="group mb-3 inline-flex min-h-6 items-center gap-1 text-[13px] text-graphite transition-colors duration-150 hover:text-ink"
+    >
+      <ArrowLeft aria-hidden="true" size={14} weight="light" className="transition-transform duration-150 ease-out group-hover:-translate-x-0.5" />
+      Inbox
+    </button>
+  );
+
+  const contradictions = view?.checks.filter((c) => c.source === "your_sources") ?? [];
+  const publicRows = (report?.rows ?? []).filter((r) => !r.signal.endsWith("across your sources"));
+  const discrepancies = view ? publicRows.filter((r) => r.status === "discrepancy").length : (summary?.discrepancies ?? 0);
+  const contradictionCount = view ? contradictions.length : (summary?.contradictions ?? 0);
+  const name = view ? view.company.name + (view.company.fictional ? " (fictional)" : "") : summary?.name;
+
+  const header = name && (
+    <ReportHeader
+      layoutId={`company-name-${companyId}`}
+      company={{ name, domain: (view?.company.domain ?? summary?.domain) || undefined }}
+    >
+      <motion.span layoutId={`company-strip-${companyId}`} className="mt-2 mb-1 flex">
+        <SignalStrip discrepancies={discrepancies} contradictions={contradictionCount} />
+      </motion.span>
+    </ReportHeader>
+  );
+
   if (error) {
     return (
       <>
-        <button type="button" onClick={onBack} className="micro-label mb-4 text-graphite hover:text-ink">
-          ← Inbox
-        </button>
-        <p role="alert" className="text-[13px] leading-5 text-ink">
-          This company couldn&apos;t be opened ({error}).
-        </p>
+        {back}
+        <p className="text-[13px] text-graphite">{error}</p>
       </>
     );
   }
-  if (!view) return <p className="text-[13px] text-graphite">Loading…</p>;
+  if (!view) {
+    return (
+      <>
+        {back}
+        {header}
+        <p role="status" className="sr-only">Loading</p>
+        <div aria-hidden="true" className="tray mt-5 h-10 rounded-full" />
+        <div aria-hidden="true" className="tray mt-6 h-32" />
+      </>
+    );
+  }
 
-  const contradictions = view.checks.filter((c) => c.source === "your_sources");
-  const publicRows = (report?.rows ?? []).filter((r) => !r.signal.endsWith("across your sources"));
   const disagreeing = (label: string) => contradictions.filter((c) => c.values?.some((v) => label.endsWith(v.item_label.split(" · ").pop() ?? ""))).length;
-  const tabs: [Tab, string][] = [
-    ["checks", `Checks${contradictions.length + publicRows.length ? ` ${contradictions.length + publicRows.length}` : ""}`],
-    ["items", `Items ${view.items.length}`],
-    ["questions", `Questions ${view.questions.length}`],
+  const checkCount = contradictions.length + publicRows.length;
+  const tabs: [Tab, string, number | null][] = [
+    ["checks", "Checks", checkCount || null],
+    ["items", "Items", view.items.length],
+    ["questions", "Questions", view.questions.length],
   ];
 
   return (
     <>
-      <button type="button" onClick={onBack} className="micro-label mb-4 text-graphite hover:text-ink">
-        ← Inbox
-      </button>
+      {back}
       {filedItemId && (
         <FiledToast itemId={filedItemId} company={view.company.name} onMoved={(id) => onOpen(id, null)} />
       )}
-      <ReportHeader company={{ name: view.company.name + (view.company.fictional ? " (fictional)" : ""), domain: view.company.domain ?? undefined }} />
+      {header}
       {view.company.form_d_entity && (
         <p className="mt-1 text-[11px] leading-4 text-graphite">
-          Matched SEC filer: {view.company.form_d_entity}
+          SEC filer: {view.company.form_d_entity}
           {view.company.cik && <span className="font-mono"> · CIK {view.company.cik}</span>}
         </p>
       )}
 
+      {/* Segmented control (v2): the white pill slides between tabs on a spring. */}
       {report && report.rows.length > 0 && (
-        <div className="mt-5">
+        <div className="mt-4">
           <Verdict rows={report.rows} />
         </div>
       )}
 
-      <div role="tablist" className="mt-5 flex gap-1 rounded-full bg-tray-strong p-1">
-        {tabs.map(([id, label]) => (
+      <div role="tablist" className="mt-5 flex gap-0.5 rounded-full bg-tray-strong p-[3px]">
+        {tabs.map(([id, label, count]) => (
           <button
             key={id}
             role="tab"
@@ -293,73 +374,103 @@ export function CompanyScreen({
             aria-selected={tab === id}
             onClick={() => setTab(id)}
             className={cn(
-              "h-8 flex-1 rounded-full text-[13px] transition-colors duration-150 ease-out",
-              tab === id ? "bg-surface font-medium text-ink shadow-fragment" : "text-graphite hover:text-ink",
+              "relative flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full text-[13px] font-medium transition-colors duration-150 ease-out",
+              tab === id ? "text-ink" : "text-graphite hover:text-ink",
             )}
           >
-            {label}
+            {tab === id && (
+              <motion.span
+                layoutId={`tab-pill-${companyId}`}
+                className="fragment absolute inset-0 z-0"
+                style={{ borderRadius: 9999 }}
+                transition={SPRING}
+              />
+            )}
+            {/* Labels stack above the pill: mid-slide it passes under its neighbours' text. */}
+            <span className="relative z-10">{label}</span>
+            {count !== null && <span className="relative z-10 text-data">{count}</span>}
           </button>
         ))}
       </div>
 
-      <div className="mt-6">
-        {tab === "checks" && (
-          <div className="space-y-8">
-            {contradictions.length > 0 && (
-              <section>
-                <h2 className="micro-label border-b border-rule pb-2 text-signal">Your sources disagree</h2>
-                <ul>
-                  {contradictions.map((c) => (
-                    <ContradictionCard key={`${c.claim_type}-${c.metric}`} check={c} />
-                  ))}
-                </ul>
-              </section>
-            )}
-            {publicRows.length > 0 ? (
-              <section>
-                <h2 className="mb-3 text-sm leading-5 font-medium text-ink">Public records</h2>
-                <DeltaRows rows={publicRows} />
-              </section>
-            ) : (
-              <p className="text-[13px] text-graphite">No public-record checks yet for this company.</p>
-            )}
-          </div>
-        )}
-
-        {tab === "items" && (
-          <>
-            <ol>
-              {[...view.items].reverse().map((item) => {
-                const n = disagreeing(item.label);
-                return (
-                  <li key={item.id} className="border-b border-rule py-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="flex min-w-0 items-center gap-2">
-                        <ItemTag kind={item.kind} />
-                        <span className="truncate text-[13px] text-ink">{item.label}</span>
-                      </span>
-                      <span className="shrink-0 text-[11px] text-graphite">{formatDate(item.item_date ?? item.received_at)}</span>
-                    </div>
-                    <p className="mt-1 text-xs text-graphite">
-                      {item.claim_count} claim{item.claim_count === 1 ? "" : "s"}
-                      {n > 0 && <span className="text-signal"> · {n} disagree with other items</span>}
-                    </p>
-                  </li>
-                );
-              })}
-            </ol>
-            <div className="mt-4">
-              <DropStrip dashed busy={busy} label="Drop another item for this company" onDrop={(input) => onDrop({ ...input, companyId })} />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={tab}
+          className="mt-6"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          transition={{ duration: DUR.base, ease: EASE_STATE }}
+        >
+          {tab === "checks" && (
+            <div className="space-y-8">
+              {contradictions.length > 0 && (
+                <section>
+                  <h2 className="mb-2 text-sm leading-5 font-medium text-ink">
+                    Your sources disagree <span className="text-signal">{contradictions.length}</span>
+                  </h2>
+                  <ul className="space-y-3">
+                    {contradictions.map((c, i) => (
+                      <ContradictionCard key={`${c.claim_type}-${c.metric}`} check={c} index={i} />
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {publicRows.length > 0 ? (
+                <section>
+                  <h2 className="mb-2 text-sm leading-5 font-medium text-ink">
+                    Public records <span className="text-data">{publicRows.length}</span>
+                  </h2>
+                  <DeltaRows rows={publicRows} />
+                </section>
+              ) : (
+                <p className="text-[13px] text-graphite">No public-record checks yet.</p>
+              )}
             </div>
-          </>
-        )}
+          )}
 
-        {tab === "questions" && <QuestionCards companyId={companyId} questions={view.questions} />}
-      </div>
+          {tab === "items" && (
+            <>
+              <ol className="space-y-2">
+                {[...view.items].reverse().map((item, i) => {
+                  const n = disagreeing(item.label);
+                  return (
+                    <motion.li
+                      key={item.id}
+                      className="fragment px-3 py-3"
+                      initial={{ opacity: 0, y: RISE / 2 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: i * STAGGER }}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <ItemTag kind={item.kind} />
+                          <span className="truncate text-[13px] text-ink">{item.label}</span>
+                        </span>
+                        <span className="shrink-0 text-[11px] text-graphite">{formatDate(item.item_date ?? item.received_at)}</span>
+                      </div>
+                      <p className="mt-1.5 flex items-center gap-2 text-xs leading-4 text-graphite">
+                        <span>
+                          <span className="font-medium text-ink">{item.claim_count}</span> claim{item.claim_count === 1 ? "" : "s"}
+                        </span>
+                        {n > 0 && <SignalStrip discrepancies={0} contradictions={n} delay={i * STAGGER} />}
+                      </p>
+                    </motion.li>
+                  );
+                })}
+              </ol>
+              <div className="mt-4">
+                <DropStrip busy={busy} step={step} label="Drop another item for this company" onDrop={(input) => onDrop({ ...input, companyId })} />
+              </div>
+            </>
+          )}
+
+          {tab === "questions" && <QuestionCards companyId={companyId} questions={view.questions} />}
+        </motion.div>
+      </AnimatePresence>
 
       <footer className="mt-8 text-[11px] leading-4 text-graphite">
-        Discrepancies are differences between sources, not findings of wrongdoing. Automated comparison of public records;
-        may be incomplete or out of date. Not investment advice.
+        Differences between sources, not findings of wrongdoing. Not investment advice.
       </footer>
     </>
   );

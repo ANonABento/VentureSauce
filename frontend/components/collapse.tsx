@@ -20,7 +20,7 @@ export function Collapse({
     <div
       id={id}
       className={cn(
-        "grid transition-[grid-template-rows,visibility] duration-200 ease-out",
+        "grid transition-[grid-template-rows,visibility] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]",
         open ? "visible grid-rows-[1fr]" : "invisible grid-rows-[0fr]",
         className,
       )}

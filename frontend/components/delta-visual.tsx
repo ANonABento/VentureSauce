@@ -1,12 +1,17 @@
-import type { CSSProperties, ReactNode } from "react";
+"use client";
+
+import type { ReactNode } from "react";
+import { motion } from "motion/react";
+import { DUR, EASE_ENTER, EASE_STATE, SPRING } from "@/lib/motion";
 import type { DeltaVisual as DeltaVisualData } from "@/lib/types";
 import { cn } from "./cn";
 import { formatDate, formatUsd } from "./report-utils";
 
 /**
- * A row's chart. Every chart spans the full card width from the same left
- * edge and says what it shows. Marks are dithered dot grids in the data color;
- * the signal color is used for one thing only: the gap of a discrepancy.
+ * A row's mini chart. Every chart spans the full content width from the same
+ * left edge and carries a caption that says what it shows. Solid ink = said
+ * publicly; outlined graphite = in the filing only. The signal color is used
+ * for one thing: the gap segment of a discrepancy.
  */
 export function DeltaVisual({
   visual,
@@ -23,25 +28,19 @@ export function DeltaVisual({
     case "headcount":
       return <HeadcountSparkline {...visual} />;
     case "leadership":
-      return <LeadershipList {...visual} discrepancy={discrepancy} />;
+      return <LeadershipList {...visual} />;
     case "timing":
       return <Timeline {...visual} />;
   }
 }
 
-const dot = (color: string) => ({ ["--dot" as string]: color }) as CSSProperties;
-
-/** Small labels under a chart, spread across its width. */
+/** Small mono labels under a chart, spread across its width. */
 function Caption({ children }: { children: ReactNode }) {
   return (
-    <div className="mt-2 flex justify-between gap-2 text-xs leading-4 text-graphite">
+    <div className="mt-1 flex justify-between gap-2 font-mono text-[11px] leading-4 text-graphite">
       {children}
     </div>
   );
-}
-
-function Value({ children }: { children: ReactNode }) {
-  return <span className="font-mono text-ink">{children}</span>;
 }
 
 /** Track = offered, fill = sold per the filing, tick = said publicly. */
@@ -63,95 +62,48 @@ function RaiseBar({
 
   return (
     <div>
-      <div aria-hidden="true" className="relative h-7">
-        <span
-          className="dither absolute inset-x-0 top-1 h-5"
-          style={dot("var(--border-strong)")}
+      <div aria-hidden="true" className="relative h-5">
+        <span className="absolute inset-x-0 top-1 h-3 rounded-[2px] bg-rule" />
+        <motion.span
+          className="absolute top-1 left-0 h-3 origin-left rounded-l-[2px] bg-ink"
+          style={{ width: percent(low) }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: DUR.reveal, ease: EASE_ENTER }}
         />
-        <span className="absolute inset-x-0 top-1 h-5 animate-grow">
-          <span
-            className="dither absolute inset-y-0 left-0 bg-surface"
-            style={{ width: percent(low), ...dot("var(--data)") }}
-          />
-          <span
-            className="dither absolute inset-y-0 bg-surface"
-            style={{
-              left: percent(low),
-              width: `calc(${percent(high)} - ${percent(low)})`,
-              ...dot(discrepancy ? "var(--signal)" : "var(--data)"),
-            }}
-          />
-        </span>
-        <span
-          className="absolute inset-y-0 w-0.5 -translate-x-1/2 rounded-full bg-ink"
+        <motion.span
+          className={cn(
+            "absolute top-1 h-3 origin-left",
+            discrepancy ? "bg-signal" : "bg-graphite",
+          )}
+          style={{
+            left: percent(low),
+            width: `calc(${percent(high)} - ${percent(low)})`,
+          }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: DUR.reveal * 0.6 }}
+        />
+        <motion.span
+          className="absolute top-0 h-5 w-0.5 -translate-x-1/2 rounded-full bg-ink"
           style={{ left: percent(said) }}
+          initial={{ opacity: 0, scaleY: 0 }}
+          animate={{ opacity: 1, scaleY: 1 }}
+          transition={{ duration: DUR.base, ease: EASE_STATE, delay: DUR.reveal }}
         />
       </div>
       <Caption>
-        <span>
-          <Value>{formatUsd(said)}</Value> said
-        </span>
-        <span>
-          <Value>{formatUsd(sold)}</Value> filed
-        </span>
-        <span>
-          <Value>{formatUsd(offered)}</Value> offered
-        </span>
+        <span>{formatUsd(said)} said</span>
+        <span>{formatUsd(sold)} filed</span>
+        <span>{formatUsd(offered)} offered</span>
       </Caption>
     </div>
   );
 }
 
-/**
- * Two dithered bars on one scale, for any row with a said and a filed figure
- * but no dedicated chart.
- */
-export function CompareBars({
-  said,
-  filed,
-  filedName = "Filed",
-  discrepancy,
-}: {
-  said: { label: string; value: number };
-  filed: { label: string; value: number };
-  /** "Filed" for an SEC filing, "Found" for other public records. */
-  filedName?: string;
-  discrepancy: boolean;
-}) {
-  const max = Math.max(said.value, filed.value) || 1;
-  const bars = [
-    { name: "Said", ...said, color: "var(--data)" },
-    { name: filedName, ...filed, color: discrepancy ? "var(--signal)" : "var(--data)" },
-  ];
-
-  return (
-    <dl className="grid grid-cols-[40px_1fr] items-center gap-x-3 gap-y-2">
-      {bars.map((bar) => (
-        <div key={bar.name} className="contents">
-          <dt className="text-xs leading-4 text-graphite">{bar.name}</dt>
-          <dd className="relative h-3">
-            <span
-              aria-hidden="true"
-              className="dither absolute inset-0"
-              style={dot("var(--border-strong)")}
-            />
-            <span aria-hidden="true" className="absolute inset-0 animate-grow">
-              <span
-                className="dither absolute inset-y-0 left-0 bg-surface"
-                style={{ width: `${(bar.value / max) * 100}%`, ...dot(bar.color) }}
-              />
-            </span>
-            <span className="sr-only">{bar.label}</span>
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-// Dots per row. Fewer than this and one row spans the card; more and they wrap.
-const DOTS_PER_ROW = 24;
-const MAX_DOTS = 96;
+// Up to this many dots are spread across the full width; beyond it they wrap.
+const SPREAD_DOTS = 28;
+const MAX_DOTS = 84;
 
 /** One dot per investor in the filing; solid = named publicly. */
 function InvestorDots({ filed, named }: { filed: number; named: number }) {
@@ -159,27 +111,29 @@ function InvestorDots({ filed, named }: { filed: number; named: number }) {
 
   return (
     <div>
-      {/* A grid, so the dots shrink to fit a narrow panel instead of overlapping. */}
       <div
         aria-hidden="true"
-        className="grid animate-grow gap-[3px]"
-        style={{
-          gridTemplateColumns: `repeat(${Math.min(shown, DOTS_PER_ROW)}, minmax(0, 1fr))`,
-        }}
+        className={cn(
+          "flex h-3 items-center",
+          shown <= SPREAD_DOTS ? "justify-between" : "h-auto flex-wrap gap-1",
+        )}
       >
         {Array.from({ length: shown }, (_, index) => (
-          <span
+          <motion.span
             key={index}
+            initial={{ opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ ...SPRING, delay: Math.min(index, 28) * 0.015 }}
             className={cn(
-              "aspect-square w-full max-w-2.5 rounded-full",
-              index < named ? "bg-data" : "border-[1.5px] border-border-strong",
+              "h-2 w-2 rounded-full",
+              index < named ? "bg-ink" : "border border-graphite",
             )}
           />
         ))}
       </div>
       <Caption>
         <span>
-          <Value>{named}</Value> named of <Value>{filed}</Value> filed
+          {named} named of {filed} filed
         </span>
       </Caption>
     </div>
@@ -190,7 +144,7 @@ const monthFormat = new Intl.DateTimeFormat("en-US", {
   month: "short",
   timeZone: "UTC",
 });
-const SPARK_HEIGHT = 56;
+const SPARK_HEIGHT = 24;
 
 function HeadcountSparkline({
   series,
@@ -202,12 +156,12 @@ function HeadcountSparkline({
   const values = series.map((point) => point.value);
   const min = Math.min(...values);
   const range = Math.max(...values) - min || 1;
-  // x in 0–100 (stretched to the card width), y in px.
+  // x in 0–100 (stretched to the content width), y in px.
   const y = (value: number) =>
-    SPARK_HEIGHT - 6 - ((value - min) / range) * (SPARK_HEIGHT - 14);
-  const points = values.map(
-    (value, index) => `${(index / (values.length - 1)) * 100},${y(value)}`,
-  );
+    SPARK_HEIGHT - 4 - ((value - min) / range) * (SPARK_HEIGHT - 8);
+  const points = values
+    .map((value, index) => `${(index / (values.length - 1)) * 100},${y(value)}`)
+    .join(" ");
   const first = series[0];
   const last = series[series.length - 1];
 
@@ -217,97 +171,73 @@ function HeadcountSparkline({
         <svg
           viewBox={`0 0 100 ${SPARK_HEIGHT}`}
           preserveAspectRatio="none"
-          className="absolute inset-0 h-full w-full animate-grow text-data"
+          className="absolute inset-0 h-full w-full overflow-visible text-ink"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.25"
         >
-          <polygon
-            points={`0,${SPARK_HEIGHT} ${points.join(" ")} 100,${SPARK_HEIGHT}`}
-            fill="currentColor"
-            opacity="0.1"
-          />
-          <polyline
-            points={points.join(" ")}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
+          <motion.polyline
+            points={points}
             vectorEffect="non-scaling-stroke"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: DUR.signature, ease: EASE_ENTER }}
           />
         </svg>
         <span
-          className="absolute right-0 h-2.5 w-2.5 translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface bg-data"
+          className="absolute right-0 h-1.5 w-1.5 translate-x-1/2 -translate-y-1/2 rounded-full bg-ink"
           style={{ top: y(last.value) }}
         />
       </div>
       <Caption>
         <span>
-          <Value>{first.value}</Value> {monthFormat.format(new Date(first.date))}
+          {first.value} {monthFormat.format(new Date(first.date))}
         </span>
         <span>
-          <Value>{last.value}</Value> {monthFormat.format(new Date(last.date))}
+          {last.value} {monthFormat.format(new Date(last.date))}
         </span>
       </Caption>
     </div>
   );
 }
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
-}
-
-/** Everyone in the filing as a chip; the ones named there only are set apart. */
+/** Everyone in the filing; a hollow dot marks who is named there only. */
 function LeadershipList({
   people,
-  discrepancy,
 }: {
   people: { name: string; role?: string; onSite: boolean }[];
-  discrepancy: boolean;
 }) {
-  const named = people.filter((person) => person.onSite).length;
+  const onSite = people.filter((person) => person.onSite).length;
 
   return (
     <div>
-      <ul className="flex flex-wrap gap-1.5">
+      <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs leading-4 text-ink">
         {people.map((person) => (
-          <li
-            key={person.name}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full py-0.5 pr-2.5 pl-0.5 text-xs leading-5",
-              person.onSite
-                ? "bg-tray text-ink"
-                : discrepancy
-                  ? "bg-signal-wash text-signal"
-                  : "border border-dashed border-border-strong text-graphite",
-            )}
-          >
+          <li key={person.name} className="flex items-center gap-1.5">
             <span
               aria-hidden="true"
               className={cn(
-                "flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-medium",
-                person.onSite
-                  ? "bg-data text-white"
-                  : discrepancy
-                    ? "bg-signal text-white"
-                    : "bg-border-strong text-ink",
+                "h-2 w-2 rounded-full",
+                person.onSite ? "bg-ink" : "border border-graphite",
               )}
-            >
-              {initials(person.name)}
-            </span>
-            {person.name}
-            {!person.onSite && <span className="sr-only"> (in the filing only)</span>}
+            />
+            <span>{person.name}</span>
+            {!person.onSite && (
+              <span className="sr-only"> (in the filing only)</span>
+            )}
           </li>
         ))}
       </ul>
       <Caption>
         <span>
-          <Value>{named}</Value> named of <Value>{people.length}</Value> filed
+          {onSite} named of {people.length} filed
         </span>
       </Caption>
     </div>
   );
 }
 
-/** The filing date and the press date as two labeled dots, with the gap between. */
+/** The filing date and the press date as two labeled dots on one line. */
 function Timeline({
   filedOn,
   announcedOn,
@@ -315,29 +245,69 @@ function Timeline({
   filedOn: string;
   announcedOn: string;
 }) {
-  const days = Math.round(
-    Math.abs(new Date(announcedOn).getTime() - new Date(filedOn).getTime()) / 86_400_000,
-  );
-
   return (
     <div>
-      <div aria-hidden="true" className="relative h-7">
-        <span
-          className="dither absolute inset-x-1 top-1/2 h-1 -translate-y-1/2 animate-grow"
-          style={dot("var(--data)")}
+      <div aria-hidden="true" className="relative h-3">
+        <motion.span
+          className="absolute inset-x-1 top-1/2 h-px origin-left bg-graphite"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: DUR.reveal, ease: EASE_ENTER }}
         />
-        <span className="absolute top-1/2 left-0 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-data bg-surface" />
-        <span className="absolute top-1/2 right-0 h-3 w-3 -translate-y-1/2 rounded-full bg-data" />
-        {Number.isFinite(days) && (
-          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface px-2 font-mono text-xs leading-4 text-ink">
-            {days} days
-          </span>
-        )}
+        <span className="absolute top-0.5 left-0 h-2 w-2 rounded-full border border-graphite bg-paper" />
+        <motion.span
+          className="absolute top-0.5 right-0 h-2 w-2 rounded-full bg-ink"
+          initial={{ opacity: 0, scale: 0.4 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ ...SPRING, delay: DUR.reveal * 0.8 }}
+        />
       </div>
       <Caption>
         <span>{formatDate(filedOn)} filed</span>
         <span>{formatDate(announcedOn)} press</span>
       </Caption>
+    </div>
+  );
+}
+
+/**
+ * Two bars on one scale, for a row with a said and a found figure but no
+ * chart of its own (headcount, a round against the press).
+ */
+export function CompareBars({
+  said,
+  found,
+  foundName,
+  discrepancy,
+}: {
+  said: number;
+  found: number;
+  /** "Filed" for an SEC filing, "Found" for other public records. */
+  foundName: string;
+  discrepancy: boolean;
+}) {
+  const max = Math.max(said, found) || 1;
+  const bars = [
+    { name: "Said", value: said, fill: "bg-ink" },
+    { name: foundName, value: found, fill: discrepancy ? "bg-signal" : "bg-data" },
+  ];
+
+  return (
+    <div aria-hidden="true" className="grid grid-cols-[40px_1fr] items-center gap-x-3 gap-y-1.5">
+      {bars.map((bar, index) => (
+        <div key={bar.name} className="contents">
+          <span className="text-[11px] leading-4 text-graphite">{bar.name}</span>
+          <span className="relative h-3 rounded-[2px] bg-rule">
+            <motion.span
+              className={cn("absolute inset-y-0 left-0 origin-left rounded-[2px]", bar.fill)}
+              style={{ width: `${(bar.value / max) * 100}%` }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: index * DUR.reveal * 0.4 }}
+            />
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

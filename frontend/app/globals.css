@@ -1,32 +1,53 @@
 @import "tailwindcss";
 
-/* VentureSauce v2 tokens (Research/Design/tokens.css). Light only. The
-   original variable names are kept, so older components keep working. */
+/*
+ * VentureSauce v2 tokens (Figma: "VentureSauce — Brand & Design Kit", Components v2).
+ * Same variable names as the Marginalia tokens, with VentureSauce values. New: tray,
+ * data, accent. See Research/Design/handoff.md and tokens.css.
+ */
 :root {
+  /* Light is the default; dark is opt-in via data-theme (see ThemeParam). */
   color-scheme: light;
 
   --paper: #fbfaf7;
   --surface: #ffffff;
-  --ink: #333d34; /* pine: text and primary action */
+  --ink: #333d34;
   --graphite: #66726a;
   --rule: #e6e1d8;
+  --rule-strong: #d4cec2;
   /* Discrepancies only. */
   --signal: #a3321f;
   --signal-wash: #fbe9e5;
   --steady: #1f6b43;
-
-  --tray: #eef3f4; /* section trays: mist tint, no border */
-  --tray-strong: #e2ebed; /* tab track, empty chart marks */
-  --data: #3f6e7c; /* neutral figures, chart marks, source links */
-  --border-strong: #d4cec2;
   --steady-wash: #e6f1ea;
-  --ink-hover: #252d26;
-  /* Amber: only the logo, the running log step, drop hover and ::selection. */
+  /* Mist trays hold the one hero element per screen. */
+  --tray: #eef3f4;
+  --tray-strong: #e2ebed;
+  /* Neutral figures and source links. */
+  --data: #3f6e7c;
+  /* Amber, 4 uses only: logo sun, running step, drop hover, selection. */
   --accent: #d9822b;
-  --accent-subtle: #fcebd6;
-  --focus-ring: #3f6e7c;
+  --accent-wash: #fcebd6;
+}
 
-  --ease: cubic-bezier(0.2, 0, 0, 1);
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #121211;
+  --surface: #1a1a19;
+  --ink: #edebe6;
+  --graphite: #a3a09a;
+  --rule: #2c2b29;
+  --rule-strong: #3a3936;
+  --signal: #e0794f;
+  --signal-wash: #2a1d17;
+  --steady: #7faf8e;
+  --steady-wash: #18241c;
+  --tray: #1c2224;
+  --tray-strong: #253033;
+  --data: #8fb3be;
+  --accent: #e39a4f;
+  --accent-wash: #2b2117;
 }
 
 @theme inline {
@@ -35,6 +56,7 @@
   --color-ink: var(--ink);
   --color-graphite: var(--graphite);
   --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
   --color-signal: var(--signal);
   --color-signal-wash: var(--signal-wash);
   --color-steady: var(--steady);
@@ -42,34 +64,13 @@
   --color-tray: var(--tray);
   --color-tray-strong: var(--tray-strong);
   --color-data: var(--data);
-  --color-border-strong: var(--border-strong);
-  --color-ink-hover: var(--ink-hover);
   --color-accent: var(--accent);
-  --color-accent-subtle: var(--accent-subtle);
-
-  --shadow-fragment: 0 1px 2px rgb(31 43 48 / 0.04), 0 6px 16px -4px rgb(31 43 48 / 0.07);
+  --color-accent-wash: var(--accent-wash);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-serif: var(--font-newsreader), Georgia, serif;
-
-  --animate-rise: rise 240ms var(--ease) both;
-  --animate-grow: grow 700ms var(--ease) both;
-
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-  }
-  @keyframes grow {
-    from {
-      clip-path: inset(0 100% 0 0);
-    }
-    to {
-      clip-path: inset(0 0 0 0);
-    }
-  }
+  /* Bespoke Serif (bundled): display and key figures. Old-style figures only. */
+  --font-serif: var(--font-bespoke), Georgia, serif;
 }
 
 @layer base {
@@ -82,33 +83,112 @@
   }
 
   ::selection {
-    background: var(--accent-subtle);
+    background: var(--accent-wash);
     color: var(--ink);
   }
 
   :focus-visible {
-    outline: 2px solid var(--focus-ring);
+    outline: 2px solid var(--data);
     outline-offset: 2px;
   }
 
   @media (prefers-reduced-motion: reduce) {
     * {
-      animation: none !important;
       transition-duration: 0ms !important;
     }
   }
 }
 
-/* Small sentence-case label. Set the color at the call site. */
+/* One row of dither dots in currentColor: the source flow's connecting line. */
+@utility dot-line {
+  background: radial-gradient(circle, currentColor 0.8px, transparent 0.95px) 0 0 / 3px 3px repeat-x;
+}
+
+/*
+ * The first-run dissolve (decision 32): the landscape breaks into its own dot
+ * grid. A 3px dot mask shrinks from full coverage (r 2.2px covers the tile) to
+ * nothing. Reduced motion gets a short crossfade instead.
+ */
+@property --dot-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 2.2px;
+}
+
+@keyframes dot-dissolve {
+  0% {
+    --dot-r: 2.2px;
+  }
+  100% {
+    --dot-r: 0px;
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@utility dissolve {
+  mask-image: radial-gradient(circle, #000 var(--dot-r), transparent calc(var(--dot-r) + 0.4px));
+  mask-size: 3px 3px;
+  animation: dot-dissolve 560ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    mask-image: none;
+    animation: fade-out 200ms ease-out forwards;
+  }
+}
+
+/*
+ * Small labels ("Filed", "Said", section titles). v2 retires uppercase mono:
+ * sentence case, Geist medium. Set the color at the call site.
+ */
 @utility micro-label {
   font-size: 12px;
   line-height: 16px;
   font-weight: 500;
+  letter-spacing: -0.005em;
 }
 
-/* Dithered dot grid: staggered rows of dots in --dot. Used for chart bars. */
+/* Mist surface for the one hero element per screen. No border. */
+@utility tray {
+  background: var(--tray);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* White card that looks like real UI. Sits on the page or on a tray. */
+@utility fragment {
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 2px rgb(31 43 48 / 0.04),
+    0 6px 16px -4px rgb(31 43 48 / 0.07);
+}
+
+/*
+ * Dithered proportion bar: two staggered rows of dots, the ASCII art carried
+ * into data. Set --dither-on and --dither-fill (0–100%) at the call site.
+ */
 @utility dither {
+  --dither-on: var(--data);
+  --dither-fill: 0%;
+  position: relative;
+  height: 7px;
   background:
-    radial-gradient(circle, var(--dot) 1.15px, transparent 1.35px) 0 0 / 4px 8px,
-    radial-gradient(circle, var(--dot) 1.15px, transparent 1.35px) 2px 4px / 4px 8px;
+    radial-gradient(circle, var(--rule-strong) 0.8px, transparent 0.95px) 0 0.5px / 3px 3px repeat-x,
+    radial-gradient(circle, var(--rule-strong) 0.8px, transparent 0.95px) 1.5px 3.5px / 3px 3px repeat-x;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--dither-fill);
+    background:
+      radial-gradient(circle, var(--dither-on) 0.8px, transparent 0.95px) 0 0.5px / 3px 3px repeat-x,
+      radial-gradient(circle, var(--dither-on) 0.8px, transparent 0.95px) 1.5px 3.5px / 3px 3px repeat-x;
+  }
 }

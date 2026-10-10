@@ -1,61 +1,31 @@
-import { cn } from "./cn";
+import { SourceFlow } from "./viz";
 
-export const LOADING_STEPS = [
-  "Reading SEC filings",
-  "Reading the web",
-  "Comparing",
-];
+/** The single-company check (the /panel/states flow). */
+export const LOADING_STEPS = ["SEC filings", "The web", "Compare"];
+
+/** A dropped item's job, one node per source it is checked against. */
+export const JOB_FLOW = ["Item", "SEC", "LinkedIn", "Press", "Your items"];
+
+const JOB_INDEX: Record<string, number> = {
+  parsing: 0,
+  checking_sec: 1,
+  checking_linkedin: 2,
+  checking_press: 3,
+  comparing_sources: 4,
+  ready: 5,
+};
+
+/** Which JOB_FLOW node a job status is on. Unknown statuses stay on the first node. */
+export const jobStep = (status: string | null | undefined) => JOB_INDEX[status ?? ""] ?? 0;
 
 /**
- * A quiet status log. `current` is the index of the step in progress; every
- * step before it is complete. `steps` defaults to the three report steps.
+ * Loading as a source-flow diagram in a mist tray (decision 28). `current` is
+ * the index of the step in progress; every step before it is complete.
  */
-export function LoadingSteps({
-  current,
-  steps = LOADING_STEPS,
-}: {
-  current: number;
-  steps?: string[];
-}) {
+export function LoadingSteps({ current, steps = LOADING_STEPS }: { current: number; steps?: string[] }) {
   return (
-    <div>
-      <p role="status" className="sr-only">
-        {steps[Math.min(current, steps.length - 1)]}
-      </p>
-      <ol className="space-y-3">
-        {steps.map((label, index) => {
-          const done = index < current;
-          const active = index === current;
-          return (
-            <li
-              key={label}
-              aria-current={active ? "step" : undefined}
-              className={cn(
-                "flex items-center gap-2 text-[13px] leading-5 transition-colors duration-200 ease-out",
-                done ? "text-ink" : "text-graphite",
-              )}
-            >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 12 12"
-                className={cn(
-                  "h-3 w-3 text-ink transition-opacity duration-200 ease-out",
-                  done ? "opacity-100" : "opacity-0",
-                )}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <path d="M2 6.5l2.5 2.5L10 3.5" />
-              </svg>
-              <span>
-                {label}
-                {active && "…"}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+    <div className="tray px-4 pt-4 pb-3">
+      <SourceFlow steps={steps} current={current} />
     </div>
   );
 }

@@ -143,6 +143,32 @@ Surya's verdict: the tabs, contradiction card and question card feel generic and
 | 23 | Tabs | A segmented pill on a tray track, with the active tab as a white fragment. Counts in mist blue. |
 | 24 | Data marks | **Dithered dot-grid bars** for proportions: status bar, raise bar, progress, digest. Mist blue for neutral, brick for discrepancy. Sparklines and lines stay solid. |
 
+## Round 4: visuals over text, and motion (2026-10-10)
+
+A teammate's feedback: the panel reads as text overload. Replace prose with diagrams, charts and visual indicators, keep the key figures, and add lively, elegant, precise motion. The references are Lasso first, then Stripe, Ramp and Mercury. The exact timings are calibrated by a motion teardown (decision 34).
+
+| # | Topic | Decision |
+|---|---|---|
+| 25 | Text rule | **One number + one mark per idea, words on tap.** Each card shows a serif figure, one visual and a 2–4 word label. Reasons, quotes and explanations go behind a tap. The founder questions keep their full sentences, because that text is what the user copies. |
+| 26 | Motion feel | **A choreographed reveal, then stillness.** When a result arrives (≈600ms total), the header fades in, the hero number counts up, the dither fills from left to right, and cards rise 8px one after another. After that, nothing moves except in response to hover or tap. Feedback takes ≤200ms; layout changes use springs. Reduced motion means instant changes or crossfades only. |
+| 27 | Motion tech | **The `motion` library + CSS.** Motion handles screen transitions, shared elements (`layoutId`), springs and count-ups. CSS handles hovers and fills. It's bundled, so it's MV3-safe. |
+| 28 | Loading | **Source-flow diagram** with the nodes Deck → SEC → LinkedIn → Press on a dotted line. Done is data blue, running is the amber dot (an existing amber use), and waiting is a hollow node. It replaces the list of step text. |
+| 29 | Contradictions | **Range plot.** Each source's value is a dot on one number line, the spread is shaded in brick, and each dot carries its source label. It replaces the contradiction card's prose. |
+| 30 | Inbox rows | **Signal strip.** Brick dots for discrepancies and hollow brick diamonds for contradictions, with no "of N" yet. Ask Kevin to add `verdict_counts {match, gap, unverifiable}` to `/companies` and the digest; the strip fills in when it's present. |
+| 31 | Verdict + digest | **Segmented status bars.** The report hero's dither bar is split by status, which removes the legend text. The digest shows one ranked stacked bar per company in place of the totals sentence. |
+| 32 | First run | **Landscape hero + drop card** for an empty inbox. On drop, a **dither dissolve**: the art breaks into its dot grid, and the dots become the source-flow dotted line. With reduced motion, a crossfade. |
+| 33 | Navigation | **Shared element + directional slide.** The company name and signal strip glide from the inbox row into the Company header. The content slides 12px in the direction of travel. The tab indicator moves on a spring. |
+| 34 | Digest | **Bars first, brief as a live transcript.** The paragraph collapses to its headline. On play, the brief opens and the current sentence is highlighted (timing estimated from sentence length). Company cards show a bar and the top question. |
+| 36 | Motion tokens | These come from the teardown below, scaled to a 380px panel. **Enter** `cubic-bezier(0.16,1,0.3,1)` (Stripe expo-out). **State** `cubic-bezier(0.25,1,0.5,1)` (Stripe quart-out). Durations: **fast 150ms** (hover/color), **base 300ms** (tabs, expand, exits), **reveal 600ms** (bars, cards), **signature 800ms** (dissolve, range plot). **Spring** bounce 0.15, visualDuration 0.45s (Lasso uses bounce 0.2). **Rise** 8px (Lasso's 150px at desktop scale). **Stagger** 40ms. Bars animate `scaleX` from a left origin, not `width` (Lasso). Expand/collapse uses `grid-template-rows 0fr→1fr` (Mercury). Exits are fade + 4px blur at 200ms, shorter than enters (Mercury `fadeOutBlur`). |
+| 35 | Process | **Code first; Figma documents it.** Build and tune at `/panel`, then update Screens v2 with the static visuals and add a **Motion** page (storyboards with duration, easing and order). The Figma P0 data re-map happens in the same pass. Motion values come from a teardown of Lasso and Stripe (computed styles) and of Ramp and Mercury (Mobbin flows). |
+
+**Motion teardown (measured 2026-10-10 from computed styles and Framer appear configs):**
+- **Lasso** (Framer, which uses the same engine as `motion`). Hero appear is a spring (bounce 0.2, duration 0.9s, y 150→0, opacity 0→1). Sections fade in over a 1s tween. Paired groups converge from ±300px while scaling 0.5→1. Progress bars animate `scaleX` with a centered origin. Hover is a 150ms ease on color; menus take 250ms. Everything animates only transform and opacity.
+- **Stripe.** Interaction is 300ms `cubic-bezier(0.25,1,0.5,1)` on color, fill, transform and opacity. Reveals are 800ms `cubic-bezier(0.165,0.84,0.44,1)` on transform and **clip-path**, plus 600ms `cubic-bezier(0.16,1,0.3,1)`. Opacity takes 500ms `cubic-bezier(0.33,1,0.68,1)`.
+- **Ramp.** Tailwind defaults: 300ms or 150ms `cubic-bezier(0.4,0,0.2,1)`. Cards lift with transform + box-shadow over 400ms ease.
+- **Mercury.** Opacity 300ms ease-out `(0,0,0.2,1)`. Accordions use **`grid-template-rows`** over 300ms. Exits use `fadeOutBlur` (500ms). Tab panels fade and translate over 300ms.
+- **The shared pattern:** quick ease-out curves, transform and opacity only, 150ms for feedback, 300ms for state changes, 600–900ms only for reveals, and nothing in a loop.
+
 ## Pending
 
 - **Layout is parked.** A teammate is building the panel layout mockup. Once it's committed, pull it and apply the kit on top. Row layout, screen structure and density decisions wait for it, and parts of that layout may change afterward. The draft recommendation for the truth-table row is a three-line stack (pill and page, quote, then a big CLAIMED → OBSERVED line with confidence, then the source).
