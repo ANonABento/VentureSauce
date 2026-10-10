@@ -1,0 +1,78 @@
+{
+  "job_id": "fixture-acme",
+  "status": "ready",
+  "company": { "name": "Acme AI", "domain": "acme-ai.example", "cik": null, "fictional": true },
+  "checks": [
+    {
+      "claim_type": "headcount",
+      "claim_text": "25 AI engineers in San Francisco",
+      "page": 7,
+      "claimed_value": 25,
+      "observed_value": 9,
+      "unit": "people",
+      "source": "linkedin",
+      "via": "brightdata",
+      "source_url": "https://example.com/acme/linkedin",
+      "verdict": "gap",
+      "confidence": "medium",
+      "note": "LinkedIn lists 9 employees, about a third of the claimed engineering team. Ask whether contractors are included."
+    },
+    {
+      "claim_type": "raised",
+      "claim_text": "Raised a $10M seed round",
+      "page": 2,
+      "claimed_value": 10000000,
+      "observed_value": 15000000,
+      "unit": "usd",
+      "source": "form_d",
+      "via": "sec_edgar",
+      "source_url": "https://example.com/acme/form-d",
+      "verdict": "gap",
+      "confidence": "high",
+      "note": "Form D reports $15M sold, $5M more than the deck and press. Possible unannounced extension."
+    },
+    {
+      "claim_type": "round_size",
+      "claim_text": "$10M seed led by Example Ventures",
+      "page": 2,
+      "claimed_value": 10000000,
+      "observed_value": 10000000,
+      "unit": "usd",
+      "source": "press",
+      "via": "brightdata",
+      "source_url": "https://example.com/acme/press",
+      "verdict": "match",
+      "confidence": "high",
+      "note": "Press announcement matches the deck's $10M figure."
+    },
+    {
+      "claim_type": "board",
+      "claim_text": "Board: Jane Founder, Sam Investor",
+      "page": 9,
+      "claimed_value": "2 board members",
+      "observed_value": "3 related persons, including Alex Director",
+      "unit": "people",
+      "source": "form_d",
+      "via": "sec_edgar",
+      "source_url": "https://example.com/acme/form-d",
+      "verdict": "gap",
+      "confidence": "medium",
+      "note": "Form D lists Alex Director, who isn't on the deck's board slide or in press. Possible unannounced director."
+    },
+    {
+      "claim_type": "customer",
+      "claim_text": "Trusted by Globex",
+      "page": 5,
+      "claimed_value": "Globex",
+      "observed_value": null,
+      "unit": null,
+      "source": "press",
+      "via": "brightdata",
+      "source_url": "https://example.com/acme/search-globex",
+      "verdict": "unverifiable",
+      "confidence": "low",
+      "note": "No public mention of Acme AI by Globex found. It may be a pilot or LOI; ask for a reference."
+    }
+  ],
+  "brief_audio_url": null
+}

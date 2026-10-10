@@ -1,0 +1,33 @@
+{
+  "fictional": true,
+  "form_d": {
+    "entity_name": "Acme AI, Inc.",
+    "cik": null,
+    "filing_date": "2026-06-02",
+    "total_offering": 15000000,
+    "total_sold": 15000000,
+    "total_remaining": 0,
+    "date_of_first_sale": "2026-05-20",
+    "num_investors": 7,
+    "related_persons": ["Jane Founder", "Sam Investor", "Alex Director"],
+    "url": "https://example.com/acme/form-d",
+    "history": []
+  },
+  "linkedin": {
+    "employees": 9,
+    "company_size": "2-10 employees",
+    "url": "https://example.com/acme/linkedin",
+    "fetched_at": "2026-10-10T12:00:00Z",
+    "via": "brightdata"
+  },
+  "press": [
+    {
+      "title": "Acme AI raises $10M seed led by Example Ventures",
+      "url": "https://example.com/acme/press",
+      "date": "2026-06-10",
+      "snippet": "Acme AI announced a $10 million seed round led by Example Ventures.",
+      "amount_mentioned": 10000000,
+      "via": "brightdata"
+    }
+  ]
+}

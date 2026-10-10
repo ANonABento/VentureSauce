@@ -22,7 +22,7 @@ backend/
     cache.py           # Data: MongoDB
     ground_truth.py    # Data: get_ground_truth(company, domain)
   fixtures/
-    job_daytona.json   # Kevin (hour 1), Extension builds against it
+    job_acme.json   # Kevin (hour 1), Extension builds against it
     acme_ground_truth.json  # Data: fictional company
 extension/             # Extension
 demo/                  # Research: decks, receipts, pitch assets

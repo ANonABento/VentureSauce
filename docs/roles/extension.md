@@ -25,7 +25,7 @@
 
 ## Hour 1–3: build against the fixture (don't wait for the backend)
 
-- [ ] Load `backend/fixtures/job_daytona.json` locally (a `USE_FIXTURE` flag in `panel.js`).
+- [ ] Run the backend in fake mode (see `backend/README.md`): `/analyze` then `/jobs/{id}` steps through `fixtures/job_acme.json` with real timing, so you can build the live UI right away.
 - [ ] **Drop zone:** accepts a PDF (drag-and-drop plus a file picker) and has a "paste text instead" toggle.
 - [ ] **Status steps:** Parsing → Checking SEC → Checking LinkedIn → Checking press → Ready. Each one ticks when `status` passes it.
 - [ ] **Truth table** (one row per check):
@@ -39,7 +39,7 @@
 
 ## Hour 3–7: go live
 
-- [ ] `POST http://localhost:8000/analyze` with `FormData` (`file`) or JSON `{text}`, then poll `GET /jobs/{id}` every 1s until `ready` or `error`.
+- [ ] `POST http://localhost:8000/analyze` with `FormData` (`file` for a PDF, or `text` for pasted text), then poll `GET /jobs/{id}` every 1s until `ready` or `error`.
 - [ ] Rows appear as checks arrive (partial results). That's what makes it feel live on stage.
 - [ ] Error state: a friendly message plus a "Retry from cache" button that calls `?replay=1`.
 - [ ] Sit in on Research's first tester session and take notes on where they hesitate or squint.

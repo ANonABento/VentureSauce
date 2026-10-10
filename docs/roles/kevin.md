@@ -6,7 +6,7 @@
 
 - [ ] Claim credits: Cognition (Devin), Daytona, Stripe perks. Make sure everyone has redeemed their Bright Data code.
 - [ ] Scaffold `backend/` (FastAPI, uvicorn, pdfplumber, anthropic, motor/pymongo, python-dotenv), plus `.gitignore` with `.env`.
-- [ ] Write `backend/fixtures/job_daytona.json` matching the job contract in PLAN.md: 5 to 6 checks covering every verdict type (match, gap, unverifiable) and every source (form_d, linkedin, press). **Push it. Extension is blocked on this.**
+- [ ] Write `backend/fixtures/job_acme.json` matching the job contract in PLAN.md: 5 to 6 checks covering every verdict type (match, gap, unverifiable) and every source (form_d, linkedin, press). **Push it. Extension is blocked on this.**
 - [ ] `GET /jobs/{id}` returns the fixture, and `POST /analyze` returns `{job_id}`. Enable CORS for `chrome-extension://*` and `http://localhost:*`.
 
 ## Hour 1–4: extraction

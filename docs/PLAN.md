@@ -103,7 +103,7 @@ One flow, done well: deck in, truth table out. Everything else is optional.
 
 **Endpoints**
 
-- `POST /analyze` (multipart `file` or JSON `{text}`) → `{job_id}`
+- `POST /analyze` (FormData with `file` = PDF, or `text` = pasted text) → `{job_id}`
 - `GET /jobs/{job_id}` → the job object below, with `status` advancing as each step finishes
 - `GET /jobs/{job_id}?replay=1` → served purely from cache (demo fallback)
 
