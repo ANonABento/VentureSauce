@@ -15,6 +15,7 @@ import extract
 import ingest
 import store
 import verdicts
+from sources import ground_truth
 from sources.ground_truth import get_ground_truth
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -74,9 +75,30 @@ def company_view(company_id: str, gt: dict | None = None) -> dict:
               + verdicts.headcount_checks(checkable, gt.get("linkedin"))
               + verdicts.press_checks(checkable, gt.get("press") or [])
               + analysis.contradictions(claims))
+    checks = _honest_unverifiable(checks, gt)
     view = {"company": _company_header(co, gt), "items": [analysis.item_summary(i) for i in items],
             "checks": checks, "claims": claims}
     return view
+
+
+NOT_CONNECTED = "Public records aren't connected in this build yet, so this wasn't checked."
+
+
+def _honest_unverifiable(checks: list[dict], gt: dict) -> list[dict]:
+    """While sources/ground_truth is the stub, "No Form D found" would be a false statement about a real company:
+    say the lookup didn't run instead. Then drop repeated identical "couldn't verify" rows (e.g. two rounds, no data)."""
+    stub = getattr(ground_truth, "IS_STUB", False) and not gt.get("fictional")
+    out, seen = [], set()
+    for c in checks:
+        if c["verdict"] == "unverifiable" and c["source"] != "your_sources":
+            if stub:
+                c = {**c, "note": NOT_CONNECTED, "confidence": "low"}
+            key = (c["source"], c["claim_type"], c["note"])
+            if key in seen:
+                continue
+            seen.add(key)
+        out.append(c)
+    return out
 
 
 def _company_header(co: dict, gt: dict) -> dict:
