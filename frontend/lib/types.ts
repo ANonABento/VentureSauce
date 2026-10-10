@@ -22,7 +22,18 @@ export type DeltaRow = {
   status: DeltaStatus;
   summary: string;      // "Ahead of press: $13M more than announced"
   likelyReasons: string[];
+  summaryShort?: string; // optional: the delta in five words or fewer, e.g. "+$13M vs. press"
+  visual?: DeltaVisual;  // optional: structured numbers behind the row's mini chart
 };
+
+// Optional structured data for a row's mini visualization. Amounts are whole
+// US dollars, dates are ISO dates.
+export type DeltaVisual =
+  | { kind: "raise"; offered: number; sold: number; said: number }
+  | { kind: "investors"; filed: number; named: number }
+  | { kind: "headcount"; series: { date: string; value: number }[] }
+  | { kind: "leadership"; people: { name: string; role?: string; onSite: boolean }[] }
+  | { kind: "timing"; filedOn: string; announcedOn: string };
 
 export type DeltaReport = {
   company: { name: string; domain: string; cik?: string };

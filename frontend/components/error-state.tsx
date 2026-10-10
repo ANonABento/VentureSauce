@@ -4,7 +4,7 @@ import { Button } from "./button";
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <div role="alert">
-      <p className="text-[15px] leading-[22px] text-ink">
+      <p className="text-sm leading-5 font-medium text-ink">
         The comparison could not be completed.
       </p>
       <Button variant="quiet" className="mt-4" onClick={onRetry}>

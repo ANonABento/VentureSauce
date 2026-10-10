@@ -25,7 +25,7 @@ export function LoadingSteps({ current }: { current: number }) {
               key={label}
               aria-current={active ? "step" : undefined}
               className={cn(
-                "flex items-center gap-2 text-sm leading-5 transition-colors duration-200 ease-out",
+                "flex items-center gap-2 text-[13px] leading-5 transition-colors duration-200 ease-out",
                 done ? "text-ink" : "text-graphite",
               )}
             >

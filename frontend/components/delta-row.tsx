@@ -1,190 +1,212 @@
 "use client";
 
 import { useId, useState } from "react";
-import type { Claim, DeltaRow as DeltaRowData, DeltaStatus } from "@/lib/types";
+import type { Claim, DeltaRow as DeltaRowData, Source } from "@/lib/types";
 import { cn } from "./cn";
 import { Collapse } from "./collapse";
-import { type DeltaLayout, REPORT_GRID } from "./delta-layout";
-import { SourceLink } from "./source-link";
+import { DeltaVisual } from "./delta-visual";
+import { Figures } from "./figures";
+import { formatDate } from "./report-utils";
+import { STATUS } from "./status";
 
-// Status is a 2px margin mark plus a text label — never color alone.
-const STATUS: Record<DeltaStatus, { label: string; text: string; mark: string }> = {
-  discrepancy: { label: "Discrepancy", text: "text-signal", mark: "bg-signal" },
-  consistent: { label: "Consistent", text: "text-steady", mark: "bg-steady" },
-  not_disclosed: { label: "Not disclosed", text: "text-graphite", mark: "bg-rule" },
-  unverified: { label: "Unverified", text: "text-graphite", mark: "bg-rule" },
-};
-
+/**
+ * Collapsed: status mark, signal, mini visual and the delta in a few words.
+ * Expanded: filed vs. said, the two sources and the likeliest reason.
+ */
 export function DeltaRow({
   row,
-  layout = "panel",
-  defaultExpanded = false,
+  size = "panel",
 }: {
   row: DeltaRowData;
-  layout?: DeltaLayout;
-  defaultExpanded?: boolean;
+  size?: "panel" | "page";
 }) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [expanded, setExpanded] = useState(false);
+  const [allReasons, setAllReasons] = useState(false);
   const id = useId();
-  const table = layout === "report";
-  const status = STATUS[row.status];
-  const Row = table ? "div" : "li";
+
+  const discrepancy = row.status === "discrepancy";
+  const quiet = row.status === "consistent";
+  const text = size === "page" ? "text-sm leading-5" : "text-[13px] leading-5";
+  const sources = [row.filed?.source, row.said?.source].filter(
+    (source): source is Source => Boolean(source),
+  );
+  const checked = [...new Set(sources.map((s) => formatDate(s.checkedAt)))];
+  const [topReason, ...moreReasons] = row.likelyReasons;
 
   return (
-    <Row
-      role={table ? "row" : undefined}
-      className={cn("relative border-b border-rule py-4", table && REPORT_GRID)}
-    >
+    <li className="relative border-b border-rule py-5">
       <span
         aria-hidden="true"
         className={cn(
-          "absolute top-4 bottom-4 -left-3 w-0.5",
-          table && "md:-left-4",
-          status.mark,
+          "absolute top-5 bottom-5 -left-3 w-0.5",
+          STATUS[row.status].fill,
         )}
       />
 
-      <div role={table ? "rowheader" : undefined}>
+      <div className="relative">
+        {/* The button's ::after stretches over the visual, so the whole
+            collapsed row is the click target. */}
         <button
           type="button"
           aria-expanded={expanded}
-          aria-controls={`${id}-filed ${id}-said ${id}-reasons`}
+          aria-controls={id}
           onClick={() => setExpanded((value) => !value)}
-          className="group block w-full text-left"
-        >
-          <span className={cn("micro-label block", status.text)}>
-            {status.label}
-          </span>
-          <span
-            className={cn(
-              "mt-1 flex items-baseline justify-between gap-3",
-              table ? "text-[15px] leading-[22px]" : "text-sm leading-5",
-            )}
-          >
-            <span className="font-medium text-ink underline decoration-transparent underline-offset-4 transition-colors duration-150 ease-out group-hover:decoration-ink">
-              {row.signal}
-            </span>
-            <span aria-hidden="true" className="font-mono text-graphite">
-              {expanded ? "−" : "+"}
-            </span>
-          </span>
-        </button>
-      </div>
-
-      <ClaimCell
-        id={`${id}-filed`}
-        label="Filed"
-        claim={row.filed}
-        emptyText="Not in the filing"
-        expanded={expanded}
-        table={table}
-      />
-      <ClaimCell
-        id={`${id}-said`}
-        label="Said"
-        claim={row.said}
-        emptyText="Not stated publicly"
-        expanded={expanded}
-        table={table}
-        last
-      />
-
-      <div
-        role={table ? "cell" : undefined}
-        className={cn("pt-1", table && "md:pt-5")}
-      >
-        <p
           className={cn(
-            "text-ink",
-            table ? "text-[15px] leading-[22px]" : "text-sm leading-5",
+            "group flex w-full items-baseline justify-between gap-3 text-left after:absolute after:inset-0",
+            text,
           )}
         >
-          {row.summary}
-        </p>
-        {row.likelyReasons.length > 0 && (
-          <Collapse id={`${id}-reasons`} open={expanded}>
-            <p className="micro-label pt-3 text-graphite">Likely reasons</p>
-            <ul
+          <span
+            className={cn(
+              "underline decoration-transparent underline-offset-4 transition-colors duration-150 ease-out group-hover:decoration-current",
+              quiet ? "text-graphite" : "font-medium text-ink",
+            )}
+          >
+            {row.signal}
+            <span className="sr-only">, {STATUS[row.status].label}:</span>
+          </span>
+          <span className="flex items-baseline gap-2 text-right">
+            <span
               className={cn(
-                "mt-1 space-y-1 text-graphite",
-                table ? "text-sm leading-5" : "text-[13px] leading-5",
+                discrepancy
+                  ? "font-medium text-signal"
+                  : quiet
+                    ? "text-graphite"
+                    : "text-ink",
               )}
             >
-              {row.likelyReasons.map((reason) => (
-                <li key={reason} className="flex gap-2">
-                  <span aria-hidden="true">–</span>
-                  <span>{reason}</span>
-                </li>
-              ))}
-            </ul>
-          </Collapse>
+              <Figures text={row.summaryShort ?? row.summary} />
+            </span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 8 8"
+              className={cn(
+                "h-2 w-2 shrink-0 text-graphite transition-transform duration-150 ease-out",
+                expanded && "rotate-180",
+              )}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1"
+            >
+              <path d="M1 2.5l3 3 3-3" />
+            </svg>
+          </span>
+        </button>
+
+        {row.visual && (
+          <div className="mt-3">
+            <DeltaVisual
+              visual={row.visual}
+              highlight={discrepancy}
+              quiet={quiet}
+            />
+          </div>
         )}
       </div>
-    </Row>
+
+      <Collapse id={id} open={expanded}>
+        <dl
+          className={cn(
+            "grid grid-cols-[36px_1fr] gap-x-3 gap-y-1 pt-4 text-ink",
+            text,
+          )}
+        >
+          <ClaimLine label="Filed" claim={row.filed} emptyText="Not in the filing" />
+          <ClaimLine label="Said" claim={row.said} emptyText="Not stated publicly" />
+        </dl>
+
+        {sources.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+            {sources.map((source, index) => (
+              <SourceChip key={index} source={source} />
+            ))}
+            <span className="text-[11px] leading-4 text-graphite">
+              checked {checked.join(", ")}
+            </span>
+          </div>
+        )}
+
+        {topReason && (
+          <div className={cn("mt-4 text-graphite", text)}>
+            <p className="micro-label">
+              {allReasons
+                ? "Likely reasons"
+                : moreReasons.length > 0
+                  ? "Likeliest reason"
+                  : "Likely reason"}
+            </p>
+            <p className="mt-1">{topReason}</p>
+            {moreReasons.length > 0 &&
+              (allReasons ? (
+                moreReasons.map((reason) => (
+                  <p key={reason} className="mt-1">
+                    {reason}
+                  </p>
+                ))
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAllReasons(true)}
+                  className="mt-1 text-xs leading-5 underline decoration-graphite/50 underline-offset-2 transition-colors duration-150 ease-out hover:text-ink hover:decoration-ink"
+                >
+                  Show {moreReasons.length} more
+                </button>
+              ))}
+          </div>
+        )}
+      </Collapse>
+    </li>
   );
 }
 
-/** One side of the comparison: the value, then its source once expanded. */
-function ClaimCell({
-  id,
+function ClaimLine({
   label,
   claim,
   emptyText,
-  expanded,
-  table,
-  last = false,
 }: {
-  id: string;
   label: string;
   claim: Claim | null;
   emptyText: string;
-  expanded: boolean;
-  table: boolean;
-  last?: boolean;
 }) {
   return (
-    <Collapse
-      id={id}
-      open={expanded}
-      // In the table the value is always visible; only the source collapses.
-      className={cn(table && "md:visible md:grid-rows-[1fr]")}
-    >
-      <div
-        role={table ? "cell" : undefined}
-        className={cn(
-          "grid grid-cols-[44px_1fr] gap-x-2 pt-3",
-          // Sets the conclusion apart from the comparison when stacked.
-          last && "pb-2",
-          table && "md:block md:pt-5 md:pb-0",
+    <>
+      <dt className="micro-label pt-0.5 text-graphite">{label}</dt>
+      <dd className={claim ? undefined : "text-graphite"}>
+        {/* Dates are words here, not figures. */}
+        {!claim ? (
+          emptyText
+        ) : claim.field === "first_sale" ? (
+          claim.value
+        ) : (
+          <Figures text={claim.value} />
         )}
+      </dd>
+    </>
+  );
+}
+
+/** A small square link chip; the date checked is in the tooltip. */
+function SourceChip({ source }: { source: Source }) {
+  return (
+    <a
+      href={source.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`Checked ${formatDate(source.checkedAt)}`}
+      className="inline-flex h-6 items-center gap-1 rounded-[2px] border border-rule px-2 text-xs leading-4 text-ink transition-colors duration-150 ease-out hover:border-ink"
+    >
+      {source.label}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 8 8"
+        className="h-2 w-2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1"
       >
-        <span
-          className={cn(
-            "micro-label pt-0.5 text-graphite",
-            table && "md:hidden",
-          )}
-        >
-          {label}
-        </span>
-        <div>
-          <p
-            className={cn(
-              "font-mono",
-              table ? "text-sm leading-[22px]" : "text-[13px] leading-5",
-              claim ? "text-ink" : "text-graphite",
-            )}
-          >
-            {claim ? claim.value : emptyText}
-          </p>
-          {claim && (
-            <Collapse open={expanded}>
-              <div className="pt-1">
-                <SourceLink source={claim.source} />
-              </div>
-            </Collapse>
-          )}
-        </div>
-      </div>
-    </Collapse>
+        <path d="M1.5 6.5l5-5M2.5 1.5h4v4" />
+      </svg>
+      <span className="sr-only"> (opens in a new tab)</span>
+    </a>
   );
 }

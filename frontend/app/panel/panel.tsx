@@ -3,13 +3,11 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/button";
-import { DeltaRows } from "@/components/delta-rows";
-import { Disclaimer } from "@/components/disclaimer";
-import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { LOADING_STEPS, LoadingSteps } from "@/components/loading-steps";
 import { ReportHeader } from "@/components/report-header";
 import { hasFiling } from "@/components/report-utils";
+import { ReportView } from "@/components/report-view";
 import type { DeltaReport } from "@/lib/types";
 import {
   type DeltaQuery,
@@ -118,7 +116,7 @@ export function PanelView({
   const title = subject.name ?? subject.domain ?? "";
   const subjectHeader = (
     <ReportHeader
-      company={{ name: title, domain: subject.name ? (subject.domain ?? "") : "" }}
+      company={{ name: title, domain: subject.name ? subject.domain : undefined }}
     />
   );
 
@@ -129,10 +127,10 @@ export function PanelView({
     >
       {status === "idle" && (
         <>
-          <h1 className="font-serif text-[22px] leading-7 font-medium tracking-tight text-ink">
+          <h1 className="font-serif text-xl leading-6 font-medium tracking-tight text-ink">
             No company detected on this page.
           </h1>
-          <p className="mt-2 text-sm leading-5 text-graphite">
+          <p className="mt-2 text-[13px] leading-5 text-graphite">
             Type a company name to compare what it filed with the SEC against
             what it says publicly.
           </p>
@@ -160,7 +158,7 @@ export function PanelView({
       {status === "detected" && (
         <>
           {subjectHeader}
-          <p className="mt-4 text-sm leading-5 text-graphite">
+          <p className="mt-4 text-[13px] leading-5 text-graphite">
             Compare what this company filed with the SEC against what it says
             publicly.
           </p>
@@ -173,42 +171,18 @@ export function PanelView({
       {status === "loading" && (
         <>
           {subjectHeader}
-          <div className="mt-6 border-t border-rule pt-4">
+          <div className="mt-5 border-t border-rule pt-4">
             <LoadingSteps current={step} />
           </div>
         </>
       )}
 
-      {status === "report" && report && (
-        <>
-          <ReportHeader
-            company={report.company}
-            checkedAt={report.generatedAt}
-            headline={report.headline}
-          />
-          <div className="mt-6">
-            <DeltaRows rows={report.rows} />
-          </div>
-          <Disclaimer className="mt-6" />
-        </>
-      )}
-
-      {status === "empty" && report && (
-        <>
-          <ReportHeader
-            company={report.company}
-            checkedAt={report.generatedAt}
-          />
-          <div className="mt-6 border-t border-rule pt-4">
-            <EmptyState />
-          </div>
-        </>
-      )}
+      {hasReport && report && <ReportView report={report} />}
 
       {status === "error" && (
         <>
           {subjectHeader}
-          <div className="mt-6 border-t border-rule pt-4">
+          <div className="mt-5 border-t border-rule pt-4">
             <ErrorState onRetry={() => onRun?.()} />
           </div>
         </>

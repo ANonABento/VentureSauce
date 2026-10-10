@@ -1,4 +1,4 @@
-import type { DeltaReport, DeltaRow } from "@/lib/types";
+import type { DeltaReport } from "@/lib/types";
 
 const dateFormat = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -13,12 +13,19 @@ export function formatDate(iso: string): string {
   return Number.isNaN(date.getTime()) ? iso : dateFormat.format(date);
 }
 
-/** Discrepancies first; everything else keeps its given order. */
-export function sortRows(rows: DeltaRow[]): DeltaRow[] {
-  return [...rows].sort(
-    (a, b) =>
-      Number(b.status === "discrepancy") - Number(a.status === "discrepancy"),
-  );
+/** 38_000_000 → "$38M", 1_250_000 → "$1.3M", 250_000 → "$250K". */
+export function formatUsd(amount: number): string {
+  const units: [number, string][] = [
+    [1e9, "B"],
+    [1e6, "M"],
+    [1e3, "K"],
+  ];
+  for (const [size, suffix] of units) {
+    if (Math.abs(amount) >= size) {
+      return `$${Number((amount / size).toFixed(1))}${suffix}`;
+    }
+  }
+  return `$${amount}`;
 }
 
 /**

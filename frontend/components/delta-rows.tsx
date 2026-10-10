@@ -1,53 +1,39 @@
 import type { DeltaRow as DeltaRowData } from "@/lib/types";
 import { cn } from "./cn";
-import { type DeltaLayout, REPORT_GRID } from "./delta-layout";
 import { DeltaRow } from "./delta-row";
-import { sortRows } from "./report-utils";
+import { STATUS, STATUS_ORDER } from "./status";
 
-const COLUMNS = ["Signal", "Filed", "Said", "Delta"];
-
-/** The delta rows of a report: discrepancies first, and open by default. */
+/** Rows grouped under a status heading, discrepancies first. */
 export function DeltaRows({
   rows,
-  layout = "panel",
+  size = "panel",
 }: {
   rows: DeltaRowData[];
-  layout?: DeltaLayout;
+  size?: "panel" | "page";
 }) {
-  const items = sortRows(rows).map((row) => (
-    <DeltaRow
-      key={row.signal}
-      row={row}
-      layout={layout}
-      defaultExpanded={row.status === "discrepancy"}
-    />
-  ));
-
-  if (layout === "panel") {
-    return <ul className="border-t border-rule">{items}</ul>;
-  }
-
   return (
-    <div
-      role="table"
-      aria-label="Filed versus said"
-      className="border-t border-rule"
-    >
-      <div
-        role="row"
-        className={cn("hidden border-b border-rule py-2", REPORT_GRID)}
-      >
-        {COLUMNS.map((column) => (
-          <span
-            key={column}
-            role="columnheader"
-            className="micro-label text-graphite"
-          >
-            {column}
-          </span>
-        ))}
-      </div>
-      {items}
+    <div className="space-y-6">
+      {STATUS_ORDER.map((status) => {
+        const group = rows.filter((row) => row.status === status);
+        if (group.length === 0) return null;
+        return (
+          <section key={status}>
+            <h2
+              className={cn(
+                "micro-label border-b border-rule pb-2",
+                STATUS[status].text,
+              )}
+            >
+              {STATUS[status].group}
+            </h2>
+            <ul>
+              {group.map((row) => (
+                <DeltaRow key={row.signal} row={row} size={size} />
+              ))}
+            </ul>
+          </section>
+        );
+      })}
     </div>
   );
 }
