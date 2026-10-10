@@ -21,6 +21,31 @@ function resolveApi(): string {
 
 export const API = resolveApi();
 
+/** This browser's inbox. `?ws=demo` pins a named one (remembered); otherwise a random id is made on first visit,
+ * so each tester has a private inbox. "default" is the old shared inbox. */
+function resolveWorkspace(): string {
+  if (typeof window === "undefined") return "default";
+  const valid = (v: string | null | undefined) => !!v && /^[a-z0-9][a-z0-9-]{0,39}$/.test(v);
+  try {
+    const asked = new URLSearchParams(window.location.search).get("ws")?.toLowerCase();
+    if (valid(asked)) localStorage.setItem("vs.ws", asked!);
+    const saved = localStorage.getItem("vs.ws");
+    if (valid(saved)) return saved!;
+    const fresh = `t-${crypto.randomUUID().slice(0, 12)}`;
+    localStorage.setItem("vs.ws", fresh);
+    return fresh;
+  } catch {
+    return `t-${Math.random().toString(16).slice(2, 14)}`; // storage blocked: private for this page load
+  }
+}
+
+export const WORKSPACE = resolveWorkspace();
+
+/** fetch() against the backend, in this browser's workspace. */
+function call(path: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(`${API}${path}`, { ...init, headers: { ...(init.headers as Record<string, string>), "X-Workspace": WORKSPACE } });
+}
+
 export type ItemKind = "pdf" | "pdf_scanned" | "slides" | "image" | "email" | "notes" | "text";
 
 export const KIND_NAME: Record<string, string> = {
@@ -118,23 +143,23 @@ async function json<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export const listCompanies = () => fetch(`${API}/companies`).then((r) => json<CompanySummary[]>(r));
-export const getCompany = (id: string) => fetch(`${API}/companies/${id}`).then((r) => json<CompanyView>(r));
+export const listCompanies = () => call(`/companies`).then((r) => json<CompanySummary[]>(r));
+export const getCompany = (id: string) => call(`/companies/${id}`).then((r) => json<CompanyView>(r));
 export const getReport = (q: { companyId?: string; url?: string; company?: string }) => {
   const p = new URLSearchParams(
     q.companyId ? { company_id: q.companyId } : q.url ? { url: q.url } : { company: q.company ?? "" },
   );
-  return fetch(`${API}/api/delta?${p}`).then((r) => json<DeltaReport & { questions: Question[]; items: Item[] }>(r));
+  return call(`/api/delta?${p}`).then((r) => json<DeltaReport & { questions: Question[]; items: Item[] }>(r));
 };
-export const getDigest = (period: "day" | "week") => fetch(`${API}/digest?period=${period}`).then((r) => json<Digest>(r));
+export const getDigest = (period: "day" | "week") => call(`/digest?period=${period}`).then((r) => json<Digest>(r));
 export const recordBrief = (script: string) =>
-  fetch(`${API}/digest/audio`, {
+  call(`/digest/audio`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ script }),
   }).then((r) => json<{ audio_url: string }>(r));
 export const moveItem = (itemId: string, target: { companyId?: string; newCompany?: string }) =>
-  fetch(`${API}/items/${itemId}/move`, {
+  call(`/items/${itemId}/move`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ company_id: target.companyId, new_company: target.newCompany }),
@@ -150,11 +175,11 @@ export async function dropItem(
   if (input.text) form.append("text", input.text);
   if (input.kind) form.append("kind", input.kind);
   if (input.companyId) form.append("company_id", input.companyId);
-  const { job_id } = await fetch(`${API}/analyze`, { method: "POST", body: form }).then((r) =>
+  const { job_id } = await call(`/analyze`, { method: "POST", body: form }).then((r) =>
     json<{ job_id: string }>(r),
   );
   for (;;) {
-    const job = await fetch(`${API}/jobs/${job_id}`).then((r) => json<Job>(r));
+    const job = await call(`/jobs/${job_id}`).then((r) => json<Job>(r));
     onProgress(job);
     if (job.status === "ready") return job;
     if (job.status === "error") throw new Error(job.error ?? "That item couldn't be read.");
@@ -168,7 +193,7 @@ export async function chatStream(
   onText: (text: string) => void,
   signal: AbortSignal,
 ) {
-  const res = await fetch(`${API}/chat/stream`, {
+  const res = await call(`/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages }),
@@ -191,6 +216,9 @@ export async function chatStream(
   }
 }
 
+/** "Try it with an example": copies the prebuilt example inbox into this workspace (instant). */
+export const loadExample = () => call(`/workspace/example`, { method: "POST" }).then((r) => json<{ companies: number }>(r));
+
 export const ttsUrl = (text: string, speed?: number) =>
   `${API}/tts?text=${encodeURIComponent(text)}${speed ? `&speed=${speed}` : ""}`;
 
@@ -198,6 +226,6 @@ export const ttsUrl = (text: string, speed?: number) =>
 export async function transcribe(wav: Blob): Promise<string> {
   const form = new FormData();
   form.append("audio", wav, "question.wav");
-  const { text } = await fetch(`${API}/asr`, { method: "POST", body: form }).then((r) => json<{ text: string }>(r));
+  const { text } = await call(`/asr`, { method: "POST", body: form }).then((r) => json<{ text: string }>(r));
   return text;
 }

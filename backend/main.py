@@ -39,7 +39,23 @@ app.add_middleware(
     allow_origins=[o.strip() for o in os.getenv("EXTRA_ORIGINS", "").split(",") if o.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=600,  # the X-Workspace header makes every call preflighted: cache the preflight
 )
+
+
+
+@app.middleware("http")
+async def workspace(request: Request, call_next):
+    """One inbox per tester: X-Workspace header (or ?ws= for plain links). Missing → the shared "default" inbox."""
+    ws = (request.headers.get("x-workspace") or request.query_params.get("ws") or "default").lower()
+    if not store.WS_RE.match(ws):
+        ws = "default"
+    token = store.WORKSPACE.set(ws)
+    try:
+        return await call_next(request)
+    finally:
+        store.WORKSPACE.reset(token)
+
 
 app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
 
@@ -153,6 +169,21 @@ def refresh_companies(request: Request):
     for cid in cos:
         jobs.refresh(cid, questions=True)
     return {"ok": True, "refreshed": len(cos)}
+
+
+EXAMPLE_WS = "example"  # built by reset_demo.py: the samples, filed through the real pipeline
+
+
+@app.post("/workspace/example")
+def load_example():
+    """"Try it with an example": copy the prebuilt example inbox (fictional Acme + Northwind, real Daytona/Clerk
+    press claims) into this workspace. Instant: nothing is re-run. Replaces what's there."""
+    ws = store.WORKSPACE.get()
+    if ws in ("default", EXAMPLE_WS):
+        raise HTTPException(400, "Open the app in your own workspace to load the example.")
+    if not store.copy_workspace(EXAMPLE_WS, ws):
+        raise HTTPException(503, "The example isn't built yet (run reset_demo.py on the server).")
+    return {"ok": True, "companies": len(store.list_companies())}
 
 
 @app.delete("/companies/{company_id}")
