@@ -28,6 +28,34 @@ def models() -> list[str]:
     return [m for m in (primary, fallback) if m]
 
 
+def vision_models() -> list[str]:
+    primary = os.getenv("VISION_MODEL", "moonshotai/Kimi-K3")
+    fallback = os.getenv("VISION_FALLBACK_MODEL", "google/gemma-3-27b-it")
+    return [m for m in (primary, fallback) if m]
+
+
+def transcribe_image(jpeg_b64: str) -> str:
+    """Slide/screenshot → plain text. Tries each vision model in turn."""
+    last: Exception | None = None
+    for model in vision_models():
+        try:
+            r = client().chat.completions.create(
+                model=model,
+                temperature=0,
+                max_tokens=1500,
+                messages=[{"role": "user", "content": [
+                    {"type": "text", "text": "Transcribe all text in this image exactly, preserving numbers. "
+                                             "Output only the transcription, no commentary."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{jpeg_b64}"}},
+                ]}],
+            )
+            return (r.choices[0].message.content or "").strip()
+        except Exception as e:
+            log.warning("vision %s failed (%s); trying next model", model, e)
+            last = e
+    raise RuntimeError(f"all vision models failed: {last}")
+
+
 def chat_json(system: str, user: str, schema: dict, name: str) -> dict:
     """Returns the parsed JSON object. Tries each model in turn; raises the last error if all fail."""
     last: Exception | None = None

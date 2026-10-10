@@ -69,9 +69,12 @@ def _check(claim: dict | None, **kw) -> dict:
         "unit": None,
         "source_url": None,
         "source_date": None,
+        # Which of the user's items the claim came from (deal inbox); absent for single-deck runs.
+        "item_label": claim.get("item_label") if claim else None,
+        "item_kind": claim.get("item_kind") if claim else None,
     }
     base.update(kw)
-    base["label"] = LABELS[base["verdict"]]
+    base.setdefault("label", LABELS[base["verdict"]])
     return base
 
 

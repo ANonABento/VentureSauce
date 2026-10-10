@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import jobs
+import store
 
 load_dotenv()
 FAKE = os.getenv("VENTURESAUCE_FAKE", "1") == "1"
@@ -56,14 +57,18 @@ def _rate_limit(request: Request) -> None:
 
 
 @app.post("/analyze")
-async def analyze(request: Request, file: UploadFile | None = File(None), text: str | None = Form(None)):
-    """Send FormData with either `file` (PDF) or `text` (pasted deck/email text)."""
+async def analyze(request: Request, file: UploadFile | None = File(None), text: str | None = Form(None),
+                  kind: str | None = Form(None), company_id: str | None = Form(None)):
+    """FormData: `file` (PDF, scanned PDF, PPTX, image, .eml, .txt) or `text` (pasted email/notes/deck text).
+    Optional `kind` for pasted text (`email` | `notes`) and `company_id` to file it under a known company."""
     _rate_limit(request)
     if not file and not (text and text.strip()):
-        raise HTTPException(400, "send a PDF as `file` or pasted text as `text`")
-    pdf_bytes = await file.read() if file else None
+        raise HTTPException(400, "send a file as `file` or pasted text as `text`")
+    upload = {"filename": file.filename, "data": await file.read()} if file else None
+    if kind not in (None, "", "email", "notes", "text"):
+        raise HTTPException(400, "kind must be email, notes or text")
     job = jobs.new_job()
-    task = asyncio.create_task(jobs.run(job, pdf_bytes, text, FAKE))
+    task = asyncio.create_task(jobs.run(job, upload, text, FAKE, kind or None, company_id or None))
     _tasks.add(task)
     task.add_done_callback(_tasks.discard)
     return {"job_id": job["job_id"]}
@@ -77,6 +82,29 @@ def get_job(job_id: str, replay: bool = False):
     if not job:
         raise HTTPException(404, "unknown job")
     return job
+
+
+@app.get("/companies")
+def companies():
+    """Deal inbox: every company with its item count, most recently updated first."""
+    return [{k: c.get(k) for k in ("id", "name", "domain", "updated_at", "item_count")} for c in store.list_companies()]
+
+
+@app.get("/companies/{company_id}")
+def company(company_id: str):
+    """The company's latest view: items, checks across all items, contradictions, questions."""
+    co = store.get_company(company_id)
+    if not co:
+        raise HTTPException(404, "unknown company")
+    return co.get("view") or {"company": {k: co.get(k) for k in ("id", "name", "domain")}, "items": [], "checks": [], "questions": []}
+
+
+@app.delete("/companies/{company_id}")
+def delete_company(company_id: str):
+    """Privacy: forget a company and everything filed under it."""
+    if not store.delete_company(company_id):
+        raise HTTPException(404, "unknown company")
+    return {"ok": True}
 
 
 # Tester page: same API the extension uses, served at / so remote testers need only a URL.
