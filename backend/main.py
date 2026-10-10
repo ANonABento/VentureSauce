@@ -11,7 +11,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -33,10 +33,29 @@ FEEDBACK_LOG = HERE / "data" / "feedback.jsonl"
 app = FastAPI(title="VentureSauce")
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^(chrome-extension://.*|http://localhost(:\d+)?|http://127\.0\.0\.1(:\d+)?)$",
+    # The extension, local dev, the Vercel frontend (production + preview deploys), plus EXTRA_ORIGINS (comma-separated).
+    allow_origin_regex=r"^(chrome-extension://.*|http://localhost(:\d+)?|http://127\.0\.0\.1(:\d+)?"
+                       r"|https://venturesauce[a-z0-9-]*\.vercel\.app)$",
+    allow_origins=[o.strip() for o in os.getenv("EXTRA_ORIGINS", "").split(",") if o.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=600,  # the X-Workspace header makes every call preflighted: cache the preflight
 )
+
+
+
+@app.middleware("http")
+async def workspace(request: Request, call_next):
+    """One inbox per tester: X-Workspace header (or ?ws= for plain links). Missing → the shared "default" inbox."""
+    ws = (request.headers.get("x-workspace") or request.query_params.get("ws") or "default").lower()
+    if not store.WS_RE.match(ws):
+        ws = "default"
+    token = store.WORKSPACE.set(ws)
+    try:
+        return await call_next(request)
+    finally:
+        store.WORKSPACE.reset(token)
+
 
 app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
 
@@ -46,7 +65,8 @@ _tasks: set[asyncio.Task] = set()
 
 @app.get("/health")
 def health():
-    return {"ok": True, "fake": FAKE}
+    # sources: "stub" until Data's live public-record lookups replace sources/ground_truth.py
+    return {"ok": True, "fake": FAKE, "sources": "stub" if getattr(jobs.ground_truth, "IS_STUB", False) else "live"}
 
 
 # Public tester links run on our LLM credits: cap decks per client IP.
@@ -150,6 +170,21 @@ def refresh_companies(request: Request):
     for cid in cos:
         jobs.refresh(cid, questions=True)
     return {"ok": True, "refreshed": len(cos)}
+
+
+EXAMPLE_WS = "example"  # built by reset_demo.py: the samples, filed through the real pipeline
+
+
+@app.post("/workspace/example")
+def load_example():
+    """"Try it with an example": copy the prebuilt example inbox (fictional Acme + Northwind, real Daytona/Clerk
+    press claims) into this workspace. Instant: nothing is re-run. Replaces what's there."""
+    ws = store.WORKSPACE.get()
+    if ws in ("default", EXAMPLE_WS):
+        raise HTTPException(400, "Open the app in your own workspace to load the example.")
+    if not store.copy_workspace(EXAMPLE_WS, ws):
+        raise HTTPException(503, "The example isn't built yet (run reset_demo.py on the server).")
+    return {"ok": True, "companies": len(store.list_companies())}
 
 
 @app.delete("/companies/{company_id}")
@@ -281,7 +316,17 @@ async def asr(request: Request, audio: UploadFile = File(...)):
 
 # Tester page: same API the extension uses, served at / so remote testers need only a URL.
 @app.get("/", include_in_schema=False)
+def home():
+    """The real UI lives in frontend/: with FRONTEND_URL set, the backend's own URL sends people there."""
+    front = os.getenv("FRONTEND_URL", "").rstrip("/")
+    if front:
+        return RedirectResponse(f"{front}/panel")
+    return FileResponse(HERE / "static" / "index.html")
+
+
+@app.get("/tester", include_in_schema=False)
 def tester_page():
+    """The original single-page tester (fallback when the frontend isn't running)."""
     return FileResponse(HERE / "static" / "index.html")
 
 
@@ -295,7 +340,7 @@ def samples_index():
                    for f in sorted(SAMPLES.iterdir()) if f.is_file())
     return HTMLResponse(f"<!doctype html><meta name=viewport content='width=device-width'><title>Test items</title>"
                         f"<body style='font:15px system-ui;margin:24px'><h1>Test items</h1><p>Download, then drop them in "
-                        f"<a href='/'>the tester</a> in order.</p><ul>{rows}</ul>")
+                        f"<a href='/'>the app</a> in order.</p><ul>{rows}</ul>")
 
 
 app.mount("/samples", StaticFiles(directory=SAMPLES), name="samples")

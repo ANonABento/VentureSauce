@@ -93,7 +93,11 @@ SCRIPT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["
 def write_script(digest: dict) -> dict:
     """Same digest content → the same script (cached on disk), so a briefing recorded ahead of time is reused
     instead of re-voiced on every play."""
-    key = _sha(json.dumps({k: digest[k] for k in ("period", "totals", "companies")}, sort_keys=True, default=str))
+    # Timestamps and ids are left out: a copy of the example inbox (new ids, new times) reuses the same recording.
+    content = [{**c, "id": None, "new_items": [{k: v for k, v in i.items() if k not in ("id", "received_at")}
+                                               for i in c["new_items"]]} for c in digest["companies"]]
+    key = _sha(json.dumps({"period": digest["period"], "totals": digest["totals"], "companies": content},
+                          sort_keys=True, default=str))
     try:
         cache = json.loads(SCRIPT_CACHE.read_text())
     except (OSError, ValueError):

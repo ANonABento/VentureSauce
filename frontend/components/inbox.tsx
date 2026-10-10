@@ -1,7 +1,8 @@
 "use client";
 
-import { type DragEvent, useRef, useState } from "react";
-import { type CompanySummary, type ItemKind, KIND_NAME } from "@/lib/api";
+import Image from "next/image";
+import { type DragEvent, useEffect, useRef, useState } from "react";
+import { API, type CompanySummary, type ItemKind, KIND_NAME, getHealth } from "@/lib/api";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { formatDate } from "./report-utils";
@@ -107,6 +108,40 @@ export function DropStrip({
         </form>
       )}
     </div>
+  );
+}
+
+/** First visit (empty inbox): what this is, and a one-click example so nobody starts from a blank page. */
+export function Welcome({ onExample, loading }: { onExample: () => void; loading: boolean }) {
+  const [live, setLive] = useState(true);
+  useEffect(() => {
+    getHealth().then((h) => setLive(h.sources === "live")).catch(() => {});
+  }, []);
+  return (
+    <section className="mt-4 overflow-hidden rounded-xl bg-tray">
+      <Image src="/art/hero.webp" alt="" width={760} height={380} priority className="h-36 w-full object-cover" />
+      <div className="p-4">
+        <h2 className="font-serif text-2xl leading-7 tracking-tight text-ink">Drop anything about a company</h2>
+        <p className="mt-2 text-[13px] leading-5 text-graphite">
+          Decks, founder emails, call notes, screenshots, slides. Each item is filed under its company, and every claim
+          is checked against SEC filings, LinkedIn and the press, and against everything else you&apos;ve dropped.
+          You get the questions to ask the founder, and a daily briefing you can listen to or talk to.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button onClick={onExample} disabled={loading}>
+            {loading ? "Loading the example…" : "Try it with an example"}
+          </Button>
+          <a href={`${API}/samples/`} target="_blank" rel="noreferrer" className="text-xs text-ink underline underline-offset-4">
+            Or download test files
+          </a>
+        </div>
+        <p className="mt-3 text-[11px] leading-4 text-graphite">
+          The example is a fictional company (Acme AI) plus public funding claims from two real startups. This inbox is
+          private to this browser.
+          {!live && " Public-record lookups for real companies are still being connected; your own items are still compared with each other."}
+        </p>
+      </div>
+    </section>
   );
 }
 

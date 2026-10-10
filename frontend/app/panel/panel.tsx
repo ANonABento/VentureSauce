@@ -11,8 +11,8 @@ import { ThemeParam } from "@/components/theme-param";
 import type { DeltaReport } from "@/lib/types";
 import { CompanyScreen } from "@/components/company";
 import { DigestScreen } from "@/components/digest";
-import { CompanyList, DropStrip } from "@/components/inbox";
-import { type CompanySummary, dropItem, getReport, listCompanies } from "@/lib/api";
+import { CompanyList, DropStrip, Welcome } from "@/components/inbox";
+import { type CompanySummary, dropItem, getReport, listCompanies, loadExample } from "@/lib/api";
 import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
 
@@ -62,6 +62,19 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   const [reload, setReload] = useState(0);
   const [lookup, setLookup] = useState("");
   const [lookupMiss, setLookupMiss] = useState<string | null>(null);
+  const [loadingExample, setLoadingExample] = useState(false);
+
+  async function onExample() {
+    setError(null);
+    setLoadingExample(true);
+    try {
+      await loadExample();
+      setCompanies(await listCompanies());
+    } catch (e) {
+      setError((e as Error).message);
+    }
+    setLoadingExample(false);
+  }
 
   useEffect(() => {
     if (screen.kind !== "inbox") return;
@@ -148,6 +161,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
               Nothing about <span className="text-ink">{detected.domain}</span> in your inbox yet. Drop its deck or a founder email.
             </p>
           )}
+          {companies?.length === 0 && !busy && <Welcome onExample={onExample} loading={loadingExample} />}
           <div className="mt-4">
             <DropStrip onDrop={onDrop} busy={busy} />
           </div>
@@ -189,7 +203,8 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
               />
             </div>
           ) : (
-            companies && (
+            companies &&
+            companies.length > 0 && (
               <CompanyList companies={companies} seen={seen} onOpen={(id) => setScreen({ kind: "company", id })} />
             )
           )}
