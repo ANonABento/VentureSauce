@@ -125,6 +125,12 @@ def _lower_than_claim(claimed: int, sold: int, filed: str | None, today: date) -
                                    "and aren't required to be updated, so this can't confirm or contradict the claim.")
 
 
+def _late_filing(form_d: dict) -> str:
+    """Form D is due within 15 days of the first sale; a late one explains stale numbers rather than accusing anyone."""
+    days = form_d.get("days_first_sale_to_filing")
+    return f" Filed {days} days after the first sale (the deadline is 15)." if isinstance(days, int) and days > 15 else ""
+
+
 def _higher_than_claim(claimed: int, sold: int) -> tuple[str, str, str]:
     return "gap", "medium", (f"Form D shows {usd(sold)} sold, {usd(sold - claimed)} more than claimed. Could be an unannounced "
                              "extension, or converted SAFEs/notes counted in this round.")
@@ -153,7 +159,7 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
     confirmed = any(_same_person(c["value"], p) for c in board for p in persons)
     weak = bool(board and persons) and not confirmed
     ceiling = "low" if weak else ("high" if confirmed else "medium")
-    caveat = f" Matched filer {entity}, but none of its listed people are in the deck, so it may be a different company." if weak else ""
+    caveat = (f" Matched filer {entity}, but none of its listed people are in the deck, so it may be a different company." if weak else "") + _late_filing(form_d)
 
     def add(c, verdict, conf, note, observed, offered=None):
         out.append(_check(c, **common, observed_value=observed, verdict=verdict, confidence=_cap(conf, ceiling),
@@ -196,14 +202,26 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
                               verdict="match" if found else "unverifiable", confidence=_cap("high" if found else "low", ceiling),
                               note="Listed as a related person on Form D." if found
                               else "Not listed on Form D (the filing may predate their appointment)." + caveat))
+        roles = {r["name"]: r for r in form_d.get("related_people") or []}
         if not weak:
             for p in persons:
                 if not any(_same_person(c["value"], p) for c in board):
+                    role = roles.get(p)
+                    if role and not role["director"]:
+                        # An officer or promoter who isn't on the board isn't missing from a board slide: skip.
+                        continue
                     out.append(_check(None, claim_type="board", claim_text="(not named in the deck)", unit="person",
                                       source="form_d", via="sec_edgar", observed_value=p, source_url=url, source_date=filed,
                                       verdict="gap", confidence="medium",
-                                      note=f"Form D lists {p} as a director or executive officer; not on the deck's board slide. "
-                                           "Possibly an unannounced director, or an officer who isn't on the board."))
+                                      note=(f"Form D lists {p} as a director{' (' + role['title'] + ')' if role and role.get('title') else ''}; "
+                                            "not on the deck's board slide. "
+                                            + (f"{p} is named on {role['startups_named_on']} startups' Form Ds, so this is likely "
+                                               "an investor's board seat from a recent round."
+                                               if role and (role.get("startups_named_on") or 0) >= 3 else
+                                               "Possibly an unannounced director.")
+                                            if role else
+                                            f"Form D lists {p} as a director or executive officer; not on the deck's board slide. "
+                                            "Possibly an unannounced director, or an officer who isn't on the board.")))
     return out
 
 

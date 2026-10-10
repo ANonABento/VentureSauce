@@ -58,6 +58,13 @@ def facts(gt: dict) -> list[str]:
                      f"{usd(fd.get('total_sold'))} sold of a {usd(fd.get('total_offering')) if isinstance(fd.get('total_offering'), (int, float)) else fd.get('total_offering')} offering, "
                      f"first sale {fd.get('date_of_first_sale')}, {fd.get('num_investors')} investors. "
                      f"Related persons: {', '.join(fd.get('related_persons') or []) or 'none listed'}.")
+        for person in fd.get("related_people") or []:
+            roles = [r for r, on in (("founder", person.get("founder")), ("director", person.get("director")),
+                                     ("executive officer", person.get("officer"))) if on]
+            extra = (f"; named on {person['startups_named_on']} startups' Form D filings"
+                     if (person.get("startups_named_on") or 0) >= 2 else "")
+            lines.append(f"{person['name']}: {', '.join(roles) or 'related person'}"
+                         f"{' (' + person['title'] + ')' if person.get('title') else ''}{extra}.")
         if fd.get("history"):
             lines.append(f"Earlier Form D filings: {len(fd['history'])}.")
     else:
