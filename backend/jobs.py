@@ -60,7 +60,8 @@ async def run_real(job: dict, pdf_bytes: bytes | None, text: str | None) -> None
         job["company"]["fictional"] = True
     if gt.get("form_d"):
         job["company"]["cik"] = gt["form_d"].get("cik")
-    job["checks"] += verdicts.form_d_checks(claims, gt.get("form_d"))
+        job["company"]["form_d_entity"] = gt["form_d"].get("entity_name")  # show which filer we matched
+    job["checks"] += verdicts.form_d_checks(claims, gt.get("form_d"), company["name"])
 
     job["status"] = "checking_linkedin"
     job["checks"] += verdicts.headcount_checks(claims, gt.get("linkedin"))

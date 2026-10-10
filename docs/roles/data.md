@@ -13,7 +13,9 @@ def get_ground_truth(company: str, domain: str | None, use_cache: bool = True) -
             "total_offering": int, "total_sold": int, "total_remaining": int,
             "date_of_first_sale": "YYYY-MM-DD", "num_investors": int,
             "related_persons": [str], "url": str,
-            "history": [ {filing_date, total_sold, url}, ... ]   # older Form Ds
+            "accession": str,          # dedupe key
+            "history": [ {filing_date, total_sold, total_offering, url, accession, is_amendment}, ... ]   # older Form Ds; D/As marked is_amendment
+
         },
         "linkedin": {"employees": int, "company_size": str, "url": str, "fetched_at": iso} | None,
         "press": [ {"title": str, "url": str, "date": str, "snippet": str, "amount_mentioned": int | None} ],
@@ -21,6 +23,13 @@ def get_ground_truth(company: str, domain: str | None, use_cache: bool = True) -
 ```
 
 Return partial results. One source failing must never break the others.
+
+## Entity matching (from Research/Product Research/form-d-data-guide.md)
+
+- A name search returns many filers ("Daytona" → 27). Drop pooled investment funds, real estate, `3C` exemptions, and names containing "Fund", "LP" or "Partners". Prefer the filer whose domain/state/city fits.
+- Put the matched `entity_name` + `cik` in the result. Kevin's verdicts cap confidence at low when none of the filer's related persons appear in the deck.
+- `primaryDocument` in the submissions JSON points at `xslFormDX01/primary_doc.xml`, which is HTML. Strip the `xslFormDX01/` prefix to get the XML. Parse with `defusedxml`.
+- `total_offering` can be `"Indefinite"`; pass it through as a string, the verdict code handles it.
 
 ## Hour 0–1
 

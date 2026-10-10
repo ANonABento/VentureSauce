@@ -31,11 +31,14 @@
 - [ ] **Truth table** (one row per check):
   - Claim (deck quote, small grey page number)
   - Claimed vs. observed (big numbers side by side)
-  - Verdict pill: green **Match** / red **Gap** / grey **Unverifiable**
+  - Verdict pill showing the check's `label` field ("Matches source" / "Differs from source" / "Couldn't verify"). **Never show the word "gap"** (legal: Research/Product Research/legal-and-compliance.md). Use amber, not alarm red, for "Differs from source"
   - Confidence (high/med/low as a small label, not a percentage)
   - Source chip: `SEC Form D`, `LinkedIn via Bright Data`, `Press via Bright Data` → opens `source_url` in a new tab
   - `note` shown on expand
-- [ ] Sort the gaps to the top. Header shows the company name and "3 gaps · 2 verified · 1 unverifiable".
+  - `source_date` next to the source chip ("Form D · filed 2026-08-17")
+  - Header: show `company.form_d_entity` when present ("Matched SEC filer: Daytona Platforms Inc.")
+- [ ] Sort `gap` rows to the top. Header shows the company name and "3 differ · 2 match · 1 couldn't verify".
+- [ ] Footer, always visible: "Automated comparison of public records. May be incomplete or out of date. Not investment advice. Only company names are sent to public data sources."
 
 ## Hour 3–7: go live
 
