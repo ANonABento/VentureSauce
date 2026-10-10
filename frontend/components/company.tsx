@@ -12,6 +12,7 @@ import {
   moveItem,
 } from "@/lib/api";
 import type { DeltaReport } from "@/lib/types";
+import { CheckCircle, Copy, WarningDiamond } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { DeltaRows } from "./delta-rows";
@@ -48,21 +49,24 @@ export function FiledToast({
   }
 
   return (
-    <div role="status" className="mb-5 rounded-[2px] border border-rule bg-surface px-3 py-2 text-[13px] leading-5">
+    <div role="status" className={cn("mb-4 bg-ink px-4 py-2 text-[13px] leading-5 text-paper", changing ? "rounded-xl" : "rounded-full")}>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-graphite">
-          Filed under <span className="font-medium text-ink">{company}</span>
+        <span className="flex min-w-0 items-center gap-2 text-paper/80">
+          <CheckCircle aria-hidden="true" size={16} weight="light" className="shrink-0 text-paper" />
+          <span className="truncate">
+            Filed under <span className="font-medium text-paper">{company}</span>
+          </span>
         </span>
-        <button type="button" className="text-xs text-ink underline underline-offset-4" onClick={() => setChanging(!changing)}>
+        <button type="button" className="shrink-0 text-xs font-medium text-paper underline underline-offset-4" onClick={() => setChanging(!changing)}>
           {changing ? "Cancel" : "Change"}
         </button>
       </div>
       {changing && (
-        <div className="mt-2 space-y-1 border-t border-rule pt-2">
+        <div className="mt-2 space-y-1 border-t border-paper/20 pt-2">
           {companies
             .filter((c) => c.name !== company)
             .map((c) => (
-              <button key={c.id} type="button" className="block text-left text-ink hover:underline" onClick={() => move({ companyId: c.id })}>
+              <button key={c.id} type="button" className="block text-left text-paper hover:underline" onClick={() => move({ companyId: c.id })}>
                 {c.name}
               </button>
             ))}
@@ -77,9 +81,9 @@ export function FiledToast({
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="New company name"
-              className="h-7 min-w-0 flex-1 rounded-[2px] border border-rule bg-paper px-2 text-xs"
+              className="h-7 min-w-0 flex-1 rounded-full border border-paper/30 bg-paper px-3 text-xs text-ink"
             />
-            <Button type="submit" variant="quiet" className="h-7 px-2 text-xs">
+            <Button type="submit" variant="quiet" className="h-7 px-3 text-xs">
               Move
             </Button>
           </form>
@@ -95,7 +99,6 @@ export function ContradictionCard({ check }: { check: Check }) {
   const nums = values.map((v) => v.value);
   const lo = Math.min(...nums);
   const hi = Math.max(...nums);
-  const pos = (v: number) => (hi === lo ? 50 : 4 + ((v - lo) / (hi - lo)) * 92);
   const title = check.metric
     ? check.metric.length <= 4
       ? check.metric.toUpperCase()
@@ -104,35 +107,43 @@ export function ContradictionCard({ check }: { check: Check }) {
       ? "Headcount"
       : "Total raised";
 
+  // The values as an equation, in the order the items arrived; the spread in brick.
   return (
-    <li className="relative border-b border-rule py-5">
-      <span aria-hidden="true" className="absolute top-5 bottom-5 -left-3 w-0.5 bg-signal" />
-      <div className="flex items-baseline justify-between gap-3 text-[13px] leading-5">
-        <span className="font-medium text-ink">{title}</span>
-        <span className="font-medium text-signal">{values.length} sources disagree</span>
+    <li className="tray">
+      <div className="flex items-center justify-between gap-3 text-sm leading-5">
+        <span className="flex items-center gap-1.5 font-medium text-ink">
+          <WarningDiamond aria-hidden="true" size={16} weight="duotone" className="shrink-0 text-signal" />
+          {title}
+        </span>
+        <span className="text-xs text-signal">Your sources disagree</span>
       </div>
-      <div className="relative mt-4 h-6" aria-hidden="true">
-        <div className="absolute top-3 right-0 left-0 h-px bg-rule" />
-        {values.map((v) => (
-          <span
-            key={`${v.item_label}-${v.value}`}
-            title={`${v.item_label}: ${fmt(v.value, check.unit)}`}
-            className="absolute top-[9px] h-[7px] w-[7px] -translate-x-1/2 rounded-full border border-signal bg-surface"
-            style={{ left: `${pos(v.value)}%` }}
-          />
+      <p className="mt-3 flex flex-wrap items-start gap-x-3 gap-y-2" aria-label={values.map((v) => `${v.item_label}: ${fmt(v.value, check.unit)}`).join("; ")}>
+        {values.map((v, i) => (
+          <span key={`${v.item_label}-${v.value}`} className="flex items-start gap-3" aria-hidden="true">
+            {i > 0 && <span className="pt-3 font-serif text-2xl leading-none text-rule-strong">·</span>}
+            <span className="flex flex-col">
+              <span className="font-serif text-[44px] leading-[48px] tracking-[-0.03em] text-ink">{fmt(v.value, check.unit)}</span>
+              <span className="max-w-[9em] truncate text-xs leading-4 text-graphite">{v.item_label.split(" · ")[0]}</span>
+            </span>
+          </span>
         ))}
-      </div>
-      <ul className="mt-2 space-y-1 text-xs leading-4">
-        {[...values]
-          .sort((a, b) => a.value - b.value)
-          .map((v) => (
-            <li key={`${v.item_label}-${v.value}`} className="flex justify-between gap-3">
-              <span className="truncate text-graphite">
-                {v.item_label} · {formatDate(v.item_day)}
+      </p>
+      <p className="mt-3 text-sm leading-5 font-medium text-signal">
+        Spread of {fmt(hi - lo, check.unit)}
+        <span className="ml-2 text-xs font-normal text-graphite">across {values.length} items</span>
+      </p>
+      <ul className="mt-3 space-y-1.5">
+        {values.map((v) => (
+          <li key={`${v.item_label}-${v.value}`} className="fragment flex items-center gap-3 px-3 py-2.5">
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] leading-5 font-medium text-ink">
+                {v.item_label} <span className="font-normal text-graphite">· {formatDate(v.item_day)}</span>
               </span>
-              <span className="shrink-0 font-mono text-ink">{fmt(v.value, check.unit)}</span>
-            </li>
-          ))}
+              {v.claim_text && <span className="block truncate text-xs leading-4 text-graphite">&ldquo;{v.claim_text}&rdquo;</span>}
+            </span>
+            <span className="shrink-0 font-serif text-lg leading-6 text-ink">{fmt(v.value, check.unit)}</span>
+          </li>
+        ))}
       </ul>
     </li>
   );
@@ -172,25 +183,27 @@ function QuestionCards({ companyId, questions }: { companyId: string; questions:
           {copied === "all" ? "Copied" : "Copy all"}
         </Button>
       </div>
-      <ol className="mt-3 space-y-3">
+      {/* One fragment, ruled rows (v2): serif index in data blue, the "why" names the sources. */}
+      <ol className="fragment mt-3 divide-y divide-rule px-3">
         {questions.map((q, i) => {
           const done = asked.includes(q.question);
           return (
-            <li key={q.question} className={cn("rounded-[2px] border border-rule bg-surface p-3", done && "opacity-60")}>
-              <p className="text-[13px] leading-5 text-ink">
-                <span className="mr-2 font-mono text-graphite">{i + 1}</span>
-                {q.question}
-              </p>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <span className="micro-label text-graphite">{q.why}</span>
-                <span className="flex gap-3 text-xs">
-                  <button type="button" className="text-ink underline-offset-4 hover:underline" onClick={() => copy(q.question, i)}>
+            <li key={q.question} className={cn("flex gap-3 py-3", done && "opacity-60")}>
+              <span className="w-4 shrink-0 text-right font-serif text-lg leading-5 text-data">{i + 1}</span>
+              <div className="min-w-0 flex-1">
+              <p className="text-sm leading-5 text-ink">{q.question}</p>
+              <div className="mt-1.5 flex items-center justify-between gap-3">
+                <span className="text-xs leading-4 text-graphite">{q.why}</span>
+                <span className="flex shrink-0 gap-3 text-xs">
+                  <button type="button" className="inline-flex min-h-6 items-center gap-1 text-ink underline-offset-4 hover:underline" onClick={() => copy(q.question, i)}>
+                    <Copy aria-hidden="true" size={14} weight="light" />
                     {copied === i ? "Copied" : "Copy"}
                   </button>
                   <button type="button" className="text-ink underline-offset-4 hover:underline" onClick={() => toggle(q.question)}>
                     {done ? "Asked ✓" : "Mark asked"}
                   </button>
                 </span>
+              </div>
               </div>
             </li>
           );
@@ -252,7 +265,7 @@ export function CompanyScreen({
 
   return (
     <>
-      <button type="button" onClick={onBack} className="micro-label mb-4 text-graphite hover:text-ink">
+      <button type="button" onClick={onBack} className="mb-3 inline-flex min-h-6 items-center text-[13px] text-graphite hover:text-ink">
         ← Inbox
       </button>
       {filedItemId && (
@@ -266,19 +279,27 @@ export function CompanyScreen({
         </p>
       )}
 
-      <div role="tablist" className="mt-5 flex gap-5 border-b border-rule">
-        {tabs.map(([id, label]) => (
-          <button
-            key={id}
-            role="tab"
-            type="button"
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
-            className={cn("-mb-px border-b pb-2 text-[13px]", tab === id ? "border-ink text-ink" : "border-transparent text-graphite hover:text-ink")}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Segmented control (v2): tray-strong track, the active tab is a white pill. */}
+      <div role="tablist" className="mt-5 flex gap-0.5 rounded-full bg-tray-strong p-[3px]">
+        {tabs.map(([id, label]) => {
+          const [name, count] = label.split(" ");
+          return (
+            <button
+              key={id}
+              role="tab"
+              type="button"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={cn(
+                "flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full text-[13px] font-medium transition-colors duration-150 ease-out",
+                tab === id ? "fragment text-ink" : "text-graphite hover:text-ink",
+              )}
+            >
+              {name}
+              {count && <span className="text-data">{count}</span>}
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-6">
@@ -286,8 +307,10 @@ export function CompanyScreen({
           <div className="space-y-8">
             {contradictions.length > 0 && (
               <section>
-                <h2 className="micro-label border-b border-rule pb-2 text-signal">Your sources disagree</h2>
-                <ul>
+                <h2 className="mb-2 text-sm leading-5 font-medium text-ink">
+                  Your sources disagree <span className="text-signal">{contradictions.length}</span>
+                </h2>
+                <ul className="space-y-3">
                   {contradictions.map((c) => (
                     <ContradictionCard key={`${c.claim_type}-${c.metric}`} check={c} />
                   ))}
@@ -296,7 +319,9 @@ export function CompanyScreen({
             )}
             {publicRows.length > 0 ? (
               <section>
-                <h2 className="micro-label mb-4 text-graphite">Public records</h2>
+                <h2 className="mb-2 text-sm leading-5 font-medium text-ink">
+                  Public records <span className="text-data">{publicRows.length}</span>
+                </h2>
                 <DeltaRows rows={publicRows} />
               </section>
             ) : (
@@ -307,11 +332,11 @@ export function CompanyScreen({
 
         {tab === "items" && (
           <>
-            <ol>
+            <ol className="space-y-2">
               {[...view.items].reverse().map((item) => {
                 const n = disagreeing(item.label);
                 return (
-                  <li key={item.id} className="border-b border-rule py-3">
+                  <li key={item.id} className="fragment px-3 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <span className="flex min-w-0 items-center gap-2">
                         <ItemTag kind={item.kind} />

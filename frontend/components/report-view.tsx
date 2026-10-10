@@ -31,14 +31,22 @@ export function ReportView({
           <div className="mt-5">
             <Verdict size={size} rows={report.rows} />
           </div>
-          <div className="mt-8">
+          <div className="mt-6">
             <DeltaRows size={size} rows={report.rows} />
           </div>
         </>
       ) : (
-        <div className="mt-5 border-t border-rule pt-4">
-          <EmptyState />
-        </div>
+        <>
+          <div className="mt-5">
+            <EmptyState partial={report.rows.length > 0} />
+          </div>
+          {/* No dead end: show what the press and LinkedIn checks did find. */}
+          {report.rows.length > 0 && (
+            <div className="mt-6">
+              <DeltaRows size={size} rows={report.rows} />
+            </div>
+          )}
+        </>
       )}
 
       <footer className="mt-8 space-y-1 text-[11px] leading-4 text-graphite">

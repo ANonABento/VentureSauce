@@ -34,12 +34,12 @@ export function DeltaRow({
   const [topReason, ...moreReasons] = row.likelyReasons;
 
   return (
-    <li className={cn("py-4", divided && "border-t border-rule")}>
+    <li className={cn("fragment px-3 py-3", divided && "mt-5")}>
       {/* The 2px mark is the one place status is shown; the text is ink. */}
       <div className="relative pl-3">
         <span
           aria-hidden="true"
-          className={cn("absolute inset-y-0 left-0 w-0.5", STATUS[row.status].mark)}
+          className={cn("absolute inset-y-0 left-0 w-0.5 rounded-full", STATUS[row.status].mark)}
         />
 
         <div className="relative">
@@ -99,9 +99,10 @@ export function DeltaRow({
                   target="_blank"
                   rel="noopener noreferrer"
                   title={`Checked ${formatDate(source.checkedAt)}`}
-                  className="underline decoration-graphite/40 underline-offset-2 transition-colors duration-150 ease-out hover:text-ink hover:decoration-ink"
+                  className="font-medium text-data underline decoration-transparent underline-offset-2 transition-colors duration-150 ease-out hover:decoration-current"
                 >
                   {source.label}
+                  <span aria-hidden="true"> ↗</span>
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               </span>

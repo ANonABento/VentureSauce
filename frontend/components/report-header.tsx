@@ -20,8 +20,8 @@ export function ReportHeader({
     <header>
       <h1
         className={cn(
-          "font-serif font-medium tracking-tight text-ink",
-          size === "page" ? "text-[32px] leading-10" : "text-xl leading-6",
+          "font-serif tracking-[-0.02em] text-ink",
+          size === "page" ? "text-[36px] leading-10" : "text-[26px] leading-[30px]",
         )}
       >
         {company.name}

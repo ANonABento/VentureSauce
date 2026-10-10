@@ -16,7 +16,7 @@ export function DeltaRows({
   const rest = rows.filter((row) => row.status !== "discrepancy");
 
   return (
-    <ul>
+    <ul className="space-y-2">
       {[...discrepancies, ...rest].map((row, index) => (
         <DeltaRow
           key={row.signal}

@@ -1,19 +1,33 @@
 @import "tailwindcss";
 
-/* "Marginalia" design tokens — filing-delta-context.md, section 7. */
+/*
+ * VentureSauce v2 tokens (Figma: "VentureSauce — Brand & Design Kit", Components v2).
+ * Same variable names as the Marginalia tokens, with VentureSauce values. New: tray,
+ * data, accent. See Research/Design/handoff.md and tokens.css.
+ */
 :root {
   /* Light is the default; dark is opt-in via data-theme (see ThemeParam). */
   color-scheme: light;
 
-  --paper: #f7f5f0;
+  --paper: #fbfaf7;
   --surface: #ffffff;
-  --ink: #161616;
-  --graphite: #5c5a55;
-  --rule: #e2ded6;
+  --ink: #333d34;
+  --graphite: #66726a;
+  --rule: #e6e1d8;
+  --rule-strong: #d4cec2;
   /* Discrepancies only. */
-  --signal: #b4441c;
-  --signal-wash: #f6e7df;
-  --steady: #3f6b4f;
+  --signal: #a3321f;
+  --signal-wash: #fbe9e5;
+  --steady: #1f6b43;
+  --steady-wash: #e6f1ea;
+  /* Mist trays hold the one hero element per screen. */
+  --tray: #eef3f4;
+  --tray-strong: #e2ebed;
+  /* Neutral figures and source links. */
+  --data: #3f6e7c;
+  /* Amber, 4 uses only: logo sun, running step, drop hover, selection. */
+  --accent: #d9822b;
+  --accent-wash: #fcebd6;
 }
 
 :root[data-theme="dark"] {
@@ -24,9 +38,16 @@
   --ink: #edebe6;
   --graphite: #a3a09a;
   --rule: #2c2b29;
+  --rule-strong: #3a3936;
   --signal: #e0794f;
   --signal-wash: #2a1d17;
   --steady: #7faf8e;
+  --steady-wash: #18241c;
+  --tray: #1c2224;
+  --tray-strong: #253033;
+  --data: #8fb3be;
+  --accent: #e39a4f;
+  --accent-wash: #2b2117;
 }
 
 @theme inline {
@@ -35,13 +56,21 @@
   --color-ink: var(--ink);
   --color-graphite: var(--graphite);
   --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
   --color-signal: var(--signal);
   --color-signal-wash: var(--signal-wash);
   --color-steady: var(--steady);
+  --color-steady-wash: var(--steady-wash);
+  --color-tray: var(--tray);
+  --color-tray-strong: var(--tray-strong);
+  --color-data: var(--data);
+  --color-accent: var(--accent);
+  --color-accent-wash: var(--accent-wash);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-serif: var(--font-newsreader), Georgia, serif;
+  /* Bespoke Serif (bundled): display and key figures. Old-style figures only. */
+  --font-serif: var(--font-bespoke), Georgia, serif;
 }
 
 @layer base {
@@ -53,8 +82,13 @@
     font-variant-numeric: tabular-nums;
   }
 
+  ::selection {
+    background: var(--accent-wash);
+    color: var(--ink);
+  }
+
   :focus-visible {
-    outline: 1px solid var(--ink);
+    outline: 2px solid var(--data);
     outline-offset: 2px;
   }
 
@@ -65,11 +99,53 @@
   }
 }
 
-/* "FILED", "SAID", "SOURCE" — set the color at the call site. */
+/*
+ * Small labels ("Filed", "Said", section titles). v2 retires uppercase mono:
+ * sentence case, Geist medium. Set the color at the call site.
+ */
 @utility micro-label {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 16px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: -0.005em;
+}
+
+/* Mist surface for the one hero element per screen. No border. */
+@utility tray {
+  background: var(--tray);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* White card that looks like real UI. Sits on the page or on a tray. */
+@utility fragment {
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 2px rgb(31 43 48 / 0.04),
+    0 6px 16px -4px rgb(31 43 48 / 0.07);
+}
+
+/*
+ * Dithered proportion bar: two staggered rows of dots, the ASCII art carried
+ * into data. Set --dither-on and --dither-fill (0–100%) at the call site.
+ */
+@utility dither {
+  --dither-on: var(--data);
+  --dither-fill: 0%;
+  position: relative;
+  height: 7px;
+  background:
+    radial-gradient(circle, var(--rule-strong) 0.8px, transparent 0.95px) 0 0.5px / 3px 3px repeat-x,
+    radial-gradient(circle, var(--rule-strong) 0.8px, transparent 0.95px) 1.5px 3.5px / 3px 3px repeat-x;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--dither-fill);
+    background:
+      radial-gradient(circle, var(--dither-on) 0.8px, transparent 0.95px) 0 0.5px / 3px 3px repeat-x,
+      radial-gradient(circle, var(--dither-on) 0.8px, transparent 0.95px) 1.5px 3.5px / 3px 3px repeat-x;
+  }
 }
