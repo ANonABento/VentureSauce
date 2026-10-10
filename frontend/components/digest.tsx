@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { CheckCircle, Pause, Play, XCircle } from "@phosphor-icons/react/dist/ssr";
 import { API, type Digest, chatStream, getDigest, recordBrief, transcribe, ttsUrl } from "@/lib/api";
 import { startWavRecording } from "@/lib/recorder";
 import { Button } from "./button";
@@ -21,10 +22,31 @@ function Total({ label, value, signal }: { label: string; value: number; signal?
     return () => clearInterval(id);
   }, [value]);
   return (
-    <div className="border border-rule bg-surface p-3">
-      <div className={cn("font-mono text-2xl leading-8", signal && value > 0 ? "text-signal" : "text-ink")}>{shown}</div>
-      <div className="micro-label text-graphite">{label}</div>
-    </div>
+    <span className="whitespace-nowrap">
+      <span className={cn("font-serif text-lg leading-6", signal && value > 0 ? "text-signal" : "text-data")}>{shown}</span>{" "}
+      {label}
+    </span>
+  );
+}
+
+/** "5 new items · 2 companies · 3 discrepancies": the totals as one sentence. */
+function Totals({ totals }: { totals: Digest["totals"] }) {
+  const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+  const parts = [
+    <Total key="items" label={plural(totals.items, "new item", "new items")} value={totals.items} />,
+    <Total key="companies" label={plural(totals.companies, "company", "companies")} value={totals.companies} />,
+    <Total key="disc" label={plural(totals.discrepancies, "discrepancy", "discrepancies")} value={totals.discrepancies} signal />,
+    <Total key="contra" label={plural(totals.contradictions, "contradiction", "contradictions")} value={totals.contradictions} signal />,
+  ];
+  return (
+    <p className="mt-4 text-[13px] leading-7 text-graphite">
+      {parts.map((part, i) => (
+        <span key={i}>
+          {i > 0 && " · "}
+          {part}
+        </span>
+      ))}
+    </p>
   );
 }
 
@@ -46,7 +68,7 @@ function SpeedButton({ speed, onChange, label }: { speed: number; onChange: (v: 
       type="button"
       aria-label={`${label}: ${speed}×. Change speed`}
       onClick={() => onChange(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
-      className="h-8 min-w-11 shrink-0 rounded-[2px] border border-rule px-2 font-mono text-[11px] text-graphite hover:text-ink"
+      className="h-8 min-w-11 shrink-0 rounded-full border border-rule-strong bg-surface px-2.5 font-mono text-[11px] text-graphite hover:text-ink"
     >
       {speed}×
     </button>
@@ -94,21 +116,27 @@ function BriefPlayer({ script }: { script: string }) {
         type="button"
         onClick={toggle}
         aria-label={state === "playing" ? "Pause briefing" : "Play briefing"}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-paper"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-paper"
       >
         {state === "playing" ? (
-          <svg viewBox="0 0 10 10" className="h-3 w-3" fill="currentColor"><path d="M2 1h2v8H2zM6 1h2v8H6z" /></svg>
+          <Pause aria-hidden="true" size={16} weight="fill" className="text-paper" />
         ) : (
-          <svg viewBox="0 0 10 10" className="ml-0.5 h-3 w-3" fill="currentColor"><path d="M2 1l7 4-7 4z" /></svg>
+          <Play aria-hidden="true" size={16} weight="fill" className="ml-0.5 text-paper" />
         )}
       </button>
-      <div className="flex-1">
-        <div className="h-0.5 bg-rule">
-          <div className="h-0.5 bg-ink transition-[width] duration-200" style={{ width: `${progress}%` }} />
-        </div>
-        <p className="mt-1 text-[11px] text-graphite">
-          {state === "recording" ? "Recording your briefing…" : "Your briefing · about a minute"}
+      <div className="min-w-0 flex-1">
+        <p className="flex items-baseline justify-between gap-2">
+          <span className="truncate text-[13px] leading-5 font-medium text-ink">
+            {state === "recording" ? "Recording your briefing…" : "Your briefing"}
+          </span>
+          <span className="shrink-0 font-mono text-xs text-graphite">~1 min</span>
         </p>
+        {/* Decorative: playback state is carried by the button label. */}
+        <div
+          aria-hidden="true"
+          className="dither mt-1.5"
+          style={{ "--dither-on": "var(--data)", "--dither-fill": `${progress}%` } as CSSProperties}
+        />
       </div>
       <SpeedButton speed={rate} onChange={changeRate} label="Briefing speed" />
       <audio
@@ -265,10 +293,10 @@ function TalkPanel() {
   }
 
   return (
-    <section className="mt-8 border-t border-rule pt-5">
+    <section className="mt-8">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="micro-label text-graphite">Talk to your briefing</h2>
+          <h2 className="text-sm leading-5 font-medium text-ink">Talk to your briefing</h2>
           <p className="mt-1 text-xs text-graphite">It briefs you out loud. Interrupt any time; ask it to look something up.</p>
         </div>
       </div>
@@ -285,7 +313,7 @@ function TalkPanel() {
       {log.length > 0 && (
         <div className="mt-4 flex max-h-96 flex-col gap-2 overflow-y-auto">
           {log.map((m, i) => (
-            <p key={i} className={cn("max-w-[90%] rounded-[2px] px-3 py-2 text-[13px] leading-5", m.role === "user" ? "self-end bg-ink text-paper" : "self-start border border-rule bg-surface text-ink", m.interim && "opacity-60")}>
+            <p key={i} className={cn("max-w-[90%] rounded-2xl px-3 py-2 text-[13px] leading-5", m.role === "user" ? "self-end bg-ink text-paper" : "fragment self-start text-ink", m.interim && "opacity-60")}>
               {m.text}
             </p>
           ))}
@@ -301,7 +329,7 @@ function TalkPanel() {
           }
         }}
       >
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Or type: check if Acme filed a new Form D" className="h-8 min-w-0 flex-1 rounded-[2px] border border-rule bg-surface px-2 text-xs" />
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Or type: check if Acme filed a new Form D" className="h-8 min-w-0 flex-1 rounded-full border border-rule-strong bg-surface px-3 text-xs text-ink placeholder:text-graphite" />
         <Button type="submit" variant="quiet" className="h-8 px-3 text-xs">Send</Button>
       </form>
     </section>
@@ -320,12 +348,18 @@ export function DigestScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (
 
   return (
     <>
-      <button type="button" onClick={onBack} className="micro-label mb-4 text-graphite hover:text-ink">← Inbox</button>
-      <div className="flex items-baseline justify-between">
-        <h1 className="font-serif text-xl leading-6 font-medium tracking-tight text-ink">{period === "day" ? "Today" : "This week"}</h1>
-        <div className="flex gap-3 text-xs">
+      <button type="button" onClick={onBack} className="micro-label mb-4 inline-flex min-h-6 items-center text-graphite hover:text-ink">← Inbox</button>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">{period === "day" ? "Today" : "This week"}</h1>
+        <div className="flex rounded-full bg-tray p-0.5 text-xs font-medium">
           {(["day", "week"] as const).map((p) => (
-            <button key={p} type="button" onClick={() => setPeriod(p)} className={period === p ? "text-ink underline underline-offset-4" : "text-graphite"}>
+            <button
+              key={p}
+              type="button"
+              aria-pressed={period === p}
+              onClick={() => setPeriod(p)}
+              className={cn("h-7 rounded-full px-3", period === p ? "fragment text-ink" : "text-graphite hover:text-ink")}
+            >
               {p === "day" ? "Today" : "Week"}
             </button>
           ))}
@@ -335,35 +369,65 @@ export function DigestScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (
       {!current && !error && <p className="mt-4 text-[13px] text-graphite">Building your briefing…</p>}
       {current && (
         <>
-          <div className="mt-5 grid grid-cols-2 gap-2">
-            <Total label="Items" value={current.totals.items} />
-            <Total label="Companies" value={current.totals.companies} />
-            <Total label="Discrepancies" value={current.totals.discrepancies} signal />
-            <Total label="Contradictions" value={current.totals.contradictions} signal />
+          {/* The digest's one hero tray: the written brief and its audio. */}
+          <div className="tray mt-5">
+            <p className="text-sm leading-5 text-ink">{current.summary}</p>
+            {current.companies.length > 0 && (
+              <div className="fragment mt-3 px-3 py-2.5">
+                <BriefPlayer key={current.script} script={current.script} />
+              </div>
+            )}
           </div>
-          {current.companies.length > 0 && <div className="mt-5"><BriefPlayer key={current.script} script={current.script} /></div>}
-          <p className="mt-4 text-[13px] leading-5 text-ink">{current.summary}</p>
-          <div className="mt-6 space-y-5">
-            {current.companies.map((c) => (
-              <section key={c.id} className="border-t border-rule pt-4">
-                <button type="button" onClick={() => onOpen(c.id)} className="text-left text-sm font-medium text-ink hover:underline">
-                  {c.name}{c.fictional ? " (fictional)" : ""}
-                </button>
-                <div className="mt-2 flex flex-wrap gap-1">{c.new_items.map((i) => <ItemTag key={i.id} kind={i.kind} />)}</div>
-                {c.discrepancies.length > 0 && (
-                  <ul className="mt-3 space-y-1 text-[13px] leading-5">
-                    {c.discrepancies.slice(0, 3).map((d) => (
-                      <li key={d.signal} className="flex justify-between gap-3">
-                        <span className="text-ink">{d.signal}</span>
-                        <span className="shrink-0 text-signal">{d.short}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {c.questions[0] && <p className="mt-3 border-l border-rule pl-3 text-[13px] leading-5 text-graphite">Ask: {c.questions[0].question}</p>}
-              </section>
-            ))}
-          </div>
+          <Totals totals={current.totals} />
+          {current.companies.length > 0 && (
+            <section className="mt-6">
+              <h2 className="text-sm leading-5 font-medium text-ink">
+                Companies <span className="text-data">{current.companies.length}</span>
+              </h2>
+              <div className="mt-3 space-y-2">
+                {current.companies.map((c) => (
+                  <section key={c.id} className="fragment px-3.5 py-3">
+                    <button type="button" onClick={() => onOpen(c.id)} className="block max-w-full truncate text-left font-serif text-lg leading-6 text-ink hover:underline hover:underline-offset-4">
+                      {c.name}{c.fictional ? " (fictional)" : ""}
+                    </button>
+                    {c.new_items.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">{c.new_items.map((i) => <ItemTag key={i.id} kind={i.kind} />)}</div>
+                    )}
+                    {c.discrepancies.length > 0 ? (
+                      <ul className="mt-3 space-y-1.5 text-[13px] leading-5">
+                        {c.discrepancies.slice(0, 3).map((d) => (
+                          <li key={d.signal} className="flex items-start gap-2 text-signal">
+                            <XCircle aria-hidden="true" size={14} weight="light" className="mt-[3px] shrink-0" />
+                            <span className="min-w-0 flex-1 text-ink">{d.signal}</span>
+                            {d.short && <span className="shrink-0">{d.short}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : c.contradictions > 0 ? (
+                      <p className="mt-3 flex items-center gap-2 text-[13px] leading-5 text-signal">
+                        <XCircle aria-hidden="true" size={14} weight="light" className="shrink-0" />
+                        {c.contradictions} contradiction{c.contradictions === 1 ? "" : "s"} between your sources
+                      </p>
+                    ) : (
+                      <p className="mt-3 flex items-center gap-2 text-[13px] leading-5 text-steady">
+                        <CheckCircle aria-hidden="true" size={14} weight="light" className="shrink-0" />
+                        No discrepancies in the new items
+                      </p>
+                    )}
+                    {c.questions[0] && (
+                      <p className="mt-3 flex gap-2.5 rounded-md bg-tray px-3 py-2 text-[13px] leading-5 text-ink">
+                        <span className="w-3 shrink-0 text-right font-serif text-base leading-5 text-data">1</span>
+                        <span className="min-w-0">
+                          <span className="sr-only">Ask: </span>
+                          {c.questions[0].question}
+                        </span>
+                      </p>
+                    )}
+                  </section>
+                ))}
+              </div>
+            </section>
+          )}
           <TalkPanel />
         </>
       )}

@@ -2,6 +2,7 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { CaretRight, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/button";
 import { ErrorState } from "@/components/error-state";
 import { LoadingSteps } from "@/components/loading-steps";
@@ -103,12 +104,31 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     <PanelFrame>
       {screen.kind === "inbox" && (
         <>
-          <div className="flex items-baseline justify-between">
-            <h1 className="font-serif text-xl leading-6 font-medium tracking-tight text-ink">Deal inbox</h1>
-            <button type="button" onClick={() => setScreen({ kind: "digest" })} className="text-xs text-ink underline underline-offset-4">
-              Today&apos;s digest →
-            </button>
-          </div>
+          <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">Deal inbox</h1>
+          {/* The inbox's one hero tray: the way into today's digest. */}
+          <button
+            type="button"
+            onClick={() => setScreen({ kind: "digest" })}
+            className="tray group mt-4 flex w-full items-center gap-3 text-left"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm leading-5 font-medium text-ink group-hover:underline group-hover:underline-offset-4">
+                Today&apos;s digest
+              </span>
+              <span className="block text-xs leading-4 text-graphite">
+                {companies ? (
+                  <>
+                    Your briefing across{" "}
+                    <span className="font-serif text-base text-data">{companies.length}</span>{" "}
+                    {companies.length === 1 ? "company" : "companies"}
+                  </>
+                ) : (
+                  "Your briefing, read aloud or skimmed"
+                )}
+              </span>
+            </span>
+            <CaretRight aria-hidden="true" size={16} weight="light" className="shrink-0 text-graphite" />
+          </button>
           {notInInbox && detected && (
             <p className="mt-2 text-[13px] leading-5 text-graphite">
               Nothing about <span className="text-ink">{detected.domain}</span> in your inbox yet. Drop its deck or a founder email.
@@ -187,22 +207,35 @@ export function PanelView({
             what it says publicly.
           </p>
           <form onSubmit={onSubmitName} className="mt-6">
-            <label htmlFor="company" className="micro-label block text-graphite">
+            <label htmlFor="company" className="block text-sm leading-5 font-medium text-ink">
               Company name
             </label>
-            <input
-              id="company"
-              name="company"
-              value={name}
-              onChange={(event) => onNameChange?.(event.target.value)}
-              required
-              autoComplete="off"
-              placeholder="e.g. Quillfeather Robotics"
-              className="mt-2 block h-9 w-full rounded-[2px] border border-rule bg-surface px-3 text-sm text-ink placeholder:text-graphite"
-            />
-            <Button type="submit" className="mt-3">
-              Compare filings
-            </Button>
+            {/* One row when there's room for the full placeholder; stacked full-width in a narrow panel. */}
+            <div className="@container mt-2">
+              <div className="flex flex-col gap-2 @[24rem]:flex-row">
+                <span className="relative block min-w-0 flex-1">
+                  <MagnifyingGlass
+                    aria-hidden="true"
+                    size={16}
+                    weight="light"
+                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-graphite"
+                  />
+                  <input
+                    id="company"
+                    name="company"
+                    value={name}
+                    onChange={(event) => onNameChange?.(event.target.value)}
+                    required
+                    autoComplete="off"
+                    placeholder="e.g. Quillfeather Robotics"
+                    className="block h-9 w-full rounded-full border border-rule-strong bg-surface pr-3 pl-9 text-sm text-ink placeholder:text-graphite"
+                  />
+                </span>
+                <Button type="submit" className="shrink-0">
+                  Compare filings
+                </Button>
+              </div>
+            </div>
           </form>
         </>
       )}
