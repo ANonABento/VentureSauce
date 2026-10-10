@@ -33,7 +33,10 @@ FEEDBACK_LOG = HERE / "data" / "feedback.jsonl"
 app = FastAPI(title="VentureSauce")
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^(chrome-extension://.*|http://localhost(:\d+)?|http://127\.0\.0\.1(:\d+)?)$",
+    # The extension, local dev, the Vercel frontend (production + preview deploys), plus EXTRA_ORIGINS (comma-separated).
+    allow_origin_regex=r"^(chrome-extension://.*|http://localhost(:\d+)?|http://127\.0\.0\.1(:\d+)?"
+                       r"|https://venturesauce[a-z0-9-]*\.vercel\.app)$",
+    allow_origins=[o.strip() for o in os.getenv("EXTRA_ORIGINS", "").split(",") if o.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
 )

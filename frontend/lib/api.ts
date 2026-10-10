@@ -1,7 +1,25 @@
 // Client for the VentureSauce backend (backend/README.md). The panel's only data source.
 import type { DeltaReport } from "@/lib/types";
 
-export const API = process.env.NEXT_PUBLIC_API ?? "http://localhost:8000";
+const DEFAULT_API = (process.env.NEXT_PUBLIC_API ?? "http://localhost:8000").replace(/\/$/, "");
+// Backends a link may point the panel at (?api=…): the laptop, quick tunnels, and hosted backends we run.
+const ALLOWED_API = /^(http:\/\/(localhost|127\.0\.0\.1)(:\d+)?|https:\/\/[a-z0-9-]+\.(trycloudflare\.com|hf\.space))$/;
+
+/** The backend URL. `?api=https://….trycloudflare.com` switches it without a redeploy (remembered per browser;
+ * `?api=default` forgets it), so a restarted tunnel only needs a new link, not a new build. */
+function resolveApi(): string {
+  if (typeof window === "undefined") return DEFAULT_API;
+  try {
+    const asked = new URLSearchParams(window.location.search).get("api")?.replace(/\/$/, "");
+    if (asked === "default") localStorage.removeItem("vs.api");
+    else if (asked && ALLOWED_API.test(asked)) localStorage.setItem("vs.api", asked);
+    return localStorage.getItem("vs.api") || DEFAULT_API;
+  } catch {
+    return DEFAULT_API;
+  }
+}
+
+export const API = resolveApi();
 
 export type ItemKind = "pdf" | "pdf_scanned" | "slides" | "image" | "email" | "notes" | "text";
 
