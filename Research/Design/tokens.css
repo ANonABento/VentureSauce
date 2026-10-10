@@ -1,0 +1,97 @@
+/*
+ * VentureSauce design tokens, v0.1 (2026-10-10), light mode.
+ * Source of truth: Figma "VentureSauce — Brand & Design Kit"
+ *   https://www.figma.com/design/uM60fyB7G4ZGtYG3UZS6mT
+ *
+ * Drop-in for frontend/app/globals.css. The first block keeps the existing
+ * "Marginalia" variable names (--paper, --ink, --signal, ...) and swaps in
+ * VentureSauce values, so components keep working unchanged. The --vs-*
+ * block mirrors the Figma variable names one-to-one for new work.
+ */
+
+:root {
+  /* ---- Existing names, new values ---- */
+  --paper: #fbfaf7;        /* bg/canvas */
+  --surface: #ffffff;      /* bg/surface */
+  --ink: #333d34;          /* text/primary · action/primary (pine) */
+  --graphite: #66726a;     /* text/tertiary. 5.0:1 on white */
+  --rule: #e6e1d8;         /* border/default (warm hairline) */
+  --signal: #a3321f;       /* status/discrepancy/fg. Discrepancies only */
+  --signal-wash: #fbe9e5;  /* status/discrepancy/bg */
+  --steady: #1f6b43;       /* status/consistent/fg */
+
+  /* ---- New in VentureSauce ---- */
+  --vs-bg-subtle: #f5f2ec;
+  --vs-bg-brand-tint: #f8e5ca;      /* parchment, brand moments only */
+  --vs-text-secondary: #536055;     /* slate sage */
+  --vs-text-accent: #9a5a12;        /* amber as text, if ever needed */
+  --vs-border-strong: #d4cec2;
+  --vs-icon-muted: #768c8d;         /* steel: icons/borders ONLY (3.6:1, fails as text) */
+  --vs-action-primary-hover: #252d26;
+  --vs-focus-ring: #3f6e7c;
+
+  /* Amber: ONLY logo, running status step, drop-zone hover, ::selection */
+  --vs-accent: #d9822b;
+  --vs-accent-subtle: #fcebd6;
+
+  /* Status (matches backend DeltaStatus) */
+  --vs-status-consistent-bg: #e6f1ea;
+  --vs-status-not-disclosed-fg: #66726a;
+  --vs-status-not-disclosed-bg: #f5f2ec;
+  --vs-status-not-disclosed-border: #d4cec2;
+  --vs-status-unverified-fg: #536055;
+  --vs-status-unverified-bg: #eef0ec;
+  --vs-status-unverified-border: #a9b1a8; /* dashed */
+
+  /* Spacing (4px grid) */
+  --vs-space-2xs: 2px;
+  --vs-space-xs: 4px;
+  --vs-space-sm: 8px;
+  --vs-space-md: 12px;
+  --vs-space-lg: 16px;
+  --vs-space-xl: 20px;
+  --vs-space-2xl: 24px;
+  --vs-space-3xl: 32px;
+  --vs-space-4xl: 40px;
+
+  /* Radius: pills/chips 4, cards/inputs/buttons 6, panel/drop card 8 */
+  --vs-radius-sm: 4px;
+  --vs-radius-md: 6px;
+  --vs-radius-lg: 8px;
+
+  /* Borders */
+  --vs-border-hairline: 1px;
+  --vs-border-edge-bar: 2px; /* left edge on status rows */
+
+  /* Elevation: one shadow, only for the drop card over the art */
+  --vs-shadow-drop-card: 0 8px 24px rgb(51 61 52 / 0.12);
+
+  /* Motion */
+  --vs-ease: cubic-bezier(0.2, 0, 0, 1);
+  --vs-dur-row-enter: 180ms;   /* fade + 4px rise */
+  --vs-dur-scramble: 400ms;    /* observed value: ASCII → number, once */
+  --vs-dur-spinner: 800ms;     /* running step arc, linear */
+}
+
+::selection {
+  background: var(--vs-accent-subtle);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--vs-focus-ring);
+  outline-offset: 2px;
+}
+
+/*
+ * Type: Geist + Geist Mono only (no serif). Already loaded via next/font.
+ * Bundle the font files locally for the extension (wifi-off demo).
+ *   Number/XL   Geist 600 28/32 -1%   (glance count uses 40/44)
+ *   Number/L    Geist 600 22/28       (claimed → observed)
+ *   Heading     Geist 600 20/28       (company name)
+ *   Body        Geist 400 13/20 · Strong 500 13/20 · Small 400 12/16
+ *   Mono/Label  Geist Mono 500 11/16 +4% UPPER   (= existing .micro-label)
+ *   Mono/Log    Geist Mono 400 12/18             (status log)
+ *   Mono/Receipt Geist Mono 400 11/16            (receipt lines)
+ * Keep `font-variant-numeric: tabular-nums` on body.
+ */

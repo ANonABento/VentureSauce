@@ -64,6 +64,36 @@ The panel should feel like a fintech ledger, not an AI toy. Numbers carry the we
    - **The signature moment:** each observed value resolves from scrambled ASCII to the real number (about 400ms, once per value). It's off under `prefers-reduced-motion` and never runs on scroll or hover.
    - No ambient shimmer, no animated art, no count-ups.
 
+## Reconciled with the teammate's frontend (`frontend/`, pulled 2026-10-10)
+
+The teammate built a full Next.js panel ("Filing Delta", "Marginalia" tokens, six states at `/panel/states`).
+
+10. **His layout is the screen structure.** That covers:
+    - The header bar with the company name
+    - The glance summary: the big count, the segmented status bar and the legend
+    - Rows grouped by status, each with an edge bar and a mini visual (raise bar, investor dots, headcount sparkline, filing timeline)
+    - All six states
+
+    The kit gets applied on top of it.
+11. **Status vocabulary follows the backend `DeltaStatus`:** discrepancy / consistent / not disclosed / unverified, replacing Gap / Match / Unverifiable. The Figma `Status pill` has 4 variants, with glyphs ✕ / ✓ / – / ?. Tokens are renamed to `color/status/*`.
+12. **Surya's calls:**
+    - **Geist only.** His Newsreader serif headings become Geist SemiBold.
+    - **Our corners (4/6/8px)** replace his square 0px.
+13. **Merge rule for code:** keep his CSS variable names (`--paper`, `--ink`, `--signal`, `--steady`, …) and swap in our values. Then add the amber accent, the mono status log, ASCII art on the empty state, and the scramble effect.
+
+    | His variable | Our value |
+    |---|---|
+    | `--ink` | `#333D34` |
+    | `--paper` | `#FBFAF7` |
+    | `--rule` | `#E6E1D8` |
+    | `--signal` | `#A3321F` |
+    | `--signal-wash` | `#FBE9E5` |
+    | `--steady` | `#1F6B43` |
+    | `--graphite` | `#66726A` |
+
+    Rename "Filing Delta" to "VentureSauce".
+14. **The deal inbox pivot (PLAN.md) isn't designed yet.** The company list, item timeline, contradictions and founder questions screens still need kit coverage.
+
 ## Pending
 
 - **Layout is parked.** A teammate is building the panel layout mockup. Once it's committed, pull it and apply the kit on top. Row layout, screen structure and density decisions wait for it, and parts of that layout may change afterward. The draft recommendation for the truth-table row is a three-line stack (pill and page, quote, then a big CLAIMED → OBSERVED line with confidence, then the source).
