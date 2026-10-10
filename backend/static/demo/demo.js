@@ -21,6 +21,9 @@ const MAIL = [
     subject: "Jane Founder shared \"Acme AI deck\" with you",
     body: "Jane Founder (jane@acme-ai.example) shared a document with you.\n\nAcme AI deck\n6 pages\n\n\"Ahead of Thursday - let me know if anything's unclear.\"",
     cta: { label: "View document", href: "#decks/acme" } },
+  { id: "daytona", from: "Morgan Lee", addr: "morgan@fund.example", when: "Oct 9", date: "Oct 9, 2026, 6:20 PM", unread: true,
+    subject: "Daytona", label: "Deals", clip: "daytona",
+    intro: "Taylor - came across this. Can you run it through and see what the filings say before Monday?\n\nMorgan" },
   { id: "acme-board", from: "Jane Founder", addr: "jane@acme-ai.example", when: "Oct 8", date: "Oct 8, 2026, 11:30 AM",
     subject: "Q3 board update", label: "Portfolio",
     body: "Hi all,\n\nQ3 board slides attached, with speaker notes. Happy to walk through any of it.\n\nJane",
@@ -58,7 +61,7 @@ const CLIPS = [
     text: "Acme AI announced a $10 million seed round led by Example Ventures.", url: "https://example.com/acme/press" },
 ];
 const DEALS = {
-  Sourced: [["Larkspur Labs", "Dev tools for robotics teams", "Oct 9"], ["Cinder Analytics", "Warehouse data platform", "Oct 3"]],
+  Sourced: [["Daytona", "Infrastructure for AI-generated code", "Oct 9", "#mail/daytona"], ["Larkspur Labs", "Dev tools for robotics teams", "Oct 9"], ["Cinder Analytics", "Warehouse data platform", "Oct 3"]],
   "First meeting": [["Northwind Robotics", "Picking arms for small warehouses", "Oct 7", "#mail/northwind", "Pre-seed"]],
   Diligence: [["Acme AI", "AI ops for logistics", "Oct 9", "#notes/acme-call", "Series A"], ["Orbitwise", "Fleet routing", "Sep 28"]],
   "Partner meeting": [["Pebblepath", "Last-mile scheduling", "Sep 30", "", "Seed"]],
@@ -137,6 +140,10 @@ const ic = (name, extra = "") => `<svg viewBox="0 0 24 24" fill="none" stroke="c
 
 /* ───────────── Mail ───────────── */
 async function mailBody(m) {
+  if (m.clip) {
+    const c = CLIPS.find((x) => x.id === m.clip);
+    return { text: `${m.intro}\n\n> ${c.title} (${c.from})\n> ${(await clipText(c)).replace(/\n+/g, "\n> ")}\n\n${c.url}`, date: m.date };
+  }
   if (!m.file) return { text: m.body, date: m.date };
   const { headers, body } = parseEml(await load(m.file));
   const d = new Date(headers.date);
@@ -373,13 +380,17 @@ function portalView() {
 }
 
 /* ───────────── Saved (read-later) ───────────── */
+/** A clip's reported statements. The clip files open with a note on provenance and end with the source URL (shown
+ * as a link instead), so only the statements are on screen. */
+async function clipText(c) {
+  const text = c.text || (await load(c.file));
+  return text.split(/\n\s*\n/).filter((para) => !/public claims/i.test(para)).join("\n\n")
+    .split("\n").filter((l) => !/^Source:/.test(l)).map((l) => l.replace(/^\s*-\s+/, "")).join("\n\n").trim();
+}
+
 async function savedView(id) {
   const open = CLIPS.find((c) => c.id === id) || CLIPS[0];
-  const text = open.text || (await load(open.file));
-  // The clip files open with a note on provenance and end with the source URL (already the "Open original" link);
-  // the reader shows just the reported statements.
-  const article = text.split(/\n\s*\n/).filter((para) => !/public claims/i.test(para)).join("\n\n")
-    .split("\n").filter((l) => !/^Source:/.test(l)).map((l) => l.replace(/^\s*-\s+/, "")).join("\n\n").trim();
+  const article = await clipText(open);
   const list = CLIPS.map((c) => `<a class="rd-item ${c.id === open.id ? "on" : ""}" href="#saved/${c.id}"><b>${esc(c.title)}</b><span>${esc(c.from)} · Saved ${c.saved}</span></a>`).join("");
   return `<div class="rd"><aside class="rd-list"><header><i></i>Saved</header>${list}</aside>
     <section class="rd-art"><article>
@@ -390,7 +401,7 @@ async function savedView(id) {
 }
 function savedWire(id) {
   const open = CLIPS.find((c) => c.id === id) || CLIPS[0];
-  $("[data-copy]").onclick = async () => copy(open.text || (await load(open.file)), "Text copied");
+  $("[data-copy]").onclick = async () => copy(await clipText(open), "Text copied");
   const d = $("[data-dl]");
   if (d) d.onclick = () => download(open.file, `${open.title}.txt`);
 }
@@ -438,54 +449,5 @@ async function route() {
   dock(app);
 }
 
-/* ───────────── Run-through: step the demo script (script.js) with a clicker or keys, notes in a second window ───────────── */
-const STEPS = window.DEMO_STEPS || [];
-const chan = "BroadcastChannel" in window ? new BroadcastChannel("venturesauce-demo") : null;
-let step = 0;
-try { step = Number(sessionStorage.getItem("demo-step")) || 0; } catch {}
-
-/** Keep the step in line with the screen when it was reached some other way (dock, links, back button). */
-function syncStep() {
-  const here = location.hash.slice(1) || "mail";
-  if (STEPS[step]?.hash !== here) {
-    // The nearest step showing this screen (the inbox is both the first and the last step).
-    const near = STEPS.map((s, i) => (s.hash === here ? i : -1)).filter((i) => i >= 0)
-      .sort((a, b) => Math.abs(a - step) - Math.abs(b - step))[0];
-    if (near != null) step = near;
-  }
-  try { sessionStorage.setItem("demo-step", step); } catch {}
-  chan?.postMessage({ at: step });
-}
-function goStep(i) {
-  if (!STEPS.length) return;
-  step = Math.max(0, Math.min(STEPS.length - 1, i));
-  const hash = "#" + STEPS[step].hash;
-  if (location.hash === hash) syncStep();
-  else location.hash = hash;
-}
-/** The next/previous step, skipping the extras when the presenter window has "2-minute version" ticked. */
-function neighbour(dir) {
-  let core = false;
-  try { core = localStorage.getItem("demo-core") === "1"; } catch {}
-  for (let i = step + dir; i >= 0 && i < STEPS.length; i += dir) if (!core || STEPS[i].core) return i;
-  return step;
-}
-chan?.addEventListener("message", (e) => {
-  if (e.data?.go != null) goStep(e.data.go);
-  if (e.data?.hello) chan.postMessage({ at: step });
-});
-document.addEventListener("keydown", (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.("input, textarea, [contenteditable]")) return;
-  // Presentation clickers send PageDown/PageUp.
-  if (e.key === "PageDown" || e.key === "]") { e.preventDefault(); goStep(neighbour(1)); }
-  else if (e.key === "PageUp" || e.key === "[") { e.preventDefault(); goStep(neighbour(-1)); }
-  else if (e.key === "n" || e.key === "N") window.open("/static/demo/presenter.html", "venturesauce-presenter", "width=560,height=720");
-});
-
-window.addEventListener("hashchange", () => route().then(syncStep));
-route().then(() => {
-  syncStep();
-  // Show the dock briefly so the presenter knows it's there, then let it tuck away.
-  $("#dock").classList.add("show");
-  setTimeout(() => $("#dock").classList.remove("show"), 2500);
-});
+window.addEventListener("hashchange", route);
+route();

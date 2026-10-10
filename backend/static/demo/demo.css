@@ -8,7 +8,9 @@ html, body { margin: 0; height: 100%; }
 body { background: #fff; color: var(--ink); font: 14px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; cursor: pointer; }
 a { color: inherit; }
-#app { height: 100%; }
+/* The dock sits in its own strip under the app, like a desktop taskbar, so it never covers content. */
+body { background: #e4e7ec; }
+#app { height: calc(100% - 72px); overflow: hidden; }
 .ib { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 0; background: none; color: #444746; flex-shrink: 0; }
 .ib:hover { background: rgba(68, 71, 70, .08); }
 .ib svg { width: 20px; height: 20px; }
@@ -23,9 +25,7 @@ a { color: inherit; }
 #toast.show { opacity: 1; transform: none; }
 
 /* Dock: auto-hides like the macOS one */
-.dock { position: fixed; left: 50%; bottom: 10px; z-index: 40; display: flex; gap: 6px; padding: 6px; border-radius: 18px; background: rgba(246, 246, 246, .72); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6); border: 1px solid rgba(0,0,0,.08); box-shadow: 0 10px 30px rgba(0,0,0,.18); transform: translate(-50%, 90px); transition: transform .22s ease; }
-.dock.show, .dock:hover, .dock-zone:hover + .dock, .dock:focus-within { transform: translate(-50%, 0); }
-.dock-zone { position: fixed; left: 0; right: 0; bottom: 0; height: 10px; z-index: 39; }
+.dock { position: fixed; left: 50%; bottom: 10px; z-index: 40; display: flex; gap: 6px; padding: 6px; border-radius: 18px; background: rgba(246, 246, 246, .72); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6); border: 1px solid rgba(0,0,0,.08); box-shadow: 0 10px 30px rgba(0,0,0,.18); transform: translateX(-50%); }
 .dock a { position: relative; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; text-decoration: none; transition: transform .12s; }
 .dock a:hover { transform: translateY(-4px) scale(1.08); }
 .dock a svg { width: 48px; height: 48px; }

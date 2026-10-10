@@ -41,10 +41,9 @@ Data's live sources landed, are recomputed when next read; `POST /companies/refr
 ## Demo desk
 
 `/demo` mimics the apps an investor lives in (a mail inbox, a shared-deck viewer, a notes workspace, a CRM pipeline,
-a founder's investor portal, a read-later list), switched from an auto-hiding dock at the bottom, so the extension can be
+a founder's investor portal, a read-later list), switched from a dock along the bottom, so the extension can be
 demoed next to something that feels real. Every downloadable item is a file in `samples/`, and email and note bodies are
 read from those same files (the "(FICTIONAL ...)" markers are hidden on screen only). Familiar layouts, but no real
 product names or logos. Fictional data, except the quoted public claims, which link to their source. The deck's source is `samples/src/acme_deck.html`.
 
-**Running the demo:** PageDown/PageUp (or a clicker, or `]`/`[`) steps through the script in `static/demo/script.js`, and `N` opens
-presenter notes in a second window (do/say per step, timer, 2-minute toggle). The printable copy is `docs/DEMO_SCRIPT.md`.
+The click path for the live demo, with the sponsor beats, is `docs/DEMO_SCRIPT.md`.
