@@ -1,4 +1,50 @@
-# VentureSauce design handoff (v0.1)
+# VentureSauce design handoff
+
+> **v2 is current.** In Figma, use the **Components v2** and **Screens v2** pages. The v1 pages are kept for comparison only. The decisions behind v2 are in `references.md`, round 3 (decisions 15–24).
+
+## v2 at a glance
+
+- **Type**
+  - **Bespoke Serif** for the company name and key numbers.
+  - **Geist** sentence-case UI text.
+  - **Geist Mono** only for receipts, the status log and timestamps.
+- **Surfaces**
+  - Mist **trays** (`--vs-bg-tray`, 12px radius, no border).
+  - White **fragments** inside them (8px radius, `--vs-shadow-fragment`).
+  - Hairlines are mostly gone.
+  - Pills, buttons, tabs and the toast are fully rounded.
+- **Color**
+  - Neutral figures and source links use `--vs-data` `#3F6E7C`.
+  - Discrepancy figures use `--signal`.
+  - Amber keeps its 4 uses: logo, running log step, drop hover, selection.
+- **Icons:** Phosphor (`@phosphor-icons/react`, MIT), Light for UI and Duotone for item kinds and the contradiction warning. No more typed ✕ ✓ – ?.
+- **Data marks:** dithered dot-grid bars for proportions. The CSS recipe is in `tokens.css`.
+
+## v2 components → frontend files
+
+| Figma (Components v2) | Use in |
+|---|---|
+| `Glance card` | `verdict.tsx` (replaces the big-number block and segmented bar) |
+| `Segmented tabs` | `company.tsx` tabs |
+| `Contradiction card v2` | `company.tsx` "Your sources disagree" |
+| `Question list v2` | `company.tsx` questions, and "Ask the founder" in the expanded row |
+| `Company row` | `inbox.tsx` list rows |
+| `Item row` | `company.tsx` items timeline |
+| `Brief player v2` | `digest.tsx` audio |
+| `Filed toast v2` | after `/analyze` files an item |
+| `Status pill v2`, `Button v2`, `Source link`, `Dither bar` | everywhere |
+
+## Bespoke Serif in Figma and code
+
+- **Figma:** the `Serif/*` text styles use Newsreader as a stand-in, because the Figma MCP can't load fonts from your Mac. To switch, open Assets › Text styles, edit each `Serif/*` style, and set the font to **Bespoke Serif Regular**. Every screen updates.
+- **Code:**
+  1. Download the font from fontshare.com/fonts/bespoke-serif and put the `.woff2` files in `frontend/public/fonts/`.
+  2. In `layout.tsx`, replace `Newsreader` with `next/font/local`.
+  3. Keep the `--font-serif` variable name.
+
+---
+
+# v1 handoff (superseded where it conflicts with v2)
 
 - **Figma:** [VentureSauce — Brand & Design Kit](https://www.figma.com/design/uM60fyB7G4ZGtYG3UZS6mT)
 - **Tokens:** [`tokens.css`](tokens.css)
