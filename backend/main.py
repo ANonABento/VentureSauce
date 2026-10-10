@@ -9,7 +9,7 @@ from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -200,12 +200,20 @@ def chat_stream(req: ChatRequest, request: Request):
 
 class TTSRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=600)
+    speed: float | None = Field(None, ge=0.7, le=1.8)  # Fish prosody speed; default FISH_SPEED
+
+
+def fish_speed(speed: float | None = None) -> float:
+    try:
+        return speed or float(os.getenv("FISH_SPEED", "1.2"))
+    except ValueError:
+        return 1.2
 
 
 @app.get("/tts")
-async def tts_get(text: str, request: Request):
+async def tts_get(text: str, request: Request, speed: float | None = Query(None, ge=0.7, le=1.8)):
     """Same as POST /tts, as a URL an <audio> element can stream from directly."""
-    return await tts(TTSRequest(text=text), request)
+    return await tts(TTSRequest(text=text, speed=speed), request)
 
 
 @app.post("/tts")
@@ -216,7 +224,8 @@ async def tts(req: TTSRequest, request: Request):
     if not key:
         raise HTTPException(503, "FISH_API_KEY is not set")
     voice = (os.getenv("FISH_CHAT_VOICE") or os.getenv("FISH_VOICE_IDS", "").split(",")[0]).strip()
-    body = {"text": req.text, "format": "mp3", "mp3_bitrate": 64, "latency": "balanced", "normalize": True}
+    body = {"text": req.text, "format": "mp3", "mp3_bitrate": 64, "latency": "balanced", "normalize": True,
+            "prosody": {"speed": fish_speed(req.speed), "volume": 0}}
     if voice:
         body["reference_id"] = voice
     http = httpx.AsyncClient(timeout=60)
@@ -235,6 +244,26 @@ async def tts(req: TTSRequest, request: Request):
         finally:
             await upstream.aclose(); await http.aclose()
     return StreamingResponse(relay(), media_type="audio/mpeg")
+
+
+@app.post("/asr")
+async def asr(request: Request, audio: UploadFile = File(...)):
+    """Speech → text via Fish Audio, for browsers without built-in speech recognition (anything but Chrome/Edge).
+    Send WAV or MP4/M4A (Fish can't decode WebM)."""
+    _rate_limit(request, bucket="asr", per_hour=600)
+    key = os.getenv("FISH_API_KEY")
+    if not key:
+        raise HTTPException(503, "FISH_API_KEY is not set")
+    data = await audio.read()
+    if not data or len(data) > 5_000_000:
+        raise HTTPException(413, "Keep voice questions under about a minute.")
+    async with httpx.AsyncClient(timeout=60) as http:
+        r = await http.post("https://api.fish.audio/v1/asr", headers={"Authorization": f"Bearer {key}"},
+                            files={"audio": (audio.filename or "q.wav", data, audio.content_type or "audio/wav")},
+                            data={"language": "en", "ignore_timestamps": "true"})
+    if r.status_code != 200:
+        raise HTTPException(502, f"Fish Audio {r.status_code}: {r.text[:200]}")
+    return {"text": (r.json().get("text") or "").strip()}
 
 
 # Tester page: same API the extension uses, served at / so remote testers need only a URL.

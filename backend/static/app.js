@@ -228,7 +228,7 @@ function paintAnswer() {
 
 // Sentence → <audio> streaming from GET /tts. Starts downloading immediately so the next one is ready.
 function enqueueSentence(text) {
-  const audio = new Audio(`${API}/tts?text=${encodeURIComponent(text)}`);
+  const audio = new Audio(`${API}/tts?text=${encodeURIComponent(text)}&speed=${$("talkSpeed").value}`);
   audio.preload = "auto";
   talk.queue.push({ text, audio });
   if (!talk.playing) playNext();
@@ -322,11 +322,54 @@ async function ask(text) {
   }
 }
 
-// Voice input: Chrome's built-in speech recognition (no server needed). Text box as a fallback.
+// Voice input: the browser's built-in speech recognition (Chrome, Edge). Elsewhere: record WAV and transcribe with
+// Fish Audio on the server (POST /asr; WAV because Fish can't decode MediaRecorder's WebM).
+async function recordWav() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const ctx = new AudioContext();
+  const src = ctx.createMediaStreamSource(stream);
+  const proc = ctx.createScriptProcessor(4096, 1, 1);
+  const chunks = [];
+  proc.onaudioprocess = (e) => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  src.connect(proc); proc.connect(ctx.destination);
+  return async () => {
+    proc.disconnect(); src.disconnect(); stream.getTracks().forEach((t) => t.stop());
+    const ratio = ctx.sampleRate / 16000; await ctx.close();
+    const all = new Float32Array(chunks.reduce((n, c) => n + c.length, 0));
+    let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
+    const n = Math.floor(all.length / ratio), view = new DataView(new ArrayBuffer(44 + n * 2));
+    const w = (at, str) => [...str].forEach((ch, i) => view.setUint8(at + i, ch.charCodeAt(0)));
+    w(0, "RIFF"); view.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt "); view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, 16000, true); view.setUint32(28, 32000, true);
+    view.setUint16(32, 2, true); view.setUint16(34, 16, true); w(36, "data"); view.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, all[Math.floor(i * ratio)])) * 0x7fff, true);
+    return new Blob([view.buffer], { type: "audio/wav" });
+  };
+}
+
+async function listenWithServer() {
+  let stop;
+  try { stop = await recordWav(); } catch { $("talkText").placeholder = "Microphone blocked. Allow it, or type your question."; return; }
+  const interim = addBubble("user", "Listening… tap again to send", "interim");
+  $("talkMic").classList.add("listening");
+  talk.recog = { stop: async () => {
+    talk.recog = null;
+    $("talkMic").classList.remove("listening");
+    interim.textContent = "Transcribing…";
+    try {
+      const form = new FormData(); form.append("audio", await stop(), "question.wav");
+      const res = await fetch(`${API}/asr`, { method: "POST", body: form });
+      const { text } = await res.json();
+      interim.remove();
+      if (res.ok && text) ask(text);
+    } catch { interim.textContent = "Didn't catch that. Try again or type it."; }
+  } };
+}
+
 function listen() {
   stopTalking();
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { $("talkText").focus(); $("talkText").placeholder = "Voice input needs Chrome; type your question instead."; return; }
+  if (!SR) return listenWithServer();
   const r = new SR();
   r.lang = "en-US"; r.interimResults = true; r.maxAlternatives = 1;
   const interim = addBubble("user", "Listening…", "interim");

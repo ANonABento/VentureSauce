@@ -17,7 +17,8 @@ uv run uvicorn main:app --reload --port 8000
 - `GET /digest?period=day|week` → roll-up + on-screen summary + podcast script · `POST /digest/audio {script}` → `{audio_url}` (Fish Audio)
 - `POST /chat/stream {messages:[{role,content}]}` → SSE `{"text"}…{"done":true}`: the voice analyst, grounded only in the inbox
 - The analyst can call `research_company` mid-conversation ("check if Acme filed a new Form D", "look up Zentrix"): fresh `get_ground_truth(..., use_cache=False)`, recomputed checks saved to the company, and a spoken summary of what changed (`research.py`). Until Data's sources land it says lookups aren't live (`sources/ground_truth.IS_STUB`).
-- `GET|POST /tts` (`text`, one sentence) → Fish Audio mp3 streamed through; the client voices each sentence as it arrives and stops on interrupt
+- `GET|POST /tts` (`text`, one sentence; optional `speed` 0.7–1.8, default `FISH_SPEED`=1.2) → Fish Audio mp3 streamed through; the client voices each sentence as it arrives and stops on interrupt
+- `POST /asr` (FormData `audio`: WAV or M4A, not WebM) → `{text}` via Fish Audio speech-to-text. Voice input for browsers without built-in speech recognition (Safari, Firefox)
 
 `POST /analyze` also takes optional `kind` (`email` | `notes`) for pasted text and `company_id` to file the item under a known company. Files: PDF (text or scanned), PPTX, PNG/JPG/WEBP, .eml, .txt/.md.
 

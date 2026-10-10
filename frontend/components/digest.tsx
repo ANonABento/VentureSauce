@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { API, type Digest, chatStream, getDigest, recordBrief, ttsUrl } from "@/lib/api";
+import { API, type Digest, chatStream, getDigest, recordBrief, transcribe, ttsUrl } from "@/lib/api";
+import { startWavRecording } from "@/lib/recorder";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { ItemTag } from "./inbox";
@@ -27,12 +28,46 @@ function Total({ label, value, signal }: { label: string; value: number; signal?
   );
 }
 
+const SPEEDS = [1, 1.2, 1.4, 1.6];
+
+/** Remembered per browser (a convenience; falls back to the default if storage is blocked). */
+function savedSpeed(key: string, fallback: number): number {
+  try {
+    const v = Number(localStorage.getItem(key));
+    return SPEEDS.includes(v) ? v : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function SpeedButton({ speed, onChange, label }: { speed: number; onChange: (v: number) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      aria-label={`${label}: ${speed}×. Change speed`}
+      onClick={() => onChange(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
+      className="h-8 min-w-11 shrink-0 rounded-[2px] border border-rule px-2 font-mono text-[11px] text-graphite hover:text-ink"
+    >
+      {speed}×
+    </button>
+  );
+}
+
 /** Ink play button + progress (never amber). Records the brief with Fish Audio on first play. */
 function BriefPlayer({ script }: { script: string }) {
   const audio = useRef<HTMLAudioElement>(null);
   const [state, setState] = useState<"idle" | "recording" | "playing" | "paused" | "unavailable">("idle");
   const [progress, setProgress] = useState(0);
   const [src, setSrc] = useState<string | null>(null);
+  const [rate, setRate] = useState(() => (typeof window === "undefined" ? 1 : savedSpeed("vs.briefRate", 1)));
+
+  function changeRate(v: number) {
+    setRate(v);
+    if (audio.current) audio.current.playbackRate = v;
+    try {
+      localStorage.setItem("vs.briefRate", String(v));
+    } catch {}
+  }
 
   async function toggle() {
     const el = audio.current;
@@ -48,6 +83,7 @@ function BriefPlayer({ script }: { script: string }) {
         return setState("unavailable");
       }
     }
+    el.playbackRate = rate;
     el.play().catch(() => setState("unavailable"));
   }
 
@@ -74,6 +110,7 @@ function BriefPlayer({ script }: { script: string }) {
           {state === "recording" ? "Recording your briefing…" : "Your briefing · about a minute"}
         </p>
       </div>
+      <SpeedButton speed={rate} onChange={changeRate} label="Briefing speed" />
       <audio
         ref={audio}
         onPlay={() => setState("playing")}
@@ -93,6 +130,17 @@ function TalkPanel() {
   const [listening, setListening] = useState(false);
   const [busy, setBusy] = useState(false);
   const [text, setText] = useState("");
+  const [speed, setSpeed] = useState(() => (typeof window === "undefined" ? 1.2 : savedSpeed("vs.talkSpeed", 1.2)));
+  const speedRef = useRef(speed);
+
+  function changeSpeed(v: number) {
+    setSpeed(v);
+    speedRef.current = v;
+    try {
+      localStorage.setItem("vs.talkSpeed", String(v));
+    } catch {}
+  }
+
   const s = useRef({ messages: [] as Msg[], queue: [] as { text: string; audio: HTMLAudioElement }[], playing: null as null | { text: string; audio: HTMLAudioElement }, spoken: [] as string[], full: "", gen: 0, abort: null as AbortController | null, interrupted: false, committed: -1, recog: null as null | { stop: () => void } });
 
   function playNext() {
@@ -144,7 +192,7 @@ function TalkPanel() {
     try {
       await chatStream(st.messages, (sentence) => {
         st.full += sentence;
-        const audio = new Audio(ttsUrl(sentence.trim()));
+        const audio = new Audio(ttsUrl(sentence.trim(), speedRef.current));
         audio.preload = "auto";
         st.queue.push({ text: sentence.trim(), audio });
         if (!st.playing) playNext();
@@ -165,7 +213,7 @@ function TalkPanel() {
     type SR = { lang: string; interimResults: boolean; onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void; onend: () => void; onerror: () => void; start: () => void; stop: () => void };
     const w = window as unknown as { SpeechRecognition?: new () => SR; webkitSpeechRecognition?: new () => SR };
     const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (!Ctor) return setText("Voice needs Chrome; type your question instead.");
+    if (!Ctor) return recordAndTranscribe();
     const r = new Ctor();
     r.lang = "en-US";
     r.interimResults = true;
@@ -189,6 +237,33 @@ function TalkPanel() {
     r.start();
   }
 
+  /** No built-in recognition: record WAV, tap again to send, transcribe on the server. */
+  async function recordAndTranscribe() {
+    let rec: Awaited<ReturnType<typeof startWavRecording>>;
+    try {
+      rec = await startWavRecording();
+    } catch {
+      return setText("Microphone blocked. Allow it in the address bar, or type your question.");
+    }
+    setListening(true);
+    setLog((l) => [...l, { role: "user", text: "Listening… tap again to send", interim: true }]);
+    s.current.recog = {
+      stop: async () => {
+        s.current.recog = null;
+        setListening(false);
+        setLog((l) => [...l.slice(0, -1), { role: "user", text: "Transcribing…", interim: true }]);
+        try {
+          const heard = await transcribe(await rec.stop());
+          setLog((l) => l.filter((m) => !m.interim));
+          if (heard) ask(heard);
+        } catch {
+          setLog((l) => l.filter((m) => !m.interim));
+          setText("Couldn't hear that. Try again, or type your question.");
+        }
+      },
+    };
+  }
+
   return (
     <section className="mt-8 border-t border-rule pt-5">
       <div className="flex items-center justify-between gap-3">
@@ -200,9 +275,12 @@ function TalkPanel() {
       <div className="mt-3 flex gap-2">
         <Button className="h-8 px-3 text-xs" onClick={() => ask("Start my briefing.")}>Start</Button>
         <Button variant="quiet" className={cn("h-8 px-3 text-xs", listening && "border-signal text-signal")} onClick={() => (s.current.recog ? s.current.recog.stop() : listen())}>
-          {listening ? "Listening…" : "Ask by voice"}
+          {listening ? "Tap to send" : "Ask by voice"}
         </Button>
         {busy && <Button variant="quiet" className="h-8 px-3 text-xs" onClick={stop}>Stop</Button>}
+        <span className="ml-auto">
+          <SpeedButton speed={speed} onChange={changeSpeed} label="Speaking speed" />
+        </span>
       </div>
       {log.length > 0 && (
         <div className="mt-4 flex max-h-96 flex-col gap-2 overflow-y-auto">

@@ -132,7 +132,8 @@ def synthesize(script: str) -> str:
         raise RuntimeError("FISH_API_KEY is not set")
     voices = [v.strip() for v in os.getenv("FISH_VOICE_IDS", "").split(",") if v.strip()]
     text, reference = _fish_text(script, voices)
-    body = {"text": text, "format": "mp3", "mp3_bitrate": 128, "latency": "normal", "normalize": True}
+    body = {"text": text, "format": "mp3", "mp3_bitrate": 128, "latency": "normal", "normalize": True,
+            "prosody": {"speed": float(os.getenv("FISH_SPEED", "1.2")), "volume": 0}}
     if reference:
         body["reference_id"] = reference
     r = httpx.post("https://api.fish.audio/v1/tts", json=body, timeout=180,

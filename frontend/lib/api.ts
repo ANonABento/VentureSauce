@@ -173,4 +173,13 @@ export async function chatStream(
   }
 }
 
-export const ttsUrl = (text: string) => `${API}/tts?text=${encodeURIComponent(text)}`;
+export const ttsUrl = (text: string, speed?: number) =>
+  `${API}/tts?text=${encodeURIComponent(text)}${speed ? `&speed=${speed}` : ""}`;
+
+/** Speech → text on the server (Fish Audio), for browsers without built-in speech recognition. */
+export async function transcribe(wav: Blob): Promise<string> {
+  const form = new FormData();
+  form.append("audio", wav, "question.wav");
+  const { text } = await fetch(`${API}/asr`, { method: "POST", body: form }).then((r) => json<{ text: string }>(r));
+  return text;
+}
