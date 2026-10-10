@@ -99,11 +99,34 @@ def get_company(company_id: str) -> dict | None:
 
 def list_companies() -> list[dict]:
     db = _load()
-    counts: dict[str, int] = {}
+    items: dict[str, list[dict]] = {}
     for it in db["items"].values():
-        counts[it["company_id"]] = counts.get(it["company_id"], 0) + 1
-    cos = [{**c, "item_count": counts.get(c["id"], 0)} for c in db["companies"].values()]
+        items.setdefault(it["company_id"], []).append(it)
+    cos = []
+    for c in db["companies"].values():
+        mine = sorted(items.get(c["id"], []), key=lambda i: i["received_at"])
+        checks = (c.get("view") or {}).get("checks", [])
+        cos.append({**c, "item_count": len(mine), "item_kinds": list(dict.fromkeys(i["kind"] for i in mine)),
+                    "discrepancies": sum(x["verdict"] == "gap" and x["source"] != "your_sources" for x in checks),
+                    "contradictions": sum(x["source"] == "your_sources" for x in checks),
+                    "last_item_at": mine[-1]["received_at"] if mine else None})
     return sorted(cos, key=lambda c: c.get("updated_at", ""), reverse=True)
+
+
+def move_item(item_id: str, company_id: str) -> tuple[str, str] | None:
+    """Refile an item under another company. Returns (from_company_id, to_company_id)."""
+    with _lock:
+        db = _load()
+        it = db["items"].get(item_id)
+        if not it or company_id not in db["companies"]:
+            return None
+        src = it["company_id"]
+        it["company_id"] = company_id
+        db["companies"][company_id]["updated_at"] = _now()
+        if not any(i["company_id"] == src for i in db["items"].values()):
+            db["companies"].pop(src, None)  # don't leave an empty company behind
+        _save(db)
+        return src, company_id
 
 
 def items_for(company_id: str) -> list[dict]:

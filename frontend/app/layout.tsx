@@ -18,9 +18,9 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "Filing Delta",
+  title: "VentureSauce",
   description:
-    "Compares what a private company filed with the SEC against what it says publicly, with both sources cited.",
+    "A deal inbox for investors: every claim in decks, emails and call notes checked against SEC filings, LinkedIn, press and your other sources.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

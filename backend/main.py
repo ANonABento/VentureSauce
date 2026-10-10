@@ -92,7 +92,8 @@ def get_job(job_id: str, replay: bool = False):
 @app.get("/companies")
 def companies():
     """Deal inbox: every company with its item count, most recently updated first."""
-    return [{k: c.get(k) for k in ("id", "name", "domain", "updated_at", "item_count")} for c in store.list_companies()]
+    keys = ("id", "name", "domain", "updated_at", "item_count", "item_kinds", "discrepancies", "contradictions", "last_item_at")
+    return [{k: c.get(k) for k in keys} for c in store.list_companies()]
 
 
 @app.get("/companies/{company_id}")
@@ -112,6 +113,28 @@ def delta_report(company_id: str | None = None, company: str | None = None, url:
     if not co or not co.get("view"):
         raise HTTPException(404, "No items for this company yet. Drop a deck, email or notes about it first.")
     return delta.to_report(co["view"])
+
+
+class MoveRequest(BaseModel):
+    company_id: str | None = None   # an existing company…
+    new_company: str | None = None  # …or a new one by name
+
+
+@app.post("/items/{item_id}/move")
+def move_item(item_id: str, req: MoveRequest):
+    """'Filed under X · Change': refile an item, then recompute both companies' views."""
+    if not (req.company_id or (req.new_company and req.new_company.strip())):
+        raise HTTPException(400, "give company_id or new_company")
+    target = req.company_id or store.resolve_company(req.new_company.strip(), None)["id"]
+    moved = store.move_item(item_id, target)
+    if not moved:
+        raise HTTPException(404, "unknown item or company")
+    for cid in set(moved):
+        if store.get_company(cid):
+            view = jobs.company_view(cid)
+            old = (store.get_company(cid) or {}).get("view") or {}
+            store.update_company(cid, view={**old, **{k: view[k] for k in ("company", "items", "checks")}})
+    return {"ok": True, "company_id": target}
 
 
 @app.delete("/companies/{company_id}")

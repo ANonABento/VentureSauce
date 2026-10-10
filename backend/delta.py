@@ -53,7 +53,9 @@ def _signal(c: dict) -> str:
     if t == "metric":
         return (c.get("metric") or "Metric").upper() if len(c.get("metric") or "") <= 4 else c["metric"].capitalize()
     if t == "round_size" and isinstance(c.get("claimed_value"), (int, float)):
-        return f"Round ({usd(c['claimed_value'])})"
+        # The same round is checked against Form D and press: say which, so the two rows don't read as duplicates.
+        against = {"form_d": " vs. Form D", "press": " vs. press"}.get(c["source"], "")
+        return f"Round ({usd(c['claimed_value'])}){against}"
     return {"headcount": "Headcount", "raised": "Total raised"}.get(t, t.capitalize())
 
 

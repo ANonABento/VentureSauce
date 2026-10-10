@@ -4,21 +4,16 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/button";
 import { ErrorState } from "@/components/error-state";
-import { LOADING_STEPS, LoadingSteps } from "@/components/loading-steps";
+import { LoadingSteps } from "@/components/loading-steps";
 import { ReportHeader } from "@/components/report-header";
-import { hasFiling } from "@/components/report-utils";
 import { ReportView } from "@/components/report-view";
 import type { DeltaReport } from "@/lib/types";
-import {
-  type DeltaQuery,
-  detectCompany,
-  getDeltaReport,
-} from "./get-delta-report";
+import { CompanyScreen } from "@/components/company";
+import { DigestScreen } from "@/components/digest";
+import { CompanyList, DropStrip } from "@/components/inbox";
+import { type CompanySummary, dropItem, getReport, listCompanies } from "@/lib/api";
+import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
-
-// getDeltaReport is a single call, so the steps advance on a timer and the
-// last one stays in progress until the report arrives.
-const STEP_MS = 800;
 
 export type Status =
   | "idle"
@@ -32,61 +27,115 @@ export type Subject = { name?: string; domain?: string };
 export function Panel() {
   const pageUrl = useSearchParams().get("url");
   // Start over whenever the extension points the panel at another page.
-  return <PanelFlow key={pageUrl ?? ""} pageUrl={pageUrl} />;
+  return <InboxApp key={pageUrl ?? ""} pageUrl={pageUrl} />;
 }
 
-function PanelFlow({ pageUrl }: { pageUrl: string | null }) {
-  const detected = detectCompany(pageUrl);
+type Screen = { kind: "inbox" } | { kind: "company"; id: string; filed?: string | null } | { kind: "digest" };
 
-  const [status, setStatus] = useState<Status>(detected ? "detected" : "idle");
-  const [subject, setSubject] = useState<Subject>(detected ?? {});
-  const [query, setQuery] = useState<DeltaQuery>(
-    detected && pageUrl ? { url: pageUrl } : {},
-  );
-  const [report, setReport] = useState<DeltaReport | null>(null);
-  const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
+const JOB_STEP: Record<string, string> = {
+  parsing: "Reading the item",
+  checking_sec: "Reading SEC filings",
+  checking_linkedin: "Checking LinkedIn",
+  checking_press: "Reading the press",
+  comparing_sources: "Comparing with your other items",
+  ready: "Filed",
+};
+
+/** The deal inbox: Inbox → Company (Checks / Items / Questions) → Digest. */
+function InboxApp({ pageUrl }: { pageUrl: string | null }) {
+  const detected = detectCompany(pageUrl);
+  const [screen, setScreen] = useState<Screen>({ kind: "inbox" });
+  const [companies, setCompanies] = useState<CompanySummary[] | null>(null);
+  const [seen, setSeen] = useState<Record<string, string>>({});
+  const [progress, setProgress] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notInInbox, setNotInInbox] = useState(false);
 
   useEffect(() => {
-    if (status !== "loading") return;
-    const timer = setInterval(
-      () => setStep((value) => Math.min(value + 1, LOADING_STEPS.length - 1)),
-      STEP_MS,
-    );
-    return () => clearInterval(timer);
-  }, [status]);
+    if (screen.kind !== "inbox") return;
+    listCompanies()
+      .then((list) => {
+        setCompanies(list);
+        const marks: Record<string, string> = {};
+        for (const c of list) {
+          try {
+            const at = localStorage.getItem(`vs-seen-${c.id}`);
+            if (at) marks[c.id] = at;
+          } catch {}
+        }
+        setSeen(marks);
+      })
+      .catch(() => setError("Can't reach the VentureSauce backend."));
+  }, [screen]);
 
-  async function run(nextQuery: DeltaQuery, nextSubject: Subject) {
-    setQuery(nextQuery);
-    setSubject(nextSubject);
-    setStep(0);
-    setStatus("loading");
+  // Opened on a company's site: jump to it if it's already in the inbox.
+  useEffect(() => {
+    if (!pageUrl || !detected) return;
+    getReport({ url: pageUrl })
+      .then((r) => {
+        const id = (r.company as { id?: string }).id;
+        if (id) setScreen({ kind: "company", id });
+      })
+      .catch(() => setNotInInbox(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageUrl]);
+
+  async function onDrop(input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string }) {
+    setError(null);
+    setProgress("Reading the item");
     try {
-      const result = await getDeltaReport(nextQuery);
-      setReport(result);
-      setStatus(hasFiling(result) ? "report" : "empty");
-    } catch {
-      setStatus("error");
+      const job = await dropItem(input, (j) => setProgress(JOB_STEP[j.status] ?? "Working"));
+      setScreen({ kind: "company", id: job.company_id!, filed: job.item_id });
+    } catch (e) {
+      setError((e as Error).message);
     }
+    setProgress(null);
   }
 
-  function submitName(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const company = name.trim();
-    if (company) run({ company }, { name: company });
-  }
-
+  const busy = progress !== null;
   return (
-    <PanelView
-      status={status}
-      subject={subject}
-      report={report}
-      step={step}
-      name={name}
-      onNameChange={setName}
-      onSubmitName={submitName}
-      onRun={() => run(query, subject)}
-    />
+    <PanelFrame>
+      {screen.kind === "inbox" && (
+        <>
+          <div className="flex items-baseline justify-between">
+            <h1 className="font-serif text-xl leading-6 font-medium tracking-tight text-ink">Deal inbox</h1>
+            <button type="button" onClick={() => setScreen({ kind: "digest" })} className="text-xs text-ink underline underline-offset-4">
+              Today&apos;s digest →
+            </button>
+          </div>
+          {notInInbox && detected && (
+            <p className="mt-2 text-[13px] leading-5 text-graphite">
+              Nothing about <span className="text-ink">{detected.domain}</span> in your inbox yet. Drop its deck or a founder email.
+            </p>
+          )}
+          <div className="mt-4">
+            <DropStrip onDrop={onDrop} busy={busy} />
+          </div>
+          {progress && <p role="status" className="mt-2 text-xs text-graphite">{progress}…</p>}
+          {error && <p role="alert" className="mt-2 text-xs text-signal">{error}</p>}
+          {companies && (
+            <CompanyList companies={companies} seen={seen} onOpen={(id) => setScreen({ kind: "company", id })} />
+          )}
+        </>
+      )}
+      {screen.kind === "company" && (
+        <>
+          {progress && <p role="status" className="mb-3 text-xs text-graphite">{progress}…</p>}
+          {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
+          <CompanyScreen
+            companyId={screen.id}
+            filedItemId={screen.filed}
+            busy={busy}
+            onBack={() => setScreen({ kind: "inbox" })}
+            onOpen={(id, filed) => setScreen({ kind: "company", id, filed })}
+            onDrop={onDrop}
+          />
+        </>
+      )}
+      {screen.kind === "digest" && (
+        <DigestScreen onBack={() => setScreen({ kind: "inbox" })} onOpen={(id) => setScreen({ kind: "company", id })} />
+      )}
+    </PanelFrame>
   );
 }
 
