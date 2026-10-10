@@ -33,7 +33,7 @@ export function LoadingSteps({ current }: { current: number }) {
                 aria-hidden="true"
                 viewBox="0 0 12 12"
                 className={cn(
-                  "h-3 w-3 text-steady transition-opacity duration-200 ease-out",
+                  "h-3 w-3 text-ink transition-opacity duration-200 ease-out",
                   done ? "opacity-100" : "opacity-0",
                 )}
                 fill="none"

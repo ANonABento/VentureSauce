@@ -2,7 +2,8 @@
 
 /* "Marginalia" design tokens — filing-delta-context.md, section 7. */
 :root {
-  color-scheme: light dark;
+  /* Light is the default; dark is opt-in via data-theme (see ThemeParam). */
+  color-scheme: light;
 
   --paper: #f7f5f0;
   --surface: #ffffff;
@@ -15,17 +16,17 @@
   --steady: #3f6b4f;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #121211;
-    --surface: #1a1a19;
-    --ink: #edebe6;
-    --graphite: #a3a09a;
-    --rule: #2c2b29;
-    --signal: #e0794f;
-    --signal-wash: #2a1d17;
-    --steady: #7faf8e;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #121211;
+  --surface: #1a1a19;
+  --ink: #edebe6;
+  --graphite: #a3a09a;
+  --rule: #2c2b29;
+  --signal: #e0794f;
+  --signal-wash: #2a1d17;
+  --steady: #7faf8e;
 }
 
 @theme inline {

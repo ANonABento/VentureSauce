@@ -1,9 +1,10 @@
 import type { DeltaRow as DeltaRowData } from "@/lib/types";
-import { cn } from "./cn";
 import { DeltaRow } from "./delta-row";
-import { STATUS, STATUS_ORDER } from "./status";
 
-/** Rows grouped under a status heading, discrepancies first. */
+/**
+ * Discrepancies first, one hairline, then the rest in the order given.
+ * Order and each row's mark come from `row.status` alone.
+ */
 export function DeltaRows({
   rows,
   size = "panel",
@@ -11,29 +12,19 @@ export function DeltaRows({
   rows: DeltaRowData[];
   size?: "panel" | "page";
 }) {
+  const discrepancies = rows.filter((row) => row.status === "discrepancy");
+  const rest = rows.filter((row) => row.status !== "discrepancy");
+
   return (
-    <div className="space-y-6">
-      {STATUS_ORDER.map((status) => {
-        const group = rows.filter((row) => row.status === status);
-        if (group.length === 0) return null;
-        return (
-          <section key={status}>
-            <h2
-              className={cn(
-                "micro-label border-b border-rule pb-2",
-                STATUS[status].text,
-              )}
-            >
-              {STATUS[status].group}
-            </h2>
-            <ul>
-              {group.map((row) => (
-                <DeltaRow key={row.signal} row={row} size={size} />
-              ))}
-            </ul>
-          </section>
-        );
-      })}
-    </div>
+    <ul>
+      {[...discrepancies, ...rest].map((row, index) => (
+        <DeltaRow
+          key={row.signal}
+          row={row}
+          size={size}
+          divided={index === discrepancies.length && index > 0}
+        />
+      ))}
+    </ul>
   );
 }
