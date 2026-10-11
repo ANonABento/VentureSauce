@@ -6,7 +6,11 @@
 
 Drop in a deck, an email, call notes or a screenshot. VentureSauce files it under the company, checks every claim against public records and against everything else the founder sent you, then hands you the questions to ask.
 
-![VentureSauce side panel next to a real SEC raise alert](docs/img/hero.webp)
+<p align="center">
+  <a href="docs/media/walkthrough.mp4"><img src="docs/media/demo.gif" alt="Dragging a $43M funding headline into the VentureSauce panel: SEC Form D filings show $171M sold" width="100%"></a>
+  <br>
+  <sub>A real headline dragged into the panel, checked live against SEC Form D. <b><a href="docs/media/walkthrough.mp4">▶ Watch the full 70-second walkthrough</a></b> (headline, a company's own PDF, deal flow, inbox)</sub>
+</p>
 
 ## Why
 
@@ -55,6 +59,8 @@ flowchart LR
 The model only **reads**. Every verdict comes from plain rules in code, so the same input always gives the same answer.
 
 ## What you get
+
+![VentureSauce side panel next to a real SEC raise alert](docs/img/hero.webp)
 
 <table>
 <tr>
