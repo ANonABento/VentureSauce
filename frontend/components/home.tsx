@@ -212,24 +212,30 @@ export function DealsChart({
               <button
                 type="button"
                 onClick={() => onOpen(c)}
-                className="group block w-full rounded-lg px-2.5 py-2.5 text-left transition-colors duration-150 ease-out hover:bg-tray/60"
+                className="group block w-full rounded-lg px-2.5 py-3 text-left transition-colors duration-150 ease-out hover:bg-tray/60"
               >
                 <span className="flex items-center justify-between gap-3">
                   <span className="flex min-w-0 items-center gap-1.5">
                     <motion.span
                       layoutId={`company-name-${c.id}`}
-                      className="truncate font-serif text-base leading-[19px] text-ink underline decoration-transparent underline-offset-4 group-hover:decoration-current"
+                      className="truncate font-serif text-[23px] leading-7 tracking-[-0.01em] text-ink underline decoration-transparent underline-offset-4 group-hover:decoration-current"
                     >
                       {c.name}
                     </motion.span>
                     {unseen && <span aria-label="new items" className="h-1.5 w-1.5 shrink-0 rounded-full bg-data" />}
                   </span>
                   <motion.span layoutId={`company-strip-${c.id}`} className="flex shrink-0">
-                    <SignalStrip discrepancies={c.discrepancies} contradictions={c.contradictions} max={6} delay={0.25 + index * STAGGER} />
+                    <SignalStrip
+                      discrepancies={c.discrepancies}
+                      contradictions={c.contradictions}
+                      max={6}
+                      delay={0.25 + index * STAGGER}
+                      className="origin-right scale-125"
+                    />
                   </motion.span>
                 </span>
                 <Meter
-                  className="mt-2"
+                  className="mt-2.5 h-2"
                   delay={0.2 + index * STAGGER}
                   total={scale}
                   segments={[
