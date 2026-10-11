@@ -63,3 +63,10 @@ def test_linkedin_reads_the_member_count(monkeypatch):
     li = minimal_live.linkedin("Legora", "legora.com")
     assert li["employees"] == 919 and li["company_size"] == "501-1,000 employees"
     assert li["url"] == "https://www.linkedin.com/company/wearelegora/"
+
+
+def test_a_valuation_is_not_read_as_money_raised():
+    assert minimal_live._amount("Legora reaches $5.55 billion valuation as AI legal tech boom endures") is None
+    assert minimal_live._amount("Legora in Talks to Raise Funds at a Roughly $8.5 Billion Value") is None
+    assert minimal_live._amount("Legora extends Series D by $50m, valuing business at $5.6bn") == 50_000_000
+    assert minimal_live._amount("Acme raises $10M at $80M valuation") == 10_000_000

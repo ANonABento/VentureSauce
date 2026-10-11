@@ -115,6 +115,8 @@ const CLIPS = [
     url: "https://www.vcnewsdaily.com/Daytona/venture-capital-funding/yycfztlnkn", saved: "Oct 8", tags: ["Dev infra", "Pipeline"], color: "#0b5cad" },
   { id: "clerk", title: "Clerk raises $50M Series C", pub: "Clerk blog", from: "clerk.com", file: "11_clerk_public_claims.txt",
     url: "https://clerk.com/blog/series-c", saved: "Oct 7", tags: ["Auth", "Comps"], color: "#6c47ff" },
+  { id: "legora", title: "Legora raises $550 million Series D to fuel US growth", pub: "Legora newsroom", from: "legora.com", file: "12_legora_public_claims.txt",
+    url: "https://legora.com/newsroom/legora-raises-550-million-series-d-to-fuel-us-growth", saved: "Oct 6", tags: ["Legal AI", "Comps"], color: "#1f2a24" },
   { id: "acme-press", title: "Acme AI raises $10M seed led by Example Ventures", pub: "Example News", from: "example.com", saved: "Sep 30",
     text: "Acme AI announced a $10 million seed round led by Example Ventures.", url: "https://example.com/acme/press", tags: ["Acme AI"], color: "#e0663a" },
 ];

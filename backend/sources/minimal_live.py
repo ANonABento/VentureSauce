@@ -190,11 +190,17 @@ PRESS_CONTEXT = {
 AMOUNT = re.compile(r"\$\s?(\d+(?:\.\d+)?)\s?(m|mn|million|b|bn|billion)\b", re.I)
 
 
+VALUATION = re.compile(r"^\s*(pre-money\s+|post-money\s+)?valu(e|ation)\b", re.I)
+
+
 def _amount(text: str) -> int | None:
-    m = AMOUNT.search(text or "")
-    if not m:
-        return None
-    return int(float(m.group(1)) * (1e9 if m.group(2).lower().startswith("b") else 1e6))
+    """The money raised in a headline; a valuation ("$5.55 billion valuation", "at a $8.5B value") is skipped."""
+    for m in AMOUNT.finditer(text or ""):
+        before, after = text[max(0, m.start() - 12):m.start()], text[m.end():m.end() + 12]
+        if VALUATION.search(after) or re.search(r"\b(at|valued at|valuing \w+ at)\s+(a\s+)?(roughly\s+)?$", before, re.I):
+            continue
+        return int(float(m.group(1)) * (1e9 if m.group(2).lower().startswith("b") else 1e6))
+    return None
 
 
 def press(company: str) -> list[dict]:

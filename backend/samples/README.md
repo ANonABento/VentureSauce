@@ -15,6 +15,7 @@ Drop these in order (tester app at `/`, or the panel at `localhost:3000/panel`).
 | `08_acme_cap_table_scan_FICTIONAL.pdf` | Scanned PDF (image only) | Read by the vision model. **$15.0M total raised** (incl. an August SAFE) vs the deck's $12M, matching the call notes and the Form D |
 | `10_daytona_public_claims.txt` | Note (real) | Daytona's reported $24M Series A, quoted from press. Live Form D: matches the Feb 2026 filing ($23.26M sold), with the newer Aug 2026 offering noted as context |
 | `11_clerk_public_claims.txt` | Note (real) | Clerk's $50M Series C, from Clerk's own blog |
+| `12_legora_public_claims.txt` | Note (real) | Legora's $550M Series D and "40 to 400 team members", from Legora's own release. Live: matches the Mar 2026 Form D ($600.08M offering incl. the extension) and press; LinkedIn's 919 is above the 400 claimed, so a low-confidence match |
 
 Acme and Northwind are fictional. The Daytona and Clerk items only restate what was publicly reported, with the source link.
 The fictional files carry the marker in their file name and document metadata, not on the slides, so they look real on screen.
