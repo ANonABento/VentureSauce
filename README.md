@@ -72,6 +72,10 @@ Acme AI and Northwind Robotics are fictional. Real companies (Daytona, Clerk, Le
 
 **Nebius** (open model) · **Bright Data** (LinkedIn and press) · **Fish Audio** (spoken digest) · **SEC EDGAR** · FastAPI · Next.js · Chrome MV3
 
+## Team 11
+
+Andi · Surya · Javier · Kevin
+
 ## More
 
 [Demo script](docs/DEMO_SCRIPT.md) · [Backend and API](backend/README.md) · [Plan](docs/PLAN.md) · [Contributing (humans and agents)](AGENTS.md)
