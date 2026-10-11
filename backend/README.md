@@ -8,7 +8,7 @@ uv run uvicorn main:app --reload --port 8000
 ```
 
 - `GET /health` → `{ok, fake}`
-- `POST /analyze` with FormData: `file` (PDF) or `text` → `{job_id}`
+- `POST /analyze` with FormData: `file` (PDF), `text` or `url` → `{job_id}`
 - `GET /jobs/{job_id}` → job (poll every 1s; `status` goes parsing → checking_sec → checking_linkedin → checking_press → ready, or `error`)
 - `GET /jobs/{job_id}?replay=1` → cached final result (demo fallback)
 - `GET /companies` → deal inbox list · `GET /companies/{id}` → company view (items, checks, questions) · `DELETE /companies/{id}`
@@ -20,7 +20,7 @@ uv run uvicorn main:app --reload --port 8000
 - `GET|POST /tts` (`text`, one sentence; optional `speed` 0.7–1.8, default `FISH_SPEED`=1.2) → Fish Audio mp3 streamed through; the client voices each sentence as it arrives and stops on interrupt
 - `POST /asr` (FormData `audio`: WAV or M4A, not WebM) → `{text}` via Fish Audio speech-to-text. Voice input for browsers without built-in speech recognition (Safari, Firefox)
 
-`POST /analyze` also takes optional `kind` (`email` | `notes`) for pasted text and `company_id` to file the item under a known company. Files: PDF (text or scanned), PPTX, PNG/JPG/WEBP, .eml, .txt/.md.
+`POST /analyze` also takes optional `kind` (`email` | `notes`) for pasted text and `company_id` to file the item under a known company. Files: PDF (text or scanned), PPTX, PNG/JPG/WEBP, .eml, .txt/.md. A `url` (pasted or dropped link) is downloaded and run the same way; a web page is read as text with its title as the label. Links to private addresses, login-walled share links (DocSend, Drive, Dropbox…) and files over 25 MB are refused with a readable 400; `/samples/…` links are read from disk.
 
 Fake mode replays `fixtures/job_acme.json` (fictional company) with ~1.5s per step.
 `sources/ground_truth.py` is a stub until Data replaces it.
