@@ -1,7 +1,8 @@
 // Where the VentureSauce panel (frontend/) is served. The side panel loads
 // APP_URL + "/panel" in an iframe. Reload the extension after changing this file.
-export const APP_URL = "http://localhost:3000";
-// DEMO: export const APP_URL = "https://<vercel-prod-url>";
+// Shared team build (Cloudflare quick tunnel from Kevin's laptop; the URL changes when the tunnel restarts).
+export const APP_URL = "https://jessica-reception-struct-depending.trycloudflare.com";
+// LOCAL: export const APP_URL = "http://localhost:3000";
 
 // true: the panel follows the active tab and reloads when its site changes.
 // false: the panel loads once and stays put. Use this for a drag-and-drop demo,
