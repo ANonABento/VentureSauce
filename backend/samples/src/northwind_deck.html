@@ -1,0 +1,129 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>Northwind Robotics seed deck (FICTIONAL company, demo data)</title>
+<!-- FICTIONAL company, written for the VentureSauce demo. The team size (8) deliberately differs from Priya's intro
+     email (7 people); the other numbers match the email. -->
+<style>
+@page { size: 1280px 720px; margin: 0 }
+* { box-sizing: border-box; margin: 0; padding: 0 }
+:root { --g: #0e7c66; --g2: #12a385; --mint: #e3f4ee; --ink: #10231f; --muted: #57706a; --line: #d9e7e2; --bg: #f7fbf9 }
+body { font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact }
+.s { width: 1280px; height: 720px; position: relative; overflow: hidden; background: var(--bg); padding: 70px 84px; page-break-after: always }
+.s.g { background: var(--g); color: #fff }
+.k { font-size: 14px; font-weight: 700; letter-spacing: .18em; color: var(--g2); text-transform: uppercase }
+.g .k { color: #a6eedb }
+h1 { font-size: 92px; font-weight: 700; letter-spacing: -.03em; line-height: .95 }
+h2 { font-size: 50px; font-weight: 700; letter-spacing: -.02em; line-height: 1.06; margin-top: 14px; max-width: 980px }
+p { font-size: 20px; line-height: 1.5; color: var(--muted) }
+.g p { color: rgba(255,255,255,.8) }
+.foot { position: absolute; left: 84px; right: 84px; bottom: 30px; display: flex; justify-content: space-between; font-size: 12px; color: #8aa59e }
+.mark { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 22px; letter-spacing: -.01em }
+.mark i { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--g2), var(--g)); position: relative }
+.mark i::after { content: ""; position: absolute; inset: 8px; border: 3px solid #fff; border-right-color: transparent; border-radius: 50% }
+.g .mark i { background: #fff } .g .mark i::after { border-color: var(--g); border-right-color: transparent }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 44px }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 26px }
+.card b { display: block; font-size: 22px; margin-bottom: 8px } .card p { font-size: 17px }
+.big { font-size: 112px; font-weight: 700; letter-spacing: -.04em; color: var(--g); line-height: .9 }
+.logo { height: 96px; border-radius: 16px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; font-size: 28px; font-weight: 700; color: #3c5650 }
+/* robot arm illustration */
+.arm { position: absolute; right: 90px; top: 120px; width: 470px; height: 480px }
+.arm .base { position: absolute; left: 150px; bottom: 30px; width: 170px; height: 46px; border-radius: 14px; background: var(--ink) }
+.arm .l1 { position: absolute; left: 215px; bottom: 70px; width: 40px; height: 210px; border-radius: 20px; background: var(--g); transform-origin: bottom center; transform: rotate(-18deg) }
+.arm .j { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: #fff; border: 8px solid var(--ink) }
+.arm .l2 { position: absolute; left: 170px; top: 193px; width: 190px; height: 34px; border-radius: 17px; background: var(--g2); transform: rotate(18deg); transform-origin: left center }
+.arm .grip { position: absolute; left: 336px; top: 262px; width: 18px; height: 60px; border-radius: 6px; background: var(--ink); box-shadow: 30px 0 0 var(--ink) }
+.arm .bin { position: absolute; left: 300px; bottom: 30px; width: 140px; height: 110px; border-radius: 12px; background: #fff; border: 3px solid var(--line) }
+.arm .box { position: absolute; left: 330px; top: 326px; width: 54px; height: 44px; border-radius: 6px; background: #f2c14e }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 46px }
+.steps div { border-top: 4px solid var(--line); padding-top: 16px } .steps div.on { border-color: var(--g2) }
+.steps b { display: block; font-size: 19px; margin-bottom: 6px } .steps p { font-size: 16px }
+.ppl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 40px }
+.pp { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 22px }
+.pp span { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 19px; margin-bottom: 14px }
+.pp b { display: block; font-size: 18px } .pp p { font-size: 14px; margin-top: 4px }
+</style></head><body>
+
+<section class="s g">
+  <div class="mark"><i></i>Northwind Robotics</div>
+  <h1 style="margin-top:170px;max-width:900px">Picking arms for small warehouses</h1>
+  <p style="font-size:26px;margin-top:26px">Seed round · October 2026</p>
+  <div style="position:absolute;right:-160px;bottom:-220px;width:640px;height:640px;border-radius:50%;border:2px solid rgba(255,255,255,.15)"></div>
+  <div style="position:absolute;right:-60px;bottom:-120px;width:440px;height:440px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+</section>
+
+<section class="s">
+  <p class="k">Problem</p>
+  <h2>Small warehouses can't hire pickers, and robots were built for giants.</h2>
+  <div class="cards">
+    <div class="card"><b>Pickers are scarce</b><p>Seasonal peaks mean overtime, temps and missed cutoffs.</p></div>
+    <div class="card"><b>Automation is all-or-nothing</b><p>Existing systems need a new building, a long install and a big budget.</p></div>
+    <div class="card"><b>Small sites are left out</b><p>Most warehouses are small and run on shelving that robots weren't designed for.</p></div>
+  </div>
+  <div class="foot"><span>Northwind Robotics · Confidential</span><span>2</span></div>
+</section>
+
+<section class="s">
+  <p class="k">Product</p>
+  <h2 style="max-width:560px">A picking arm that drops into existing shelving.</h2>
+  <p style="max-width:520px;margin-top:22px">Bolts onto a standard cart, learns the pick face in an afternoon and works alongside people. No new building, no ripping out racking.</p>
+  <div class="arm"><div class="base"></div><div class="bin"></div><div class="l1"></div><div class="l2"></div><div class="j" style="left:145px;top:185px"></div><div class="grip"></div><div class="box"></div></div>
+  <div class="foot"><span>Northwind Robotics · Confidential</span><span>3</span></div>
+</section>
+
+<section class="s">
+  <p class="k">Traction</p>
+  <p class="big" style="margin-top:34px">$400K</p>
+  <h2 style="font-size:40px;margin-top:20px">$400K ARR from 3 customers: Contoso, Fabrikam, Tailspin.</h2>
+  <div class="cards" style="margin-top:36px"><div class="logo">Contoso</div><div class="logo">Fabrikam</div><div class="logo">Tailspin</div></div>
+  <div class="foot"><span>Northwind Robotics · Confidential</span><span>4</span></div>
+</section>
+
+<section class="s">
+  <p class="k">Business model</p>
+  <h2>Robots as a service: a monthly fee per arm, with no upfront cost.</h2>
+  <div class="steps">
+    <div class="on"><b>Pilot</b><p>One arm on the hardest pick zone</p></div>
+    <div class="on"><b>Expand</b><p>More arms across the same site</p></div>
+    <div><b>Multi-site</b><p>Roll out to every building</p></div>
+    <div><b>Software</b><p>Fleet analytics as an add-on</p></div>
+  </div>
+  <div class="foot"><span>Northwind Robotics · Confidential</span><span>5</span></div>
+</section>
+
+<section class="s">
+  <p class="k">Team</p>
+  <h2>An 8-person team of roboticists and warehouse operators.</h2>
+  <div class="ppl">
+    <div class="pp"><span style="background:#0e7c66">PS</span><b>Priya Shah</b><p>CEO · robotics, ex-warehouse automation</p></div>
+    <div class="pp"><span style="background:#2f4f8f">DK</span><b>Daniel Kowalski</b><p>CTO · manipulation and perception</p></div>
+    <div class="pp"><span style="background:#b0682a">AR</span><b>Ana Ruiz</b><p>Head of Operations · ran fulfilment sites</p></div>
+    <div class="pp"><span style="background:#6b5aa6">LT</span><b>Leo Tan</b><p>Lead engineer · embedded systems</p></div>
+  </div>
+  <div class="foot"><span>Northwind Robotics · Confidential</span><span>6</span></div>
+</section>
+
+<section class="s">
+  <p class="k">Financing</p>
+  <h2>$2.5M pre-seed (March 2026).</h2>
+  <p style="max-width:760px;margin-top:22px">The pre-seed took us from prototype to paying customers. Every customer started with a pilot and converted to a paid contract.</p>
+  <div class="steps" style="margin-top:56px">
+    <div class="on"><b>Prototype</b><p>First arm picking from a standard shelf</p></div>
+    <div class="on"><b>First pilot</b><p>Running nightly shifts at a customer site</p></div>
+    <div class="on"><b>Paid contracts</b><p>Every pilot converted</p></div>
+    <div><b>Seed</b><p>Manufacturing and a sales team</p></div>
+  </div>
+  <div class="foot"><span>Northwind Robotics · Confidential</span><span>7</span></div>
+</section>
+
+<section class="s g">
+  <p class="k">The ask</p>
+  <h2 style="color:#fff">Raising a $6M seed to put arms in more small warehouses.</h2>
+  <div class="steps">
+    <div class="on" style="border-color:#a6eedb"><b>Manufacturing</b><p>Move from hand-built to a contract manufacturer</p></div>
+    <div style="border-color:rgba(255,255,255,.25)"><b>Sales</b><p>First sales team for regional 3PLs</p></div>
+    <div style="border-color:rgba(255,255,255,.25)"><b>Software</b><p>Faster setup for new pick faces</p></div>
+    <div style="border-color:rgba(255,255,255,.25)"><b>Support</b><p>Field technicians in two regions</p></div>
+  </div>
+  <p style="position:absolute;left:84px;bottom:64px;font-size:18px">priya@northwind-robotics.example</p>
+</section>
+</body></html>

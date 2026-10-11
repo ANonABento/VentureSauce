@@ -1,19 +1,22 @@
 # Demo script (demo desk)
 
-Open `<backend>/demo` in Chrome with the VentureSauce side panel open and an empty inbox. Switch apps with the dock along the bottom. ★ marks the 2-minute version.
+Open `<backend>/demo` in Chrome with the VentureSauce side panel open and an empty inbox. Switch apps with the dock along the bottom.
+
+**Getting files into the panel:** the panel takes real files, so a link dragged straight out of a web page doesn't work. Click ↓ on an attachment (or *Download* in the deck viewer), then drag the file from Chrome's downloads bubble (top right) into the panel. Text (emails, notes) can be copied and pasted with ⌘V. ★ marks the 2-minute version.
 
 The story: an investor's week is a pile of decks, emails, call notes and press. Drop it all in; VentureSauce files it by company, checks every claim against public records and against your other sources, and hands you the questions to ask.
 
 | # | Screen | Do | Say |
 | --- | --- | --- | --- |
 | 1 ★ | **Mail inbox** | Panel open, inbox empty. | "This is an investor's week: a deck, a founder update, call notes, a partner forwarding press. Every one of them makes claims, and nobody checks them against each other." |
-| 2 ★ | **Mail → "Deck for Thursday"** | Drag the *Acme AI deck.pdf* attachment into the panel. | "I drop the deck. It's read by an open model on **Nebius**, filed under Acme AI, and every claim is checked against SEC Form D, plus LinkedIn and press via **Bright Data**." Point at a "via Bright Data" label. |
-| 3 | **Decks → slide 13 (the ask)** (or the panel row) | Click the Form D source link on the "raised" row. | "The deck says $12M raised. The Form D says $15M sold, and lists a director the board slide leaves out. Every row links to its receipt." |
+| 2 ★ | **Mail → "Deck for Thursday"** | Hover the attachment, click ↓ to download, then drag it from Chrome's downloads bubble into the panel. (Clicking the card itself opens the deck viewer.) | "I drop the deck. It's read by an open model on **Nebius**, filed under Acme AI, and every claim is checked against SEC Form D, plus LinkedIn and press via **Bright Data**." Point at a "via Bright Data" label. |
+| 3 | **Decks → Acme AI deck, slide 13 (the ask)** (or the panel row) | Click the Form D source link on the "raised" row. | "The deck says $12M raised. The Form D says $15M sold, and lists a director the board slide leaves out. Every row links to its receipt." |
 | 4 ★ | **Mail → "Acme AI - September update"** | ⋮ → *Copy message text*, then ⌘V in the panel (or ⋮ → *Download message* and drop the .eml). | "The founder's update says ARR is $2.4M; the deck said $3.1M. 18 people vs 25. Your own sources disagree, and no public database would catch that." |
 | 5 ★ | **Notes → "Acme AI: call with Jane"** | ••• → *Copy page text*, ⌘V. | "My call notes: '$15M total', not $12M. And 'Alex Director helps out', who is on the Form D." |
+| 5b | **Mail → "Re: cap table"** | Download the scanned PDF and drop it in. | "Jane sent the cap table, as a scan. VentureSauce reads it anyway: $15M raised, including an August SAFE the deck leaves out. That's the paper trail for the $15M on the Form D." |
 | 6 | **Acme AI portal** | ⌘⌃⇧4 a screenshot of the dashboard to the clipboard, ⌘V. | "Even a screenshot: 8% month-over-month here, 20% in the deck." |
 | 7 ★ | **Mail → "Daytona" (from Morgan)** | ⋮ → *Copy message text*, ⌘V. Open the Form D link in the panel. | "Now a real company, and one of tonight's sponsors. My partner forwarded **Daytona**'s Series A press: $24M. VentureSauce pulls their real Form D filings from SEC EDGAR, and LinkedIn headcount through Bright Data." Then say what the panel shows (see below). |
-| 8 | **Mail → "Intro - Northwind Robotics"** | Copy message text, ⌘V. Open *Questions*. | "A cold intro with no public footprint: nothing to verify yet, so every claim becomes a question for the founder." |
+| 8 | **Mail → "Intro - Northwind Robotics"** | Copy message text, ⌘V, then download and drop the attached deck. Open *Questions*. | "A cold intro with no public footprint, so every claim becomes a question for the founder. And the deck already disagrees with the email: 8 people vs 7." |
 | 9 ★ | **Panel: Digest** | Digest → Week → *Play briefing*. | "At the end of the week, one digest across companies, read out by **Fish Audio**: what's new, what conflicts, what to ask before Thursday's meeting." |
 
 ## Where the sponsors show up

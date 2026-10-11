@@ -6,8 +6,18 @@
 
 const S = "/samples/";
 const ME = { name: "Taylor Kim", addr: "taylor@fund.example", fund: "Kettle Peak Ventures" };
-const DECK_PAGES = 13;
 const DECK_PDF = { file: "00_acme_deck_FICTIONAL.pdf", name: "Acme AI deck.pdf" };
+// Documents in the deck viewer. Slide images are rendered from backend/samples/src/ (see samples/README.md).
+const DECKS = {
+  acme: { title: "Acme AI deck", by: "Jane Founder", addr: "jane@acme-ai.example", when: "Oct 9", pages: 13, file: DECK_PDF.file, name: DECK_PDF.name,
+    img: (n) => `/static/demo/img/acme-deck-${n}.webp`, msg: "Ahead of Thursday - let me know if anything's unclear.", viewed: "11 of 13 pages · 6 min" },
+  board: { title: "Acme Q3 board update", by: "Jane Founder", addr: "jane@acme-ai.example", when: "Oct 8", pages: 7, file: "06_acme_board_update.pptx", name: "Acme Q3 board update.pptx",
+    img: (n) => `/static/demo/img/acme-board-${n}.webp`, msg: "Q3 board slides, with speaker notes.", viewed: "7 of 7 pages · 4 min" },
+  northwind: { title: "Northwind Robotics seed deck", by: "Priya Shah", addr: "priya@northwind-robotics.example", when: "Oct 7", pages: 8, file: "07_northwind_deck_FICTIONAL.pdf", name: "Northwind Robotics deck.pdf",
+    img: (n) => `/static/demo/img/northwind-deck-${n}.webp`, msg: "Our seed deck, as promised.", viewed: "Not opened yet" },
+  captable: { title: "Acme AI cap table (scan)", by: "Jane Founder", addr: "jane@acme-ai.example", when: "Oct 9", pages: 1, file: "08_acme_cap_table_scan_FICTIONAL.pdf", name: "Acme AI cap table.pdf",
+    img: () => "/static/demo/img/acme-cap-table.webp", msg: "Scanned from the board binder.", viewed: "1 of 1 page · 1 min", portrait: true },
+};
 
 const MAIL = [
   { id: "invite", from: "Calendar", addr: "calendar-notification@fund.example", when: "8:02 AM", date: "Oct 10, 2026, 8:02 AM",
@@ -16,10 +26,14 @@ const MAIL = [
   { id: "acme-deck", from: "Jane Founder", addr: "jane@acme-ai.example", when: "Oct 9", date: "Oct 9, 2026, 4:12 PM", unread: true, starred: true,
     subject: "Deck for Thursday", label: "Deals",
     body: "Hi Taylor,\n\nAttaching our latest deck ahead of Thursday's partner meeting. The board update from last week is in the other thread.\n\nJane",
-    attachments: [{ file: DECK_PDF.file, name: DECK_PDF.name, kind: "PDF", thumb: "/static/demo/img/acme-deck-1.webp" }] },
+    attachments: [{ file: DECK_PDF.file, name: DECK_PDF.name, kind: "PDF", thumb: "/static/demo/img/acme-deck-1.webp", deck: "acme" }] },
+  { id: "cap-table", from: "Jane Founder", addr: "jane@acme-ai.example", when: "Oct 9", date: "Oct 9, 2026, 5:47 PM", unread: true,
+    subject: "Re: cap table", label: "Deals", who: "Jane, me", n: 2,
+    body: "Hi Taylor,\n\nHere's the cap table summary from the board binder (sorry, only have it as a scan right now). Happy to send the full model once the data room is up.\n\nJane",
+    attachments: [{ file: "08_acme_cap_table_scan_FICTIONAL.pdf", name: "Acme AI cap table.pdf", kind: "PDF", thumb: "/static/demo/img/acme-cap-table.webp", deck: "captable" }] },
   { id: "shared", from: "Decks", addr: "no-reply@decks.fund.example", when: "Oct 9", date: "Oct 9, 2026, 4:10 PM", unread: true,
     subject: "Jane Founder shared \"Acme AI deck\" with you",
-    body: "Jane Founder (jane@acme-ai.example) shared a document with you.\n\nAcme AI deck\n13 pages\n\n\"Ahead of Thursday - let me know if anything's unclear.\"",
+    body: `Jane Founder (jane@acme-ai.example) shared a document with you.\n\nAcme AI deck\n${DECKS.acme.pages} pages\n\n"Ahead of Thursday - let me know if anything's unclear."`,
     cta: { label: "View document", href: "#decks/acme" } },
   { id: "daytona", from: "Morgan Lee", addr: "morgan@fund.example", when: "Oct 9", date: "Oct 9, 2026, 6:20 PM", unread: true,
     subject: "Daytona", label: "Deals", clip: "daytona",
@@ -27,9 +41,10 @@ const MAIL = [
   { id: "acme-board", from: "Jane Founder", addr: "jane@acme-ai.example", when: "Oct 8", date: "Oct 8, 2026, 11:30 AM",
     subject: "Q3 board update", label: "Portfolio",
     body: "Hi all,\n\nQ3 board slides attached, with speaker notes. Happy to walk through any of it.\n\nJane",
-    attachments: [{ file: "06_acme_board_update.pptx", name: "Acme Q3 board update.pptx", kind: "PPTX" }] },
+    attachments: [{ file: "06_acme_board_update.pptx", name: "Acme Q3 board update.pptx", kind: "PPTX", thumb: "/static/demo/img/acme-board-1.webp", deck: "board" }] },
   { id: "northwind", from: "Priya Shah", addr: "priya@northwind-robotics.example", when: "Oct 7", unread: true, label: "Deals",
-    subject: "Intro - Northwind Robotics (pre-seed)", file: "04_northwind_intro_email.eml" },
+    subject: "Intro - Northwind Robotics (pre-seed)", file: "04_northwind_intro_email.eml",
+    attachments: [{ file: "07_northwind_deck_FICTIONAL.pdf", name: "Northwind Robotics deck.pdf", kind: "PDF", thumb: "/static/demo/img/northwind-deck-1.webp", deck: "northwind" }] },
   { id: "partners", from: "Morgan Lee", addr: "morgan@fund.example", when: "Oct 6", date: "Oct 6, 2026, 7:45 PM",
     subject: "Monday partner meeting: agenda",
     body: "Agenda for Monday:\n\n1. Pipeline review\n2. Acme AI: decide on a follow-up call\n3. Portfolio updates\n\nMorgan" },
@@ -233,10 +248,11 @@ async function mailView(openId) {
   open.unread = false;
   const { text, date } = await mailBody(open);
   const files = open.attachments || [];
-  const cards = files.map((a, i) => `<a class="attcard" href="${S + a.file}" download="${esc(a.name)}" title="${esc(a.name)}">
-      ${a.thumb ? `<img src="${a.thumb}" alt="">` : `<div class="ph k-ppt">P</div>`}
+  const cards = files.map((a) => `<div class="attcard" title="${esc(a.name)}">
+      <a class="prev" href="${a.deck ? `#decks/${a.deck}` : S + a.file}" ${a.deck ? "" : `download="${esc(a.name)}"`}>
+        ${a.thumb ? `<img src="${a.thumb}" alt="">` : `<div class="ph k-ppt">P</div>`}</a>
       <div class="bar"><i class="k-${a.kind === "PDF" ? "pdf" : "ppt"}">${a.kind === "PDF" ? "PDF" : "P"}</i><span>${esc(a.name)}</span></div>
-      <div class="hov">${ic("dl", 'style="width:22px;height:22px"')}</div></a>`).join("");
+      <a class="dlb" href="${S + a.file}" download="${esc(a.name)}" title="Download">${ic("dl")}</a></div>`).join("");
   const n = files.length;
   return mailShell(`
     <div class="gm-tool"><a class="ib" href="#mail" aria-label="Back to Inbox">${ic("back")}</a>
@@ -294,40 +310,57 @@ function mailWire(openId) {
 }
 
 /* ───────────── Decks ───────────── */
-const slide = (i) => `/static/demo/img/acme-deck-${i}.webp`;
-
 function decksView(id, page) {
-  if (id !== "acme") {
-    return `<div class="ds-home"><div class="wrap"><h1>Shared with me</h1><div style="color:#667085">Documents founders have sent you</div>
-      <table class="ds-table"><thead><tr><th>Name</th><th>Shared by</th><th>Pages</th><th>Last viewed</th></tr></thead><tbody>
-        <tr data-href="#decks/acme"><td><span class="doc"><img src="${slide(1)}" alt="">Acme AI deck</span></td><td>Jane Founder</td><td>${DECK_PAGES}</td><td>Oct 9</td></tr>
-        <tr data-dl="06_acme_board_update.pptx|Acme Q3 board update.pptx"><td><span class="doc"><span class="ph k-ppt">PPTX</span>Acme Q3 board update</span></td><td>Jane Founder</td><td>-</td><td>Oct 8</td></tr>
-      </tbody></table></div></div>`;
+  const d = DECKS[id];
+  if (!d) {
+    const rows = Object.entries(DECKS).map(([k, x]) => `<tr data-href="#decks/${k}">
+        <td><span class="doc"><img src="${x.img(1)}" alt="" class="${x.portrait ? "pt" : ""}">${esc(x.title)}</span></td>
+        <td><span class="by">${avatar(x.by)}<span>${esc(x.by)}<small>${esc(x.addr)}</small></span></span></td>
+        <td>${x.pages}</td><td>${x.when}</td><td class="seen">${esc(x.viewed)}</td></tr>`).join("");
+    return `<div class="ds-home"><header class="ds-hometop"><span class="ds-logo">D</span><b>Decks</b><label class="ds-search">${ic("search")}<input placeholder="Search documents"></label><span class="grow"></span>${avatar(ME.name)}</header>
+      <div class="wrap"><div class="ds-cols"><div>
+        <h1>Shared with me</h1><div class="sub">Documents founders have sent you</div>
+        <table class="ds-table"><thead><tr><th>Name</th><th>Shared by</th><th>Pages</th><th>Received</th><th>Your activity</th></tr></thead><tbody>${rows}</tbody></table>
+      </div><aside class="ds-act"><h3>Recent activity</h3>
+        <p><b>You</b> viewed <u>Acme AI deck</u><small>Oct 9 · 6 min</small></p>
+        <p><b>Jane Founder</b> shared <u>Acme AI cap table (scan)</u><small>Oct 9</small></p>
+        <p><b>Jane Founder</b> shared <u>Acme AI deck</u><small>Oct 9</small></p>
+        <p><b>You</b> viewed <u>Acme Q3 board update</u><small>Oct 8 · 4 min</small></p>
+        <p><b>Priya Shah</b> shared <u>Northwind Robotics seed deck</u><small>Oct 7</small></p>
+      </aside></div></div></div>`;
   }
-  const p = Math.min(DECK_PAGES, Math.max(1, Number(page) || 1));
-  const thumbs = Array.from({ length: DECK_PAGES }, (_, i) =>
-    `<button class="${i + 1 === p ? "on" : ""}" data-p="${i + 1}" aria-label="Page ${i + 1}"><img src="${slide(i + 1)}" alt=""><span class="pg">${i + 1}</span></button>`).join("");
+  const p = Math.min(d.pages, Math.max(1, Number(page) || 1));
+  const thumbs = Array.from({ length: d.pages }, (_, i) =>
+    `<button class="${i + 1 === p ? "on" : ""}" data-p="${i + 1}" aria-label="Page ${i + 1}"><img src="${d.img(i + 1)}" alt="" class="${d.portrait ? "pt" : ""}"><span class="pg">${i + 1}</span></button>`).join("");
   return `<div class="ds">
-    <header class="ds-top"><a href="#decks" class="ds-logo" style="text-decoration:none">A</a>
-      <div class="t"><b>Acme AI deck</b><span>Shared by Jane Founder · Oct 9</span></div><div class="grow"></div>
-      <a class="ds-btn" href="${S + DECK_PDF.file}" download="${DECK_PDF.name}">${ic("dl")}Download</a>
-      <button class="ds-btn pri">${ic("share")}Reply to Jane</button></header>
-    <div class="ds-stage">
-      <img src="${slide(p)}" alt="Acme AI deck, page ${p}" width="960" height="540">
-      <button class="ds-arrow l" data-p="${p - 1}" ${p === 1 ? "disabled" : ""} aria-label="Previous page">${ic("left")}</button>
-      <button class="ds-arrow r" data-p="${p + 1}" ${p === DECK_PAGES ? "disabled" : ""} aria-label="Next page">${ic("right")}</button>
-      <span class="ds-count">${p} / ${DECK_PAGES}</span></div>
+    <header class="ds-top"><a href="#decks" class="ds-logo" style="text-decoration:none" title="All documents">D</a>
+      <div class="t"><b>${esc(d.title)}</b><span>Shared by ${esc(d.by)} · ${d.when}</span></div><div class="grow"></div>
+      <span class="ds-pg">Page ${p} of ${d.pages}</span>
+      <span class="ds-zoom"><span>−</span><span>100%</span><span>+</span></span>
+      <a class="ds-btn" href="${S + d.file}" download="${esc(d.name)}">${ic("dl")}Download</a>
+      <button class="ds-btn pri">${ic("share")}Reply to ${esc(d.by.split(" ")[0])}</button></header>
+    <div class="ds-prog"><i style="width:${(p / d.pages) * 100}%"></i></div>
+    <div class="ds-body">
+      <div class="ds-stage">
+        <img src="${d.img(p)}" alt="${esc(d.title)}, page ${p}" class="${d.portrait ? "pt" : ""}">
+        <button class="ds-arrow l" data-p="${p - 1}" ${p === 1 ? "disabled" : ""} aria-label="Previous page">${ic("left")}</button>
+        <button class="ds-arrow r" data-p="${p + 1}" ${p === d.pages ? "disabled" : ""} aria-label="Next page">${ic("right")}</button></div>
+      <aside class="ds-info"><h4>About this document</h4>
+        <div class="by">${avatar(d.by)}<span><b>${esc(d.by)}</b><small>${esc(d.addr)}</small></span></div>
+        <blockquote>${esc(d.msg)}</blockquote>
+        <dl><dt>Pages</dt><dd>${d.pages}</dd><dt>Shared</dt><dd>${d.when}, 2026</dd><dt>Your activity</dt><dd>${esc(d.viewed)}</dd><dt>Downloads</dt><dd>Allowed</dd></dl></aside>
+    </div>
     <nav class="ds-strip">${thumbs}</nav></div>`;
 }
 function decksWire(id, page) {
-  document.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => (location.hash = `#decks/acme/${b.dataset.p}`)));
+  document.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => (location.hash = `#decks/${id}/${b.dataset.p}`)));
   document.querySelectorAll("tr[data-href]").forEach((r) => (r.onclick = () => (location.hash = r.dataset.href)));
-  document.querySelectorAll("tr[data-dl]").forEach((r) => (r.onclick = () => download(...r.dataset.dl.split("|"))));
-  if (id === "acme") {
+  const d = DECKS[id];
+  if (d) {
     const p = Number(page) || 1;
     keys.on = (e) => {
-      if (e.key === "ArrowRight" && p < DECK_PAGES) location.hash = `#decks/acme/${p + 1}`;
-      if (e.key === "ArrowLeft" && p > 1) location.hash = `#decks/acme/${p - 1}`;
+      if (e.key === "ArrowRight" && p < d.pages) location.hash = `#decks/${id}/${p + 1}`;
+      if (e.key === "ArrowLeft" && p > 1) location.hash = `#decks/${id}/${p - 1}`;
     };
   }
 }
@@ -522,8 +555,8 @@ function portalView() {
           <div class="pt-react"><span>👏 6</span><span>🚀 3</span><span>💬 2 comments</span></div>
         </div>
         <div class="pt-card"><h3>Documents</h3>
-          ${doc("PPT", "#d24726", "Q3 board update", "Board · Oct 8", `${S}06_acme_board_update.pptx`, "Acme Q3 board update.pptx")}
-          ${doc("PDF", "#ea4335", "Company deck", "Fundraising · Oct 9", `${S}${DECK_PDF.file}`, DECK_PDF.name)}
+          ${doc("PPT", "#d24726", "Q3 board update", "Board · Oct 8", "#decks/board")}
+          ${doc("PDF", "#ea4335", "Company deck", "Fundraising · Oct 9", "#decks/acme")}
           ${doc("XLS", "#188038", "September financials", "Finance · Oct 1")}
           ${doc("DIR", "#5f6368", "Data room", "Access on request")}
         </div></div>
@@ -575,7 +608,7 @@ const APPS = {
     title: () => `Inbox (${MAIL.filter((m) => m.unread).length}) - ${ME.addr}`,
     icon: tile("#1a73e8", '<rect x="10" y="14" width="28" height="20" rx="3" fill="#fff"/><path d="M11 16l13 9 13-9" stroke="#1a73e8" stroke-width="2.4" fill="none" stroke-linejoin="round"/>') },
   decks: { name: "Decks", view: decksView, wire: decksWire,
-    title: (id) => (id === "acme" ? "Acme AI deck" : "Shared with me"),
+    title: (id) => DECKS[id]?.title || "Shared with me",
     icon: tile("#1a56db", '<rect x="11" y="13" width="26" height="17" rx="2" fill="#fff"/><path d="M24 30v6M18 36h12" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M15 25l5-5 4 3 6-6" stroke="#1a56db" stroke-width="2.2" fill="none" stroke-linecap="round"/>') },
   notes: { name: "Notes", view: notesView, wire: notesWire,
     title: (id) => NOTES.find((n) => n.id === id)?.title || "Deal notes",
