@@ -153,6 +153,12 @@ function mailShell(main, unread) {
 }
 const SENDER = { from: "VentureSauce alerts", addr: "alerts@venturesauce" };
 const subject = (r) => `${r.name} raised ${money(r.sold)}${r.target && r.target !== r.sold ? ` of ${money(r.target)}` : ""} (Form D)`;
+/** The whole email as text, the way it's copied out of a mail client: what an email row or message carries when
+ * dragged into the panel. */
+const emailText = (r) => `From: ${SENDER.from} <${SENDER.addr}>\nSubject: ${subject(r)}\nDate: ${day(r.filed)}\n\n` +
+  [alertText(r), r.headline ? `\nIn the news: ${r.headline}` : "", site(r) ? `Website: ${site(r)}` : "", `Form D: ${r.form_d}`]
+    .filter(Boolean).join("\n");
+const emailDrag = (r) => `draggable="true" data-text="${esc(emailText(r))}"`;
 
 // Real emails in the inbox (backend/samples/*.eml), above the SEC alerts. Dragging one drops its text into the panel.
 const EMAILS = ["Legora.eml"];
@@ -219,7 +225,7 @@ async function mailView(openId) {
     return emailRead(open, list, list.filter((m) => m.unread).length);
   }
   if (!open) {
-    const rows = list.map((r) => r.mail ? emailRow(r) : `<a class="gm-row ${r.unread ? "unread" : ""}" href="#mail/${r.id}" ${dragAttrs(r)}>
+    const rows = list.map((r) => r.mail ? emailRow(r) : `<a class="gm-row ${r.unread ? "unread" : ""}" href="#mail/${r.id}" ${emailDrag(r)}>
       <span class="chk"></span><span class="star">${ic("star")}</span>
       <span class="who">${SENDER.from}</span>
       <span class="what"><span class="lab">SEC alerts</span><b>${esc(subject(r))}</b> - ${esc(alertText(r).replace(/\s+/g, " ").slice(0, 150))}</span>
@@ -244,7 +250,7 @@ async function mailView(openId) {
       <span class="count">${list.indexOf(open) + 1} of ${list.length}</span></div>
     <div class="gm-read">
       <div class="gm-subj"><h2>${esc(subject(open))}</h2><span class="lab">SEC alerts ×</span></div>
-      <div class="gm-msg">
+      <div class="gm-msg" ${emailDrag(open)}>
         ${avatar("V", "lg")}
         <div><div class="gm-from"><b>${SENDER.from}</b> <span>&lt;${SENDER.addr}&gt;</span></div><div class="gm-to">to me ▾</div></div>
         <div class="gm-date">${esc(day(open.filed))}<button class="ib" data-more aria-label="More">${ic("more", 'stroke-width="3"')}</button></div>
@@ -551,6 +557,8 @@ const OLD = { press: "saved", crm: "deals", decks: "files" }; // old links
 document.addEventListener("dragstart", (e) => {
   const el = e.target.closest?.("[data-url],[data-file],[data-text]");
   if (!el) return;
+  // A dragged link comes pre-filled with its own address (the desk page), which the panel would read first: clear it.
+  e.dataTransfer.clearData();
   if (el.dataset.text) return e.dataTransfer.setData("text/plain", el.dataset.text);
   const url = el.dataset.url || new URL(S + el.dataset.file, location.href).href;
   e.dataTransfer.setData("text/uri-list", url);

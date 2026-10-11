@@ -181,5 +181,7 @@ def to_text(filename: str | None, data: bytes | None, text: str | None, kind_hin
     else:
         body, kind = (text or "").strip(), kind_hint or "text"
     if not body.strip():
-        raise ValueError("no text found in this input")
+        if filename and filename.endswith(".html"):
+            raise ValueError("That page has no readable text (it may only load in a browser). Copy its text and paste it instead.")
+        raise ValueError("No text found in this item. If it's a scan or a photo, try a clearer image.")
     return {"kind": kind, "text": body, "label": filename or {"email": "Pasted email", "notes": "Call notes"}.get(kind, "Pasted text")}
