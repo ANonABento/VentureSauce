@@ -71,8 +71,12 @@ def company_view(company_id: str, gt: dict | None = None) -> dict:
     items = store.items_for(company_id)
     claims = analysis.all_claims(items)
     checkable = analysis.merged_claims(claims)
+    known = minimal_live.KNOWN_DOMAINS.get(minimal_live.slug(co["name"]))
+    if not co.get("domain") and known:  # the panel finds a company from the page URL by its domain; never guessed
+        co["domain"] = known
+        store.update_company(company_id, domain=known)
     gt = gt if gt is not None else get_ground_truth(co["name"], co.get("domain"))
-    checks = (verdicts.form_d_checks(checkable, gt.get("form_d"), co["name"])
+    checks =(verdicts.form_d_checks(checkable, gt.get("form_d"), co["name"])
               + verdicts.headcount_checks(checkable, gt.get("linkedin"))
               + verdicts.press_checks(checkable, gt.get("press") or [])
               + verdicts.crunchbase_checks(checkable, gt.get("crunchbase"))
