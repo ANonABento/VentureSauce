@@ -136,3 +136,37 @@
  *   Mono/Receipt Geist Mono 400 11/16            (receipt lines)
  * Keep `font-variant-numeric: tabular-nums` on body.
  */
+
+/*
+ * ---- v3 "Blue hour" palette (2026-10-10, references.md decision 54) ----
+ * Overrides every color above. The cream + pine + amber set read as Claude's
+ * palette; v3 is cool white, blue-black ink, steel-blue data and one cobalt
+ * accent, with no green and no orange. Mirrors frontend/app/globals.css.
+ * Contrast (WCAG): ink 16.9:1, graphite 5.4:1, data 6.6:1, signal 5.9:1 on
+ * paper; signal 4.9:1 on tray-strong. Cobalt is never used for text.
+ */
+:root {
+  --paper: #f5f7fa;
+  --surface: #ffffff;
+  --ink: #0e1621;
+  --graphite: #5b6675;
+  --rule: #e3e8ee;
+  --rule-strong: #cdd5de;
+  --signal: #b42846;        /* crimson: discrepancies only */
+  --signal-wash: #fbe8ec;
+  --steady: #2f5d7c;        /* "consistent" is data blue, not green */
+  --steady-wash: #e7eef4;
+  --tray: #e9eff4;
+  --tray-strong: #dce5ec;
+  --data: #2f5d7c;
+  --accent: #3b5bff;        /* cobalt: logo, running step, drop hover, selection */
+  --accent-wash: #e4e9ff;
+
+  --vs-data: var(--data);
+  --vs-bg-tray: var(--tray);
+  --vs-bg-tray-strong: var(--tray-strong);
+  --vs-accent: var(--accent);
+  --vs-accent-subtle: var(--accent-wash);
+  --vs-focus-ring: var(--data);
+  --vs-shadow-fragment: 0 1px 2px rgb(14 22 33 / 0.04), 0 6px 16px -4px rgb(14 22 33 / 0.07);
+}

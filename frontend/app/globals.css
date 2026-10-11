@@ -9,45 +9,51 @@
   /* Light is the default; dark is opt-in via data-theme (see ThemeParam). */
   color-scheme: light;
 
-  --paper: #fbfaf7;
+  /*
+   * "Blue hour" (references.md decision 54): cool white paper, blue-black ink,
+   * steel-blue data, one cobalt accent. No green and no orange; the earlier
+   * cream + pine + amber read as Claude's palette.
+   */
+  --paper: #f5f7fa;
   --surface: #ffffff;
-  --ink: #333d34;
-  --graphite: #66726a;
-  --rule: #e6e1d8;
-  --rule-strong: #d4cec2;
-  /* Discrepancies only. */
-  --signal: #a3321f;
-  --signal-wash: #fbe9e5;
-  --steady: #1f6b43;
-  --steady-wash: #e6f1ea;
+  --ink: #0e1621;
+  --graphite: #5b6675;
+  --rule: #e3e8ee;
+  --rule-strong: #cdd5de;
+  /* Discrepancies only: crimson, a cool red kept apart from the accent. */
+  --signal: #b42846;
+  --signal-wash: #fbe8ec;
+  /* "Consistent" and "nothing flagged" read as data blue, not green. */
+  --steady: #2f5d7c;
+  --steady-wash: #e7eef4;
   /* Mist trays hold the one hero element per screen. */
-  --tray: #eef3f4;
-  --tray-strong: #e2ebed;
+  --tray: #e9eff4;
+  --tray-strong: #dce5ec;
   /* Neutral figures and source links. */
-  --data: #3f6e7c;
-  /* Amber, 4 uses only: logo sun, running step, drop hover, selection. */
-  --accent: #d9822b;
-  --accent-wash: #fcebd6;
+  --data: #2f5d7c;
+  /* Cobalt, 4 uses only: logo, running step, drop hover, selection. Never text. */
+  --accent: #3b5bff;
+  --accent-wash: #e4e9ff;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --paper: #121211;
-  --surface: #1a1a19;
-  --ink: #edebe6;
-  --graphite: #a3a09a;
-  --rule: #2c2b29;
-  --rule-strong: #3a3936;
-  --signal: #e0794f;
-  --signal-wash: #2a1d17;
-  --steady: #7faf8e;
-  --steady-wash: #18241c;
-  --tray: #1c2224;
-  --tray-strong: #253033;
-  --data: #8fb3be;
-  --accent: #e39a4f;
-  --accent-wash: #2b2117;
+  --paper: #0d1117;
+  --surface: #151b23;
+  --ink: #e8edf3;
+  --graphite: #9aa6b4;
+  --rule: #232b35;
+  --rule-strong: #313b47;
+  --signal: #f07a90;
+  --signal-wash: #2a1620;
+  --steady: #8db4d0;
+  --steady-wash: #16212b;
+  --tray: #161e27;
+  --tray-strong: #1f2934;
+  --data: #8db4d0;
+  --accent: #7b93ff;
+  --accent-wash: #1b2340;
 }
 
 @theme inline {
@@ -165,8 +171,8 @@
   background: var(--surface);
   border-radius: 8px;
   box-shadow:
-    0 1px 2px rgb(31 43 48 / 0.04),
-    0 6px 16px -4px rgb(31 43 48 / 0.07);
+    0 1px 2px rgb(14 22 33 / 0.04),
+    0 6px 16px -4px rgb(14 22 33 / 0.07);
 }
 
 /*

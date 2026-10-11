@@ -83,7 +83,7 @@ function Sheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-to-company-title"
-        className="relative w-full max-w-[420px] rounded-t-2xl bg-paper px-4 pt-3 pb-5 shadow-[0_-8px_32px_-8px_rgb(31_43_48/0.18)]"
+        className="relative w-full max-w-[420px] rounded-t-2xl bg-paper px-4 pt-3 pb-5 shadow-[0_-8px_32px_-8px_rgb(14_22_33/0.18)]"
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%", transition: { duration: 0.2, ease: EASE_ENTER } }}

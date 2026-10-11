@@ -197,6 +197,7 @@ The teammate's feedback: the Digest still reads text-heavy, and judges will navi
 | 51 | Deals list | Home's chart card shows the **top 4**. "+N more" and the header's **Deals** button open the full Deals screen: name, mini pulse sparkline, glyphs and date. |
 | 52 | Names | **Deals** (not projects), **Pulse** (the company plot), **Sauce Report** (the download). |
 | 53 | Art across screens | **A masthead band** (~150px) of the landscape at the top of Home, Deals, Company and Digest, fading into the paper. Each screen frames its own part of the valley (sunrise, ridges, river, mist), and the band pans between them on navigation. Titles sit in the faded end; data stays on paper. First run shows the art in its drop zone instead. |
+| 54 | Palette | **"Blue hour"** replaces cream + pine + amber, which a teammate rightly called "so Claude". Paper `#F5F7FA`, ink `#0E1621`, graphite `#5B6675`, tray `#E9EFF4`, data `#2F5D7C`, **cobalt `#3B5BFF`** for the four accent uses (never text), and **crimson `#B42846`** for discrepancies. No green: "consistent" is data blue. Every text pair passes AA. The backdrop art is being regenerated as abstract minimal ASCII art (a wave field) in the same palette. |
 
 ## Pending
 
