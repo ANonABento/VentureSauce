@@ -7,10 +7,14 @@
 Drop in a deck, an email, call notes or a screenshot. VentureSauce files it under the company, checks every claim against public records and against everything else the founder sent you, then hands you the questions to ask.
 
 <p align="center">
-  <a href="docs/media/walkthrough.mp4"><img src="docs/media/demo.gif" alt="Dragging a $43M funding headline into the VentureSauce panel: SEC Form D filings show $171M sold" width="100%"></a>
+  <a href="#full-walkthrough"><img src="docs/media/demo.gif" alt="Dragging a $43M funding headline into the VentureSauce panel: SEC Form D filings show $171M sold" width="100%"></a>
   <br>
-  <sub>A real headline dragged into the panel, checked live against SEC Form D. <b><a href="docs/media/walkthrough.mp4">▶ Watch the full 70-second walkthrough</a></b> (headline, a company's own PDF, deal flow, inbox)</sub>
+  <sub>A real headline dragged into the panel, checked live against SEC Form D. <b><a href="#full-walkthrough">▶ Watch the full 70-second walkthrough</a></b> (headline, a company's own PDF, deal flow, inbox)</sub>
 </p>
+
+## Full walkthrough
+
+https://github.com/user-attachments/assets/09ccd5fc-1387-4e43-ba96-c82ed8310edf
 
 ## Why
 
