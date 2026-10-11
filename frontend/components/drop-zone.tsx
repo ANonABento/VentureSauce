@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { Dropzone } from "@/components/kibo-ui/dropzone";
 import { Progress } from "@/components/ui/progress";
 import { DUR, EASE_ENTER } from "@/lib/motion";
+import { cn } from "./cn";
 import { JOB_FLOW } from "./loading-steps";
 
 export type DropInput = { file?: File; text?: string; kind?: "email" | "notes" };
@@ -29,7 +30,9 @@ export function DropZone({
   step,
   filing,
   onError,
+  className,
 }: {
+  className?: string;
   onPick: (input: DropInput) => void;
   busy: boolean;
   /** The running job's JOB_FLOW step. */
@@ -41,7 +44,7 @@ export function DropZone({
     const value = Math.min(100, ((step + 0.5) / JOB_FLOW.length) * 100);
     return (
       <motion.div
-        className="rounded-xl border border-rule bg-surface px-4 py-4"
+        className={cn("flex flex-col justify-center rounded-xl border border-rule bg-surface px-4 py-4", className)}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: DUR.base, ease: EASE_ENTER }}
@@ -66,7 +69,7 @@ export function DropZone({
       maxFiles={1}
       onDrop={(files) => files[0] && onPick({ file: files[0] })}
       onError={(error) => onError?.(error.message)}
-      className="rounded-xl border-dashed border-rule-strong bg-surface p-7 shadow-none hover:bg-surface hover:border-data/50"
+      className={cn("min-h-[140px] rounded-xl border-dashed border-rule-strong bg-surface p-7 shadow-none hover:border-data/50 hover:bg-surface", className)}
     >
       <span className="flex flex-col items-center gap-2.5">
         <span className="flex size-9 items-center justify-center rounded-full bg-tray text-data">

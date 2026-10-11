@@ -77,7 +77,7 @@ export function FigureTile({
       {...(onClick ? { type: "button" as const, onClick, "aria-haspopup": "dialog" as const } : {})}
       aria-label={label ? `${value} ${label}` : undefined}
       className={cn(
-        "fragment flex flex-col items-start px-3.5 pt-3 pb-3 text-left",
+        "fragment flex min-h-[clamp(124px,17dvh,176px)] flex-col items-start justify-between px-3.5 pt-3.5 pb-3 text-left",
         onClick && "transition-transform duration-150 ease-out hover:-translate-y-0.5",
       )}
       initial={{ opacity: 0, y: RISE }}
@@ -180,7 +180,9 @@ export function DealsChart({
   seen,
   onOpen,
   onAll,
+  className,
 }: {
+  className?: string;
   companies: CompanySummary[];
   seen: Record<string, string>;
   onOpen: (company: CompanySummary) => void;
@@ -192,11 +194,12 @@ export function DealsChart({
   const more = ranked.length - top.length;
 
   return (
-    <section className="fragment px-1.5 py-1.5" aria-labelledby="deals-chart-title">
+    <section className={cn("fragment flex flex-col px-1.5 py-1.5", className)} aria-labelledby="deals-chart-title">
       <h2 id="deals-chart-title" className="sr-only">
         Deals by flags
       </h2>
-      <ul>
+      {/* Rows spread over whatever height the card is given. */}
+      <ul className="flex flex-1 flex-col justify-around">
         {top.map((c, index) => {
           const unseen = c.last_item_at && (!seen[c.id] || seen[c.id] < c.last_item_at);
           return (

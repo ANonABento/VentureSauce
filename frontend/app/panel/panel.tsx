@@ -268,7 +268,8 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     <PanelFrame>
       {/* The horizon band pans along the arc per screen (decisions 53, 55); first run shows the art in its drop zone instead. */}
       <Masthead scene={SCENE[screen.kind]} />
-      <div className="relative mt-1">
+      {/* Content starts in the faded end of the art, so there is no dead band of empty sky. */}
+      <div className="relative -mt-12">
         {status}
         <ScreenTransition id={screenKey(screen)} direction={direction}>
           {screen.kind === "home" && companies === null && (
@@ -296,32 +297,28 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
             </>
           )}
           {screen.kind === "home" && companies && companies.length > 0 && (
-            <>
-              <Greeting onDeals={() => setScreen({ kind: "deals" })} />
-              {notInInbox && detected && (
-                <p className="mt-2 text-[13px] leading-5 text-graphite">
-                  <span className="text-ink">{detected.domain}</span> isn&apos;t in your inbox yet.
-                </p>
-              )}
-              <div className="mt-5">
-                <StatTiles companies={companies} />
+            // Fills the panel's height: tiles grow a little, the deals chart and the dropzone take the rest.
+            <div className="flex min-h-[calc(100dvh-148px)] flex-col gap-3">
+              <div className="mb-2">
+                <Greeting onDeals={() => setScreen({ kind: "deals" })} />
+                {notInInbox && detected && (
+                  <p className="mt-2 text-[13px] leading-5 text-graphite">
+                    <span className="text-ink">{detected.domain}</span> isn&apos;t in your inbox yet.
+                  </p>
+                )}
               </div>
-              <div className="mt-3">
-                <ReportBar onListen={() => setScreen({ kind: "digest" })} />
-              </div>
-              <div className="mt-3">
-                <DealsChart
-                  companies={companies}
-                  seen={seen}
-                  onOpen={(company) => openCompany(company, "home")}
-                  onAll={() => setScreen({ kind: "deals" })}
-                />
-              </div>
-              {error && <p role="alert" className="mt-3 text-xs font-medium text-ink">{error}</p>}
-              <div className="mt-3">
-                <DropZone onPick={onPick} busy={busy} step={step} filing={filing} onError={setError} />
-              </div>
-            </>
+              <StatTiles companies={companies} />
+              <ReportBar onListen={() => setScreen({ kind: "digest" })} />
+              <DealsChart
+                className="flex-[1.3]"
+                companies={companies}
+                seen={seen}
+                onOpen={(company) => openCompany(company, "home")}
+                onAll={() => setScreen({ kind: "deals" })}
+              />
+              {error && <p role="alert" className="text-xs font-medium text-ink">{error}</p>}
+              <DropZone className="flex-1" onPick={onPick} busy={busy} step={step} filing={filing} onError={setError} />
+            </div>
           )}
           {screen.kind === "file" && pending && (
             <AddToCompanyScreen
