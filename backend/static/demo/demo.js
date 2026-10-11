@@ -248,7 +248,7 @@ async function mailView(openId) {
   open.unread = false;
   const { text, date } = await mailBody(open);
   const files = open.attachments || [];
-  const cards = files.map((a) => `<div class="attcard" title="${esc(a.name)}">
+  const cards = files.map((a) => `<div class="attcard" title="${esc(a.name)}" draggable="true" data-file="${a.file}">
       <a class="prev" href="${a.deck ? `#decks/${a.deck}` : S + a.file}" ${a.deck ? "" : `download="${esc(a.name)}"`}>
         ${a.thumb ? `<img src="${a.thumb}" alt="">` : `<div class="ph k-ppt">P</div>`}</a>
       <div class="bar"><i class="k-${a.kind === "PDF" ? "pdf" : "ppt"}">${a.kind === "PDF" ? "PDF" : "P"}</i><span>${esc(a.name)}</span></div>
@@ -279,7 +279,7 @@ async function mailList() {
   const rows = await Promise.all(MAIL.map(async (m) => {
     const { text } = await mailBody(m);
     const snip = text.replace(/\s+/g, " ").slice(0, 140);
-    const chips = (m.attachments || []).map((a) => `<span class="chipfile"><i class="k-${a.kind === "PDF" ? "pdf" : "ppt"}">${a.kind === "PDF" ? "PDF" : "P"}</i><span>${esc(a.name)}</span></span>`).join("");
+    const chips = (m.attachments || []).map((a) => `<span class="chipfile" draggable="true" data-file="${a.file}"><i class="k-${a.kind === "PDF" ? "pdf" : "ppt"}">${a.kind === "PDF" ? "PDF" : "P"}</i><span>${esc(a.name)}</span></span>`).join("");
     return `<a class="gm-row ${m.unread ? "unread" : ""}" href="#mail/${m.id}">
       <span class="chk"></span><span class="star ${m.starred ? "on" : ""}">${ic("star", m.starred ? 'fill="currentColor"' : "")}</span>
       <span class="who">${esc(m.who || m.from)}${m.n ? ` <span class="tn">${m.n}</span>` : ""}</span>
@@ -344,10 +344,10 @@ function filesShell(main, overlay = "") {
 function filesList() {
   const decks = Object.entries(DECKS).map(([k, d]) => [deckKind(d), d.title, d.by, d.when, SIZES[k], `#decks/${k}`]);
   const rows = [...decks, ...FILE_ROWS].map(([kind, name, owner, when, size, href]) => `
-    <tr ${href ? `data-href="${href}"` : ""}><td><span class="nm">${fileIcon(kind)}${esc(name)}</span></td>
+    <tr ${href ? `data-href="${href}" draggable="true" data-file="${DECKS[href.split("/")[1]].file}"` : ""}><td><span class="nm">${fileIcon(kind)}${esc(name)}</span></td>
       <td><span class="ow">${avatar(owner)}${esc(owner)}</span></td><td>${when}</td><td>${size}</td>
       <td class="acts">${ic("dl")}${ic("share")}${ic("more", 'stroke-width="3"')}</td></tr>`).join("");
-  const cards = Object.entries(DECKS).map(([k, d]) => `<a class="fd-card" href="#decks/${k}">
+  const cards = Object.entries(DECKS).map(([k, d]) => `<a class="fd-card" href="#decks/${k}" draggable="true" data-file="${d.file}">
       <div class="th"><img src="${d.img(1)}" alt="" class="${d.portrait ? "pt" : ""}"></div>
       <div class="cap">${fileIcon(deckKind(d))}<span>${esc(d.title)}</span></div>
       <small>${esc(d.by)} shared · ${d.when}</small></a>`).join("");
@@ -654,6 +654,15 @@ const APPS = {
 APPS.press = APPS.saved; // old links
 
 const keys = { on: null };
+// Dragging an attachment or file anywhere on the desk carries the file's own link (not the preview's), which the
+// VentureSauce panel downloads and files.
+document.addEventListener("dragstart", (e) => {
+  const el = e.target.closest?.("[data-file]");
+  if (!el) return;
+  const url = new URL(S + el.dataset.file, location.href).href;
+  e.dataTransfer.setData("text/uri-list", url);
+  e.dataTransfer.setData("text/plain", url);
+});
 document.addEventListener("keydown", (e) => keys.on?.(e));
 
 function dock(active) {
