@@ -61,9 +61,13 @@ def merged_claims(claims: list[dict]) -> list[dict]:
     """What to check against public records: the latest headcount/raised, every distinct round, person and customer."""
     latest: dict[str, dict] = {}
     seen, out = set(), []
+    starts = {float(n.replace(",", "")) for c in claims if c["claim_type"] in ("headcount", "raised")
+              for n in re.findall(r"\bfrom\s+\$?([\d,.]+)\b[^.]*?\bto\b", c.get("claim_text") or "", re.I)}
     for c in claims:
         if c["claim_type"] in ("headcount", "raised"):
-            latest[c["claim_type"]] = c  # items are oldest-first, so the last one wins
+            # Items are oldest-first, so the last one wins; a plan or a starting point is never "today's" figure.
+            if not _not_current(c) and not (isinstance(c["value"], (int, float)) and float(c["value"]) in starts):
+                latest[c["claim_type"]] = c
         elif c["claim_type"] in ("round_size", "customer", "board"):
             key = (c["claim_type"], str(c["value"]).lower())
             if key not in seen:

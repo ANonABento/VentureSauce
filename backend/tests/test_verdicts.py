@@ -156,3 +156,11 @@ def test_plans_and_starting_points_dont_contradict():
               mk("b", 400, "Legora has grown from 40 to 400 team members"),
               mk("b", 300, "grow to more than 300 employees across its U.S. offices by the end of 2026")]
     assert analysis.contradictions(claims) == []
+
+
+def test_latest_headcount_skips_plans_and_starting_points():
+    import analysis
+    mk = lambda value, text: {"claim_type": "headcount", "value": value, "claim_text": text}
+    picked = analysis.merged_claims([mk(40, "40 ... team members"), mk(400, "grown from 40 to 400 team members"),
+                                     mk(300, "grow to more than 300 employees by the end of 2026")])
+    assert [c["value"] for c in picked] == [400]
