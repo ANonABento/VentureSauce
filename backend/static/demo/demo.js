@@ -309,60 +309,90 @@ function mailWire(openId) {
   }));
 }
 
-/* ───────────── Decks ───────────── */
+/* ───────────── Files (Drive-like) ───────────── */
+// Other items in "Shared with me": texture only, not openable. [kind, name, owner, shared, size]
+const FILE_ROWS = [
+  ["folder", "Acme AI - data room", "Jane Founder", "Oct 9", "-"],
+  ["sheet", "Kestrel Health - September financials", "Lena Ortiz", "Sep 30", "184 KB"],
+  ["doc", "Fund II - Q3 LP letter (draft)", "Morgan Lee", "Sep 29", "96 KB"],
+  ["doc", "IC memo template", "Morgan Lee", "Sep 29", "41 KB"],
+  ["pdf", "Copperline - bridge closing set", "Avery Brooks", "Sep 22", "2.1 MB"],
+  ["slides", "Orbitwise - management presentation", "Kai Nakamura", "Sep 15", "8.4 MB"],
+];
+const FILE_COLORS = { pdf: "#ea4335", slides: "#f4b400", doc: "#4285f4", sheet: "#0f9d58", folder: "#5f6368" };
+const fileIcon = (kind) => kind === "folder"
+  ? `<svg class="fi" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#5f6368"/></svg>`
+  : `<svg class="fi" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="${FILE_COLORS[kind]}"/><text x="12" y="16" text-anchor="middle" font-size="8" font-weight="700" fill="#fff" font-family="Arial">${{ pdf: "PDF", slides: "P", doc: "≡", sheet: "▦" }[kind]}</text></svg>`;
+const deckKind = (d) => (d.file.endsWith(".pptx") ? "slides" : "pdf");
+const SIZES = { acme: "376 KB", board: "54 KB", northwind: "140 KB", captable: "179 KB" };
+
+function filesShell(main, overlay = "") {
+  return `<div class="fd">
+    <header class="fd-top"><div class="fd-brand">${ic("file")}<span>Files</span></div>
+      <label class="fd-search">${ic("search")}<input placeholder="Search in Files"><span>${ic("menu")}</span></label>
+      <span class="grow"></span><button class="ib">${ic("help")}</button><button class="ib">${ic("gear")}</button><button class="ib">${ic("grid", 'stroke-width="3.2"')}</button><span style="padding:0 6px">${avatar(ME.name)}</span></header>
+    <div class="fd-body">
+      <nav class="fd-nav"><button class="fd-new"><b>+</b>New</button>
+        <a>${ic("inbox")}Home</a><a>${ic("file")}My Files</a><a>${ic("grid", 'stroke-width="3.2"')}Computers</a>
+        <a class="on" href="#decks">${ic("people")}Shared with me</a><a>${ic("clock")}Recent</a><a>${ic("star")}Starred</a>
+        <a>${ic("mail")}Spam</a><a>${ic("trash")}Trash</a><a>${ic("archive")}Storage</a>
+        <div class="fd-quota"><i><b style="width:38%"></b></i>5.7 GB of 15 GB used</div></nav>
+      <main class="fd-main">${main}</main>
+    </div>${overlay}</div>`;
+}
+
+function filesList() {
+  const decks = Object.entries(DECKS).map(([k, d]) => [deckKind(d), d.title, d.by, d.when, SIZES[k], `#decks/${k}`]);
+  const rows = [...decks, ...FILE_ROWS].map(([kind, name, owner, when, size, href]) => `
+    <tr ${href ? `data-href="${href}"` : ""}><td><span class="nm">${fileIcon(kind)}${esc(name)}</span></td>
+      <td><span class="ow">${avatar(owner)}${esc(owner)}</span></td><td>${when}</td><td>${size}</td>
+      <td class="acts">${ic("dl")}${ic("share")}${ic("more", 'stroke-width="3"')}</td></tr>`).join("");
+  const cards = Object.entries(DECKS).map(([k, d]) => `<a class="fd-card" href="#decks/${k}">
+      <div class="th"><img src="${d.img(1)}" alt="" class="${d.portrait ? "pt" : ""}"></div>
+      <div class="cap">${fileIcon(deckKind(d))}<span>${esc(d.title)}</span></div>
+      <small>${esc(d.by)} shared · ${d.when}</small></a>`).join("");
+  return `<div class="fd-head"><h1>Shared with me</h1><span class="grow"></span><span class="fd-vt"><b>☰</b><span>▦</span></span></div>
+    <div class="fd-chips"><span>Type ⌄</span><span>People ⌄</span><span>Modified ⌄</span><span>Source ⌄</span></div>
+    <h3 class="fd-sub">Suggested files</h3><div class="fd-cards">${cards}</div>
+    <table class="fd-table"><thead><tr><th>Name</th><th>Shared by</th><th>Share date ↓</th><th>File size</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 function decksView(id, page) {
   const d = DECKS[id];
-  if (!d) {
-    const rows = Object.entries(DECKS).map(([k, x]) => `<tr data-href="#decks/${k}">
-        <td><span class="doc"><img src="${x.img(1)}" alt="" class="${x.portrait ? "pt" : ""}">${esc(x.title)}</span></td>
-        <td><span class="by">${avatar(x.by)}<span>${esc(x.by)}<small>${esc(x.addr)}</small></span></span></td>
-        <td>${x.pages}</td><td>${x.when}</td><td class="seen">${esc(x.viewed)}</td></tr>`).join("");
-    return `<div class="ds-home"><header class="ds-hometop"><span class="ds-logo">D</span><b>Decks</b><label class="ds-search">${ic("search")}<input placeholder="Search documents"></label><span class="grow"></span>${avatar(ME.name)}</header>
-      <div class="wrap"><div class="ds-cols"><div>
-        <h1>Shared with me</h1><div class="sub">Documents founders have sent you</div>
-        <table class="ds-table"><thead><tr><th>Name</th><th>Shared by</th><th>Pages</th><th>Received</th><th>Your activity</th></tr></thead><tbody>${rows}</tbody></table>
-      </div><aside class="ds-act"><h3>Recent activity</h3>
-        <p><b>You</b> viewed <u>Acme AI deck</u><small>Oct 9 · 6 min</small></p>
-        <p><b>Jane Founder</b> shared <u>Acme AI cap table (scan)</u><small>Oct 9</small></p>
-        <p><b>Jane Founder</b> shared <u>Acme AI deck</u><small>Oct 9</small></p>
-        <p><b>You</b> viewed <u>Acme Q3 board update</u><small>Oct 8 · 4 min</small></p>
-        <p><b>Priya Shah</b> shared <u>Northwind Robotics seed deck</u><small>Oct 7</small></p>
-      </aside></div></div></div>`;
-  }
-  const p = Math.min(d.pages, Math.max(1, Number(page) || 1));
-  const thumbs = Array.from({ length: d.pages }, (_, i) =>
-    `<button class="${i + 1 === p ? "on" : ""}" data-p="${i + 1}" aria-label="Page ${i + 1}"><img src="${d.img(i + 1)}" alt="" class="${d.portrait ? "pt" : ""}"><span class="pg">${i + 1}</span></button>`).join("");
-  return `<div class="ds">
-    <header class="ds-top"><a href="#decks" class="ds-logo" style="text-decoration:none" title="All documents">D</a>
-      <div class="t"><b>${esc(d.title)}</b><span>Shared by ${esc(d.by)} · ${d.when}</span></div><div class="grow"></div>
-      <span class="ds-pg">Page ${p} of ${d.pages}</span>
-      <span class="ds-zoom"><span>−</span><span>100%</span><span>+</span></span>
-      <a class="ds-btn" href="${S + d.file}" download="${esc(d.name)}">${ic("dl")}Download</a>
-      <button class="ds-btn pri">${ic("share")}Reply to ${esc(d.by.split(" ")[0])}</button></header>
-    <div class="ds-prog"><i style="width:${(p / d.pages) * 100}%"></i></div>
-    <div class="ds-body">
-      <div class="ds-stage">
-        <img src="${d.img(p)}" alt="${esc(d.title)}, page ${p}" class="${d.portrait ? "pt" : ""}">
-        <button class="ds-arrow l" data-p="${p - 1}" ${p === 1 ? "disabled" : ""} aria-label="Previous page">${ic("left")}</button>
-        <button class="ds-arrow r" data-p="${p + 1}" ${p === d.pages ? "disabled" : ""} aria-label="Next page">${ic("right")}</button></div>
-      <aside class="ds-info"><h4>About this document</h4>
-        <div class="by">${avatar(d.by)}<span><b>${esc(d.by)}</b><small>${esc(d.addr)}</small></span></div>
-        <blockquote>${esc(d.msg)}</blockquote>
-        <dl><dt>Pages</dt><dd>${d.pages}</dd><dt>Shared</dt><dd>${d.when}, 2026</dd><dt>Your activity</dt><dd>${esc(d.viewed)}</dd><dt>Downloads</dt><dd>Allowed</dd></dl></aside>
-    </div>
-    <nav class="ds-strip">${thumbs}</nav></div>`;
+  if (!d) return filesShell(filesList());
+  const pages = Array.from({ length: d.pages }, (_, i) =>
+    `<img src="${d.img(i + 1)}" alt="${esc(d.title)}, page ${i + 1}" data-page="${i + 1}" class="${d.portrait ? "pt" : ""}" loading="lazy">`).join("");
+  const overlay = `<div class="fd-ov">
+      <header class="fd-ovtop"><a class="ib" href="#decks" aria-label="Close">${ic("back")}</a>${fileIcon(deckKind(d))}<b>${esc(d.title)}</b>
+        <span class="grow"></span><span class="fd-open">Open with ⌄</span><span class="grow"></span>
+        <button class="ib" aria-label="Comment">${ic("pen")}</button><button class="ib" aria-label="Print">${ic("print")}</button>
+        <a class="ib" href="${S + d.file}" download="${esc(d.name)}" aria-label="Download">${ic("dl")}</a>
+        <button class="ib" aria-label="Share">${ic("share")}</button><button class="ib" aria-label="More">${ic("more", 'stroke-width="3"')}</button></header>
+      <div class="fd-pages">${pages}</div>
+      <div class="fd-pill">Page <b id="fd-pg">${Math.min(d.pages, Math.max(1, Number(page) || 1))}</b> / ${d.pages}<i></i>−<span>${ic("search")}</span>+</div>
+    </div>`;
+  return filesShell(filesList(), overlay);
 }
 function decksWire(id, page) {
-  document.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => (location.hash = `#decks/${id}/${b.dataset.p}`)));
   document.querySelectorAll("tr[data-href]").forEach((r) => (r.onclick = () => (location.hash = r.dataset.href)));
   const d = DECKS[id];
-  if (d) {
-    const p = Number(page) || 1;
-    keys.on = (e) => {
-      if (e.key === "ArrowRight" && p < d.pages) location.hash = `#decks/${id}/${p + 1}`;
-      if (e.key === "ArrowLeft" && p > 1) location.hash = `#decks/${id}/${p - 1}`;
-    };
-  }
+  const box = $(".fd-pages");
+  if (!d || !box) return;
+  const imgs = [...box.querySelectorAll("img")];
+  const go = (n) => imgs[n - 1]?.scrollIntoView({ block: "start" });
+  if (Number(page) > 1) requestAnimationFrame(() => go(Number(page)));
+  box.addEventListener("scroll", () => {
+    const top = box.getBoundingClientRect().top + 80;
+    const cur = imgs.filter((im) => im.getBoundingClientRect().top <= top).length || 1;
+    $("#fd-pg").textContent = cur;
+  });
+  keys.on = (e) => {
+    const cur = Number($("#fd-pg").textContent);
+    if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "PageDown") { e.preventDefault(); go(Math.min(d.pages, cur + 1)); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "PageUp") { e.preventDefault(); go(Math.max(1, cur - 1)); }
+    if (e.key === "Escape") location.hash = "#decks";
+  };
+  $(".fd-ov").addEventListener("click", (e) => { if (e.target.classList.contains("fd-pages")) location.hash = "#decks"; });
 }
 
 /* ───────────── Notes ───────────── */
@@ -607,9 +637,9 @@ const APPS = {
   mail: { name: "Mail", view: mailView, wire: mailWire,
     title: () => `Inbox (${MAIL.filter((m) => m.unread).length}) - ${ME.addr}`,
     icon: tile("#1a73e8", '<rect x="10" y="14" width="28" height="20" rx="3" fill="#fff"/><path d="M11 16l13 9 13-9" stroke="#1a73e8" stroke-width="2.4" fill="none" stroke-linejoin="round"/>') },
-  decks: { name: "Decks", view: decksView, wire: decksWire,
-    title: (id) => DECKS[id]?.title || "Shared with me",
-    icon: tile("#1a56db", '<rect x="11" y="13" width="26" height="17" rx="2" fill="#fff"/><path d="M24 30v6M18 36h12" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M15 25l5-5 4 3 6-6" stroke="#1a56db" stroke-width="2.2" fill="none" stroke-linecap="round"/>') },
+  decks: { name: "Files", view: decksView, wire: decksWire,
+    title: (id) => `${DECKS[id]?.title || "Shared with me"} - Files`,
+    icon: tile("#fff", '<rect x=".5" y=".5" width="47" height="47" rx="10.5" fill="none" stroke="#ddd"/><path d="M10 16a3 3 0 0 1 3-3h7l3 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#f4b400"/><path d="M10 20h28v11a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#fbc934"/>') },
   notes: { name: "Notes", view: notesView, wire: notesWire,
     title: (id) => NOTES.find((n) => n.id === id)?.title || "Deal notes",
     icon: tile("#fff", '<rect x=".5" y=".5" width="47" height="47" rx="10.5" fill="none" stroke="#ddd"/><path d="M14 12h16l6 6v18H14z" fill="#fff" stroke="#111" stroke-width="2.4" stroke-linejoin="round"/><path d="M19 21h12M19 26h12M19 31h8" stroke="#111" stroke-width="2.2" stroke-linecap="round"/>') },

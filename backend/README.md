@@ -40,7 +40,7 @@ Data's live sources landed, are recomputed when next read; `POST /companies/refr
 
 ## Demo desk
 
-`/demo` mimics the apps an investor lives in (a mail inbox, a shared-deck viewer, a notes workspace, a CRM pipeline,
+`/demo` mimics the apps an investor lives in (a mail inbox, a shared-files drive, a notes workspace, a CRM pipeline,
 a founder's investor portal, a read-later list), switched from a dock along the bottom, so the extension can be
 demoed next to something that feels real. Every downloadable item is a file in `samples/`, and email and note bodies are
 read from those same files (the "(FICTIONAL ...)" markers are hidden on screen only). Familiar layouts, but no real
