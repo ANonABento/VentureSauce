@@ -1,0 +1,51 @@
+CREATE SCHEMA IF NOT EXISTS raw;
+
+CREATE TABLE IF NOT EXISTS raw.form_d_filings (
+    accession_number VARCHAR,
+    filed_date DATE,
+    form_type VARCHAR,
+    cik VARCHAR,
+    index_company_name VARCHAR,
+    entity_name VARCHAR,
+    entity_type VARCHAR,
+    jurisdiction_of_inc VARCHAR,
+    year_of_inc VARCHAR,
+    city VARCHAR,
+    state_or_country VARCHAR,
+    industry_group VARCHAR,
+    investment_fund_type VARCHAR,
+    revenue_range VARCHAR,
+    previous_accession_number VARCHAR,
+    date_of_first_sale VARCHAR,
+    minimum_investment VARCHAR,
+    total_offering_amount VARCHAR,
+    total_amount_sold VARCHAR,
+    total_remaining VARCHAR,
+    total_investors VARCHAR,
+    is_amendment BOOLEAN,
+    first_sale_yet_to_occur BOOLEAN,
+    more_than_one_year BOOLEAN,
+    is_equity BOOLEAN,
+    is_debt BOOLEAN,
+    is_pooled_fund BOOLEAN,
+    has_non_accredited_investors BOOLEAN,
+    federal_exemptions VARCHAR[],
+    filing_url VARCHAR,
+    primary_doc_url VARCHAR,
+    ingested_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS raw.form_d_related_persons (
+    accession_number VARCHAR,
+    filed_date DATE,
+    cik VARCHAR,
+    person_index INTEGER,
+    first_name VARCHAR,
+    middle_name VARCHAR,
+    last_name VARCHAR,
+    city VARCHAR,
+    state_or_country VARCHAR,
+    clarification VARCHAR,
+    relationships VARCHAR[],
+    ingested_at TIMESTAMP
+);
