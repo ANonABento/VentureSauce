@@ -298,7 +298,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           )}
           {screen.kind === "home" && companies && companies.length > 0 && (
             // Fills the panel's height: tiles grow a little, the deals chart and the dropzone take the rest.
-            <div className="flex min-h-[calc(100dvh-184px)] flex-col gap-3">
+            <div className="flex min-h-[calc(100dvh-192px)] flex-col gap-3">
               <div className="mb-2">
                 <Greeting onDeals={() => setScreen({ kind: "deals" })} />
                 {notInInbox && detected && (
