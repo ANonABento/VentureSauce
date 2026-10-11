@@ -192,3 +192,52 @@
       radial-gradient(circle, var(--dither-on) 0.8px, transparent 0.95px) 1.5px 3.5px / 3px 3px repeat-x;
   }
 }
+
+/*
+ * Sauce Report print styles (app/sauce, components/sauce-report.tsx; decision 49).
+ * Download PDF prints the page: colors print exactly (dither dots, brick, mist
+ * blue), fragments trade their shadow for a hairline, and entrance animations
+ * print their end state even if a reveal is still running. Everything but
+ * @page is scoped to the report.
+ */
+@media print {
+  @page {
+    margin: 12mm 12mm 14mm;
+  }
+
+  body:has(.sauce-doc) {
+    background: var(--surface);
+  }
+
+  .sauce-doc {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sauce-doc .fragment {
+    box-shadow: none;
+    border: 1px solid var(--rule);
+  }
+
+  .sauce-doc *,
+  .sauce-doc *::before,
+  .sauce-doc *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* motion.* writes inline opacity/transform while revealing; the end state is opacity 1, no transform.
+     Dot-pattern circles keep their tonal opacity. */
+  .sauce-doc :not(circle)[style*="opacity"] {
+    opacity: 1 !important;
+  }
+
+  .sauce-doc [style*="transform"] {
+    transform: none !important;
+  }
+
+  /* Dither bars reveal through a growing clip; the full bar is the end state. */
+  .sauce-doc g[clip-path] {
+    clip-path: none !important;
+  }
+}

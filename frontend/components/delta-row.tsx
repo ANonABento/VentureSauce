@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { motion } from "motion/react";
+import { Bank, EnvelopeSimple, FileText, LinkedinLogo, Newspaper, Note } from "@phosphor-icons/react/dist/ssr";
 import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
 import type { Claim, DeltaRow as DeltaRowData, Source } from "@/lib/types";
 import { cn } from "./cn";
@@ -10,6 +11,16 @@ import { DeltaVisual } from "./delta-visual";
 import { Figures } from "./figures";
 import { formatDate } from "./report-utils";
 import { STATUS } from "./status";
+
+/** Which icon stands for a source: SEC filings, LinkedIn, the user's own items, or the press. */
+function sourceIcon(label: string) {
+  if (/sec|form d|edgar/i.test(label)) return Bank;
+  if (/linkedin/i.test(label)) return LinkedinLogo;
+  if (/email|mail/i.test(label)) return EnvelopeSimple;
+  if (/note/i.test(label)) return Note;
+  if (/deck|slides|pdf/i.test(label)) return FileText;
+  return Newspaper;
+}
 
 /**
  * Collapsed: status mark, signal, the delta in a few words, mini chart and
@@ -100,23 +111,24 @@ export function DeltaRow({
         </div>
 
         {sources.length > 0 && (
-          <p className="mt-2 text-[11px] leading-4 text-graphite">
-            {sources.map((source, index) => (
-              <span key={index}>
-                {index > 0 && " · "}
+          // Sources as icon links (decision 41): the name is in the tooltip and the accessible label.
+          <p className="mt-2 flex items-center gap-1">
+            {sources.map((source, index) => {
+              const Icon = sourceIcon(source.label);
+              return (
                 <a
+                  key={index}
                   href={source.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title={`Checked ${formatDate(source.checkedAt)}`}
-                  className="font-medium text-data underline decoration-transparent underline-offset-2 transition-colors duration-150 ease-out hover:decoration-current"
+                  title={`${source.label} · checked ${formatDate(source.checkedAt)}`}
+                  aria-label={`${source.label} (opens in a new tab)`}
+                  className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tray text-data transition-colors duration-150 ease-out hover:bg-tray-strong"
                 >
-                  {source.label}
-                  <span aria-hidden="true"> ↗</span>
-                  <span className="sr-only"> (opens in a new tab)</span>
+                  <Icon aria-hidden="true" size={13} weight="duotone" />
                 </a>
-              </span>
-            ))}
+              );
+            })}
           </p>
         )}
 

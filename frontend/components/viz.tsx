@@ -204,12 +204,14 @@ export type RangeValue = { value: number; label: string };
 const LABEL_W = 76;
 const PAD = 5;
 
-/** Labels go below the line; one that would overlap its neighbour flips above. */
+/** Labels go below the line unless that row is crowded; each takes whichever row leaves it more room. */
 function placeLabels<T extends { x: number }>(points: T[]) {
   let lastBelow = -Infinity;
   let lastAbove = -Infinity;
   return points.map((p) => {
-    const below = p.x - lastBelow >= LABEL_W || p.x - lastAbove < LABEL_W;
+    const roomBelow = p.x - lastBelow;
+    const roomAbove = p.x - lastAbove;
+    const below = roomBelow >= LABEL_W || roomBelow >= roomAbove;
     if (below) lastBelow = p.x;
     else lastAbove = p.x;
     return { ...p, below };
@@ -279,7 +281,7 @@ export function RangePlot({
             const edge = i === 0 ? "start" : i === placed.length - 1 ? "end" : "middle";
             const left = Math.min(Math.max(p.x - LABEL_W / 2, 0), width - LABEL_W);
             return (
-              <div key={`${p.label}-${p.value}`} aria-hidden="true">
+              <div key={i} aria-hidden="true">
                 <motion.span
                   className="absolute h-[9px] w-[9px] rounded-full bg-ink ring-2 ring-surface"
                   style={{ left: p.x - 4.5, top: lineY - 4 }}
@@ -323,11 +325,14 @@ export function RangePlot({
 export function SourceFlow({
   steps,
   current,
+  announce = true,
   className,
 }: {
   steps: string[];
   /** Index of the step in progress; everything before it is done. steps.length = all done. */
   current: number;
+  /** False when the parent already announces progress, so screen readers don't hear it twice. */
+  announce?: boolean;
   className?: string;
 }) {
   const reduce = useReducedMotion();
@@ -336,9 +341,11 @@ export function SourceFlow({
 
   return (
     <div className={cn("relative h-[46px] w-full", className)}>
-      <p role="status" className="sr-only">
-        {current > last ? "All checks done" : `${steps[current]}, step ${current + 1} of ${steps.length}`}
-      </p>
+      {announce && (
+        <p role="status" className="sr-only">
+          {current > last ? "All checks done" : `${steps[current]}, step ${current + 1} of ${steps.length}`}
+        </p>
+      )}
       {steps.slice(0, -1).map((step, i) => (
         <span
           key={`line-${step}`}

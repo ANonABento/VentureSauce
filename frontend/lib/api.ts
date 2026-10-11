@@ -1,7 +1,7 @@
 // Client for the VentureSauce backend (backend/README.md). The panel's only data source.
 import type { DeltaReport } from "@/lib/types";
 
-const DEFAULT_API = (process.env.NEXT_PUBLIC_API ?? "http://localhost:8000").replace(/\/$/, "");
+export const DEFAULT_API = (process.env.NEXT_PUBLIC_API ?? "http://localhost:8000").replace(/\/$/, "");
 // Backends a link may point the panel at (?api=…): the laptop, quick tunnels, and hosted backends we run.
 const ALLOWED_API = /^(http:\/\/(localhost|127\.0\.0\.1)(:\d+)?|https:\/\/[a-z0-9-]+\.(trycloudflare\.com|hf\.space))$/;
 

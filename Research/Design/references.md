@@ -187,6 +187,17 @@ The teammate's feedback: the Digest still reads text-heavy, and judges will navi
 | 46 | Drop zone | **The landscape art with an inset dashed frame**, which dissolves into the source flow on drop. One layout serves first run too: with an empty inbox only the greeting, the drop zone and the lookup show. |
 | 47 | Report bar | **A mini player**: ▶ plays the brief in place, with a mini waveform and the duration once known. Tapping the bar opens the Digest. Defaults to Today. |
 
+**Round 5b: the teammate's 5-screen wireframe** (home → add to company → Sauce Report → projects → company pulse):
+
+| # | Topic | Decision |
+|---|---|---|
+| 48 | Add to company | After a drop, a **picker sheet** shows the filename, then "✨ Detect from the document" (preselected), each company (serif name + glyphs) and "+ New company", with Cancel and Submit. Drops on a company's own screen skip it. "+ New company" drops with auto-detect, then calls `moveItem(…, { newCompany })`. |
+| 49 | Sauce Report | **A branded one-page report about the company**: cover, verdict bar, range plots, public-record rows with source links, and questions. It previews in the panel; Download prints it to PDF from a print-styled page, so the links survive. |
+| 50 | Company screen | **Pulse timeline as the plot**: item dates on x, and the most-contradicted metric as a stepped line through its values, with ◇ where they disagree. Then ● / ◇ / 💬 numbers, a one-line summary, Actions (top question + Copy, drop another item), and the Checks / Items / Questions details below. Download opens the Sauce Report. |
+| 51 | Deals list | Home's chart card shows the **top 4**. "+N more" and the header's **Deals** button open the full Deals screen: name, mini pulse sparkline, glyphs and date. |
+| 52 | Names | **Deals** (not projects), **Pulse** (the company plot), **Sauce Report** (the download). |
+| 53 | Art across screens | **A masthead band** (~150px) of the landscape at the top of Home, Deals, Company and Digest, fading into the paper. Each screen frames its own part of the valley (sunrise, ridges, river, mist), and the band pans between them on navigation. Titles sit in the faded end; data stays on paper. First run shows the art in its drop zone instead. |
+
 ## Pending
 
 - **Layout is parked.** A teammate is building the panel layout mockup. Once it's committed, pull it and apply the kit on top. Row layout, screen structure and density decisions wait for it, and parts of that layout may change afterward. The draft recommendation for the truth-table row is a three-line stack (pill and page, quote, then a big CLAIMED → OBSERVED line with confidence, then the source).
