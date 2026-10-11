@@ -78,7 +78,8 @@ def from_eml(data: bytes) -> str:
 
 class _PageText(HTMLParser):
     """Readable text of a web page: skips scripts, styles and site chrome; one line per block."""
-    SKIP = {"script", "style", "noscript", "svg", "nav", "footer", "header", "form", "button", "iframe", "template"}
+    # Not <header>: some sites (Framer) put the whole article in one. Menus are in <nav>.
+    SKIP = {"script", "style", "noscript", "svg", "nav", "footer", "form", "button", "iframe", "template"}
     BLOCK = {"p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "br", "section", "article", "blockquote"}
 
     def __init__(self):

@@ -314,5 +314,6 @@ def press_checks(claims: list[dict], press: list[dict]) -> list[dict]:
                               verdict="match", confidence="medium", note=f"Public mention found: \"{hit['title']}\"."))
         else:
             out.append(_check(c, **common, verdict="unverifiable", confidence="low",
-                              note=f"No public mention of {c['value']} as a customer found. It may be a pilot or LOI; ask for a reference."))
+                              note=f"{c['value']} isn't mentioned in the funding coverage we checked, so this can't confirm it. "
+                                   "A customer reference or case study would."))
     return out
