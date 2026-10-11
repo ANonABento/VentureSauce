@@ -490,10 +490,15 @@ function portalView() {
     return `<rect x="${x}" y="${y}" width="${bw}" height="${H - y}" rx="4" fill="${i === bars.length - 1 ? "#4f46e5" : "#c7c9f9"}"/>
       <text x="${x + bw / 2}" y="${H + 18}" text-anchor="middle" font-size="11" fill="#6b7280">${months[i]}</text>`;
   }).join("");
+  const doc = (kind, color, name, meta, href, dl) => `<a class="pt-doc" ${href ? `href="${href}"` : ""} ${dl ? `download="${dl}"` : ""}><i style="background:${color}">${kind}</i><div><b>${name}</b><small>${meta}</small></div><span>${ic("dl")}</span></a>`;
   return `<div class="pt">
-    <header class="pt-top"><span class="lg">A</span><b>Acme AI</b><span class="sep">/</span><span style="color:#5b6170">Investor portal</span>
-      <nav><span class="on">Overview</span><span>Updates</span><span>Documents</span><span>Cap table</span></nav><span class="grow"></span>${avatar(ME.name)}</header>
-    <div class="pt-wrap" id="dashboard">
+    <aside class="pt-nav"><div class="pt-co"><span class="lg">A</span><div><b>Acme AI</b><small>Investor portal</small></div></div>
+      <a class="on">${ic("inbox")}Overview</a><a>${ic("mail")}Updates<span class="cnt">1</span></a><a>${ic("refresh")}Metrics</a><a>${ic("file")}Documents</a><a>${ic("people")}Cap table</a>
+      <div class="pt-navfoot">Shared with<br><b>${ME.fund}</b><br><span>Viewer access</span></div></aside>
+    <main class="pt-main">
+    <header class="pt-top"><span style="color:#5b6170">Overview</span><span class="grow"></span><span class="pt-live"><i></i>Synced from billing and HRIS</span>${avatar(ME.name)}</header>
+    <div class="pt-wrap">
+      <section id="dashboard">
       <div class="pt-h"><div><h1>Acme AI · Investor dashboard</h1><div class="sub">As of Sep 30, 2026 · Shared with ${ME.fund}</div></div>
         <a class="ds-btn" href="${S}05_acme_dashboard_screenshot.png" download="Acme AI dashboard.png">${ic("dl")}Export PNG</a></div>
       <div class="pt-kpis">
@@ -506,7 +511,23 @@ function portalView() {
         <div class="pt-card"><h3>Customers</h3><ul class="pt-cust">
           <li><span class="av" style="background:#0f766e;width:28px;height:28px;font-size:12px">G</span>Globex<span class="st">Live</span></li>
           <li><span class="av" style="background:#b45309;width:28px;height:28px;font-size:12px">H</span>Hooli<span class="st">Live</span></li></ul></div></div>
-    </div></div>`;
+      </section>
+      <div class="pt-grid" style="margin-top:0">
+        <div class="pt-card pt-post">
+          <div class="pt-ph">${avatar("Jane Founder", "lg")}<div><b>Jane Founder</b><small>CEO · posted Oct 1 · September update</small></div><span class="pt-tag">Monthly update</span></div>
+          <h3 style="margin:14px 0 8px">September: second warehouse live at Globex</h3>
+          <p>Hi everyone, a short one this month. The big moment was Globex turning on Acme in their second building, which went live without a single escalation from the floor team. We also shipped plain-English explanations for every suggested change, which supervisors have asked for since day one.</p>
+          <p>On the team side we welcomed two engineers, and we're starting to prepare for the Series A conversations in November.</p>
+          <p><b>Where you can help:</b> intros to operations leaders at mid-market retailers, and to anyone who has scaled a customer success team in Europe.</p>
+          <div class="pt-react"><span>👏 6</span><span>🚀 3</span><span>💬 2 comments</span></div>
+        </div>
+        <div class="pt-card"><h3>Documents</h3>
+          ${doc("PPT", "#d24726", "Q3 board update", "Board · Oct 8", `${S}06_acme_board_update.pptx`, "Acme Q3 board update.pptx")}
+          ${doc("PDF", "#ea4335", "Company deck", "Fundraising · Oct 9", `${S}${DECK_PDF.file}`, DECK_PDF.name)}
+          ${doc("XLS", "#188038", "September financials", "Finance · Oct 1")}
+          ${doc("DIR", "#5f6368", "Data room", "Access on request")}
+        </div></div>
+    </div></main></div>`;
 }
 
 /* ───────────── Saved (read-later) ───────────── */
