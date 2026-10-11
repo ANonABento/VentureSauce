@@ -59,6 +59,7 @@ uv sync --python 3.12 && uv run uvicorn main:app --port 8000
 cd frontend && npm install && npm run dev   # http://localhost:3000/panel
 
 # Chrome: chrome://extensions → Developer mode → Load unpacked → extension/
+#         (for local, use the LOCAL line in extension/config.js)
 ```
 
 - **Demo desk:** `localhost:8000/demo`. Fake Gmail, Drive, Notes and CRM to drag items from.
