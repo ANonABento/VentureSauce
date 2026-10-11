@@ -6,7 +6,7 @@
 
 Drop in a deck, an email, call notes or a screenshot. VentureSauce files it under the company, checks every claim against public records and against everything else the founder sent you, then hands you the questions to ask.
 
-![VentureSauce side panel next to a founder's email](docs/img/hero.webp)
+![VentureSauce side panel next to a real SEC raise alert](docs/img/hero.webp)
 
 ## Why
 
