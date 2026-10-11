@@ -77,7 +77,7 @@ export function FigureTile({
       {...(onClick ? { type: "button" as const, onClick, "aria-haspopup": "dialog" as const } : {})}
       aria-label={label ? `${value} ${label}` : undefined}
       className={cn(
-        "fragment flex min-h-[clamp(124px,17dvh,176px)] flex-col items-start justify-between px-3.5 pt-3.5 pb-3 text-left",
+        "fragment flex aspect-square flex-col items-start justify-between px-3.5 pt-3 pb-3 text-left",
         onClick && "transition-transform duration-150 ease-out hover:-translate-y-0.5",
       )}
       initial={{ opacity: 0, y: RISE }}
@@ -87,7 +87,8 @@ export function FigureTile({
       <CountUp
         value={value}
         delay={0.1 + index * STAGGER}
-        className={cn("font-serif text-[56px] leading-[56px] tracking-[-0.03em]", flag && value > 0 ? "text-signal" : "text-ink")}
+        // Geist Mono for data (decision 66): it echoes the ASCII art; the serif stays the voice (names, titles).
+        className={cn("font-mono text-[40px] leading-none font-medium tracking-[-0.04em]", flag && value > 0 ? "text-signal" : "text-ink")}
       />
       <span aria-hidden={label ? true : undefined} className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-graphite">
         {glyph === "question" ? (
@@ -134,7 +135,7 @@ export function ReportBar({ onListen }: { onListen?: () => void }) {
         rel="noopener noreferrer"
         className="group flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-1.5 transition-colors duration-150 hover:bg-tray/60"
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-ink text-paper">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-tray text-data">
           <FileText aria-hidden="true" size={16} weight="light" />
         </span>
         <span className="min-w-0 flex-1 font-serif text-lg leading-6 text-ink">

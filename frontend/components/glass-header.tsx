@@ -33,7 +33,7 @@ export function GlassHeader({ embedded = false }: { embedded?: boolean }) {
           "backdrop-blur-[14px] backdrop-saturate-[1.8]",
           overContent
             ? "border-ink/10 bg-surface/70 shadow-[0_8px_24px_-12px_rgb(10_31_61/0.25),inset_0_1px_0_rgb(255_255_255/0.9)]"
-            : "border-white/25 bg-white/10 shadow-[0_10px_30px_-12px_rgb(0_0_0/0.45),inset_0_1px_0_rgb(255_255_255/0.4),inset_0_-1px_0_rgb(255_255_255/0.06)]",
+            : "border-white/30 bg-white/[0.08] shadow-[0_10px_30px_-12px_rgb(0_0_0/0.45),inset_0_1px_0_rgb(255_255_255/0.4),inset_0_-1px_0_rgb(255_255_255/0.06)]",
         )}
       >
         {/* The specular sheen: light catching the top of the glass. */}

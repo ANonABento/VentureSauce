@@ -269,7 +269,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
       {/* The horizon band pans along the arc per screen (decisions 53, 55); first run shows the art in its drop zone instead. */}
       <Masthead scene={SCENE[screen.kind]} />
       {/* Content starts in the faded end of the art, so there is no dead band of empty sky. */}
-      <div className="relative -mt-12">
+      <div className="relative -mt-16">
         {status}
         <ScreenTransition id={screenKey(screen)} direction={direction}>
           {screen.kind === "home" && companies === null && (

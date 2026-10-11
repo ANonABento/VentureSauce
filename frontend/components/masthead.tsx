@@ -23,7 +23,7 @@ export function Masthead({ scene }: { scene: Scene }) {
     <div
       aria-hidden="true"
       // Pulled up behind the floating glass header (56px with its margin, plus the page's 12px padding), so the art shows through it.
-      className="pointer-events-none relative -mx-4 -mt-[68px] h-[176px] overflow-hidden"
+      className="pointer-events-none relative -mx-4 -mt-[68px] h-[196px] overflow-hidden"
       // Solid where it meets the header, gone by the bottom.
       style={{ maskImage: "linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%)" }}
     >
@@ -35,6 +35,12 @@ export function Masthead({ scene }: { scene: Scene }) {
         animate={{ x: `${-FOCUS_X[scene] * 100}%`, y: `${-FOCUS_Y * 100}%`, scaleY: -1 }}
         transition={{ duration: DUR.signature + 0.2, ease: EASE_ENTER }}
       />
+      {/*
+       * Colour for the glass to frost (decision 66): navy deepening into a cobalt glow just under the header,
+       * so the pane blurs a real gradient rather than flat texture.
+       */}
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgb(10_31_61/0.55)_0%,rgb(53_80_230/0.45)_38%,rgb(63_90_245/0.18)_58%,transparent_80%)]" />
+      <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(60%_100%_at_70%_0%,rgb(142_160_255/0.45),transparent_70%)]" />
     </div>
   );
 }
