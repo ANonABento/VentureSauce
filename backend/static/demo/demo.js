@@ -268,12 +268,41 @@ async function mailWire(openId) {
 /* ───────────── Deal flow (CRM look) from the pipeline ───────────── */
 const FILTERS = { all: "All startups", news: "In the news", site: "Confirmed website", quiet: "Under the radar", judges: "Judges' companies" };
 const SHOWN = 150;
-async function dealsView(filter = "all", q = "") {
+/** A company's record, opened beside the table (as CRMs do) instead of leaving the list. */
+async function dealRecord(r, back) {
+  const { notes } = await notes_();
+  const note = notes.find((n) => n.domain === r.site);
+  const people = (r.people || "").split("; ").filter(Boolean);
+  const row = (k, v) => `<div class="df-kv"><span>${k}</span><div>${v}</div></div>`;
+  const ext = (url, text) => `<a href="${url}" target="_blank" rel="noreferrer">${esc(text)} ↗</a>`;
+  return `<aside class="df-rec" aria-label="${esc(r.name)}">
+    <header><div class="org">${logo(r.name)}<div><b>${esc(r.name)}</b><small>${esc([r.sector, r.city, r.state].filter(Boolean).join(" · "))}</small></div></div>
+      <a class="ib" href="${back}" aria-label="Close">✕</a></header>
+    ${r.headline ? `<div class="df-news" ${dragAttrs(r)}><small>In the news · found by Bright Data's SERP API</small><b>${esc(r.headline)}</b><span>Drag into VentureSauce to check it</span></div>` : ""}
+    <h4>Funding on file (SEC Form D)</h4>
+    ${row("Latest round", `<b>${money(r.sold)}</b>${r.target && r.target !== r.sold ? ` of ${money(r.target)}` : ""}${r.open ? ' <span class="round">open</span>' : ""}`)}
+    ${row("Filed", `${esc(day(r.filed))}${r.first_sale ? ` · first sale ${esc(day(r.first_sale))}` : ""}`)}
+    ${row("Security", esc(r.security || "-"))}
+    ${row("All Form Ds", `${money(r.total)} across ${r.offerings} offering${r.offerings === 1 ? "" : "s"} · ${r.investors ?? "?"} investors`)}
+    ${row("Incorporated", esc(r.founded || "-"))}
+    ${people.length ? `<h4>People on the filing</h4><p>${people.map(esc).join(", ")}</p>` : ""}
+    <h4>Profiles (via Bright Data)</h4>
+    ${row("Website", r.site ? `<span draggable="true" data-url="${site(r)}">${ext(site(r), r.site)}</span>` : '<span class="nil">not confirmed</span>')}
+    ${row("LinkedIn", r.li ? ext(r.li.url, `${r.li.employees} people`) : '<span class="nil">no confirmed profile</span>')}
+    ${row("Crunchbase", r.cb ? ext(r.cb.url, r.cb.total ? `${money(r.cb.total)} total funding` : "profile") : '<span class="nil">no confirmed profile</span>')}
+    ${r.quiet ? `<p class="df-note">No funding press found yet: the SEC filing is the only public trace of this raise.</p>` : ""}
+    <div class="df-links">${ext(r.form_d, "Form D on SEC")}${ext(r.edgar, "All filings")}${note ? `<a href="#notes/${slug(note.name)}">Research note</a>` : ""}</div>
+  </aside>`;
+}
+
+async function dealsView(filter = "all", q = "", open = "") {
   const { rows, fetched_at } = await flow();
+  const base = `#deals/${filter}/${q || ""}`;
   q = decodeURIComponent(q || "").toLowerCase();
   const pick = { all: () => true, news: (r) => r.headline && r.site, site: (r) => r.site, quiet: (r) => r.quiet, judges: (r) => r.judges }[filter] || (() => true);
   const hits = rows.filter((r) => pick(r) && (!q || r.name.toLowerCase().includes(q)));
-  const body = hits.slice(0, SHOWN).map((r) => `<tr ${dragAttrs(r)} data-href="#mail/${r.cik}">
+  const rec = open ? rows.find((r) => r.cik === open) : null;
+  const body = hits.slice(0, SHOWN).map((r) => `<tr ${dragAttrs(r)} data-href="${base}/${r.cik}" class="${rec && rec.cik === r.cik ? "on" : ""}">
       <td><div class="org">${logo(r.name)}<div><b>${esc(r.name)}</b><small>${esc(r.headline || [r.sector, r.city].filter(Boolean).join(" · "))}</small></div></div></td>
       <td>${esc(day(r.filed))}</td>
       <td><b>${money(r.sold)}</b>${r.target && r.target !== r.sold ? `<small class="df-of"> of ${money(r.target)}</small>` : ""}${r.open ? ' <span class="round">open</span>' : ""}</td>
@@ -284,7 +313,7 @@ async function dealsView(filter = "all", q = "") {
       <td>${r.quiet ? '<span class="round">no press yet</span>' : ""}${r.judges ? ` <span class="round">${esc(r.judges.relation)}</span>` : ""}</td>
       <td><a href="${r.form_d}" target="_blank" rel="noreferrer">Form D ↗</a></td></tr>`).join("");
   const tabs = Object.entries(FILTERS).map(([k, label]) => `<a href="#deals/${k}" class="${k === filter ? "on" : ""}">${label}</a>`).join("");
-  return `<div class="crm">
+  return `<div class="crm ${rec ? "with-rec" : ""}">
     <aside class="crm-side"><div class="brand"><i></i>Relate</div>
       <div class="crm-search">Search people, orgs…<kbd>⌘K</kbd></div>
       <h6>Lists</h6><a class="on">Deal flow</a>
@@ -296,9 +325,9 @@ async function dealsView(filter = "all", q = "") {
       <div class="crm-views">${tabs}</div>
       <div class="crm-tablewrap"><table class="crm-table"><thead><tr><th>Company</th><th>Latest Form D</th><th>Latest round</th><th>All Form Ds</th><th>LinkedIn</th><th>Crunchbase</th><th>Website</th><th></th><th>Filing</th></tr></thead>
         <tbody>${body || `<tr><td colspan="9" class="nil">No startups match.</td></tr>`}</tbody></table></div>
-    </section></div>`;
+    </section>${rec ? await dealRecord(rec, base) : ""}</div>`;
 }
-function dealsWire(filter = "all") {
+function dealsWire(filter = "all", q = "") {
   document.querySelectorAll(".crm-table tr[data-href]").forEach((r) => (r.onclick = (e) => { if (!e.target.closest("a")) location.hash = r.dataset.href; }));
   const box = $(".df-q");
   box.onkeydown = (e) => { if (e.key === "Enter") location.hash = `#deals/${filter}/${encodeURIComponent(box.value.trim())}`; };

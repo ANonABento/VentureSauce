@@ -377,3 +377,19 @@ a { color: inherit; }
 .fd-table tr[data-ext] { cursor: pointer; }
 .nt-body a { color: inherit; text-decoration: underline; text-decoration-color: #c7c6c4; }
 .nt-body mark { background: #fbf3db; padding: 2px 4px; border-radius: 3px; }
+
+/* Deal flow: a company record beside the table */
+.crm.with-rec { grid-template-columns: 220px 1fr 380px; }
+.crm-table tr.on td { background: #f1f0ff; }
+.df-rec { border-left: 1px solid #e8e9ef; overflow: auto; padding: 18px 20px 96px; background: #fff; }
+.df-rec header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.df-rec .org { display: flex; align-items: center; gap: 10px; } .df-rec .org b { display: block; font-size: 16px; color: #1b1f3b; } .df-rec .org small { color: #8a8da3; }
+.df-rec .lg { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; color: #fff; font-weight: 700; }
+.df-rec .ib { text-decoration: none; color: #6b6f85; font-size: 16px; padding: 4px 8px; border-radius: 6px; } .df-rec .ib:hover { background: #f1f1f6; }
+.df-rec h4 { margin: 18px 0 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: #8a8da3; }
+.df-rec p { margin: 0; line-height: 1.5; color: #3b3f5c; }
+.df-rec .df-news { margin: 4px 0 0; }
+.df-kv { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f3f3f7; }
+.df-kv > span { color: #8a8da3; } .df-kv a { color: #4b44c9; text-decoration: none; }
+.df-rec .df-links { margin-top: 18px; } .df-rec .df-links a { color: #4b44c9; text-decoration: none; border: 1px solid #dfe1ea; border-radius: 6px; padding: 6px 10px; }
+.df-note { margin-top: 12px !important; font-size: 12.5px; color: #8a6d00 !important; background: #fff8e1; padding: 8px 10px; border-radius: 6px; }
