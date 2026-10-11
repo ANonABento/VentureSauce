@@ -439,7 +439,7 @@ function Conversation({ analyst, typing }: { analyst: Analyst; typing: boolean }
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 aria-label="Ask the analyst"
-                placeholder="Did Acme file a new Form D?"
+                placeholder="Did Legora file a new Form D?"
                 className="h-8 min-w-0 flex-1 rounded-full border border-rule-strong bg-surface px-3 text-xs text-ink placeholder:text-graphite"
               />
               <button

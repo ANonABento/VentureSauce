@@ -29,7 +29,6 @@ FAKE = os.getenv("VENTURESAUCE_FAKE", "0" if os.getenv("LLM_API_KEY") else "1") 
 if FAKE:
     print("VentureSauce: FAKE MODE (every upload returns the Acme fixture). Set VENTURESAUCE_FAKE=0 for the real pipeline.")
 HERE = Path(__file__).parent
-SAMPLE_DECK = HERE.parent / "demo" / "acme_ai_deck_FICTIONAL.pdf"
 FEEDBACK_LOG = HERE / "data" / "feedback.jsonl"
 
 app = FastAPI(title="VentureSauce")
@@ -98,7 +97,7 @@ async def analyze(request: Request, file: UploadFile | None = File(None), text: 
     upload = {"filename": file.filename, "data": await file.read()} if file else None
     if not upload and url and url.strip():
         try:
-            upload = await asyncio.to_thread(fetch_url.fetch, url)
+            upload = {**await asyncio.to_thread(fetch_url.fetch, url), "url": url.strip()}
         except fetch_url.LinkError as e:
             raise HTTPException(400, str(e))
         except httpx.HTTPError:
@@ -202,8 +201,8 @@ EXAMPLE_WS = "example"  # built by reset_demo.py: the samples, filed through the
 
 @app.post("/workspace/example")
 def load_example():
-    """"Try it with an example": copy the prebuilt example inbox (fictional Acme + Northwind, real Daytona/Clerk
-    press claims) into this workspace. Instant: nothing is re-run. Replaces what's there."""
+    """"Try it with an example": copy the prebuilt example inbox (real companies only: their own announcements and
+    funding headlines from Data's pipeline, see samples/README.md) into this workspace. Instant: nothing is re-run. Replaces what's there."""
     ws = store.WORKSPACE.get()
     if ws in ("default", EXAMPLE_WS):
         raise HTTPException(400, "Open the app in your own workspace to load the example.")
@@ -379,9 +378,6 @@ def samples_index():
 app.mount("/samples", StaticFiles(directory=SAMPLES), name="samples")
 
 
-@app.get("/sample/acme.pdf", include_in_schema=False)
-def sample_deck():
-    return FileResponse(SAMPLE_DECK, media_type="application/pdf")
 
 
 class Feedback(BaseModel):

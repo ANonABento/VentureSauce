@@ -97,9 +97,9 @@ names. To regenerate the placeholder: `python3 extension/scripts/make_icons.py` 
   - [ ] backend CORS extended to the Vercel origin (owned by Kevin, `backend/main.py`)
 - [ ] `FOLLOW_TABS = false` if the demo is drag-and-drop.
 - [ ] Separate Chrome profile with only this extension loaded.
-- [ ] Demo company tabs open (Daytona, fictional Acme).
+- [ ] Demo desk tabs open (Mail SEC alerts, Saved: Legora, Daytona).
 - [ ] Side panel dragged to about 380–420px.
-- [ ] Demo deck on the desktop (`demo/acme_ai_deck_FICTIONAL.pdf`).
+- [ ] Demo desk open at `<backend>/demo` (real SEC alerts and announcements to drag in).
 - [ ] Cache warm: run the demo flow once beforehand.
 - [ ] Backup screen recording of the full flow.
 - [ ] Mic permission tested once if the voice analyst is shown (see "Voice analyst").

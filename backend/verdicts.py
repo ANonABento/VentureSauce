@@ -278,12 +278,22 @@ def crunchbase_checks(claims: list[dict], cb: dict | None) -> list[dict]:
     context ("couldn't verify" with the figure), never a flag on its own; a close one is a medium-confidence match."""
     total = (cb or {}).get("total_funding_usd")
     if not isinstance(total, (int, float)) or total <= 0:
+        total = None
+    if not total and not isinstance((cb or {}).get("largest_round_usd"), (int, float)):
         return []
     out = []
     common = dict(unit="usd", source="crunchbase", via="brightdata", observed_value=total, source_url=cb.get("url"),
                   source_date=(cb.get("fetched_at") or "")[:10] or None)
+    largest = (cb or {}).get("largest_round_usd")
     for c in claims:
-        if c["claim_type"] != "raised" or _is_ask(c):
+        if c["claim_type"] == "round_size" and not _is_ask(c):
+            # A round is checked only when Crunchbase confirms it (largest round or total); otherwise no row.
+            hit = next((v for v in (largest, total) if isinstance(v, (int, float)) and _close(c["value"], v)), None)
+            if hit:
+                out.append(_check(c, **{**common, "observed_value": hit}, verdict="match", confidence="medium",
+                                  note=f"Crunchbase lists {'a ' + usd(hit) + ' round' if hit == largest else usd(hit) + ' in disclosed funding'}."))
+            continue
+        if c["claim_type"] != "raised" or _is_ask(c) or not total:
             continue
         if _close(c["value"], total):
             out.append(_check(c, **common, verdict="match", confidence="medium",

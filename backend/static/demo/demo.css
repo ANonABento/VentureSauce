@@ -359,3 +359,17 @@ a { color: inherit; }
   .rd { grid-template-columns: 1fr; } .rd-list { display: none; }
   .fd-body { grid-template-columns: 1fr; } .fd-nav { display: none; } .fd-main { margin: 0 8px 8px; } .fd-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fd-brand { width: auto; }
 }
+
+/* Real-data desk: alert links, deal-flow search and source note */
+.df-links { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; }
+.df-links .ds-btn { text-decoration: none; }
+.df-hint { grid-column: 2 / -1; margin: 12px 0 0; font-size: 13px; color: #5f6368; }
+.df-src { margin: 4px 14px 0; font-size: 12px; line-height: 1.45; color: #a3a6c2; }
+.df-q { height: 34px; min-width: 240px; padding: 0 12px; border: 1px solid #dfe1ea; border-radius: 8px; font: inherit; font-size: 13px; }
+.df-of { color: #8a8da3; font-size: 12px; }
+.crm-table a { color: #4b44c9; text-decoration: none; } .crm-table a:hover { text-decoration: underline; }
+.crm-table tr[draggable="true"] { cursor: grab; }
+.df-news { grid-column: 2 / -1; margin: 18px 0 0; padding: 14px 16px; border: 1px solid #dadce0; border-left: 4px solid #1a73e8; border-radius: 8px; background: #f8fafe; cursor: grab; display: grid; gap: 4px; }
+.df-news small { font-size: 11.5px; color: #5f6368; text-transform: uppercase; letter-spacing: .04em; }
+.df-news b { font-size: 16px; color: #202124; }
+.df-news span { font-size: 12.5px; color: #1a73e8; }

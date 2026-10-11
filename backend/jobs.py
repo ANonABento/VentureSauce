@@ -7,6 +7,7 @@ company's full view (checks across ALL of the company's items, contradictions, q
 import asyncio
 import copy
 import json
+import re
 import uuid
 from pathlib import Path
 
@@ -15,7 +16,7 @@ import extract
 import ingest
 import store
 import verdicts
-from sources import minimal_live
+from sources import minimal_live, oso
 from sources import ground_truth
 from sources.ground_truth import get_ground_truth
 
@@ -88,7 +89,7 @@ def company_view(company_id: str, gt: dict | None = None) -> dict:
 
 
 # Bump when check logic or wording changes: saved views from older code are recomputed when next read.
-CHECKS_VERSION = 11
+CHECKS_VERSION = 12
 
 
 def checked_marker() -> dict:
@@ -167,6 +168,14 @@ def _company_header(co: dict, gt: dict) -> dict:
     return header
 
 
+def _own_site(url: str | None, name: str | None) -> str | None:
+    """A dropped link is the company's own site when its host carries the company's name (conexeu.com for Conexeu
+    Sciences); a news article's host (techcrunch.com) is the publisher's, so it isn't used."""
+    host = oso.host(url) if url else None
+    first = re.sub(r"[^a-z0-9]", "", (minimal_live.common_name(name or "").split() or [""])[0].lower())
+    return host if host and len(first) >= 3 and first in host.replace("-", "") else None
+
+
 async def run_real(job: dict, upload: dict | None, text: str | None, kind: str | None, company_id: str | None) -> None:
     # 1. Any input → text → claims → filed under a company.
     item = await asyncio.to_thread(ingest.to_text, upload and upload["filename"], upload and upload["data"], text, kind)
@@ -174,7 +183,14 @@ async def run_real(job: dict, upload: dict | None, text: str | None, kind: str |
     # The name the company goes by ("Daytona"), not its legal one ("Daytona Platforms Inc."), so the inbox reads well
     # and a deck and an email under the two names land on one company.
     name = extracted["company"]["name"]
-    co = store.resolve_company(minimal_live.common_name(name) if name else name, extracted["company"]["domain"], company_id)
+    link = upload and upload.get("url")
+    if link and not name:
+        # A homepage often never says its own name in the text: take the page title's lead ("Quartermaster | ...") when
+        # it matches the site, else the site itself, so the item never lands under whichever company was filed last.
+        lead = re.split(r"\s+[|\-–—:]\s+", item["label"])[0].strip()
+        name = lead if _own_site(link, lead) else oso.host(link)
+    domain = extracted["company"]["domain"] or _own_site(link, name)
+    co = store.resolve_company(minimal_live.common_name(name) if name else name, domain, company_id)
     saved = store.add_item(co["id"], item["kind"], item["label"], extracted["item_date"], extracted["claims"])
     job.update(company_id=co["id"], item_id=saved["id"], company={"id": co["id"], "name": co["name"], "domain": co.get("domain")})
 

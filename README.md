@@ -10,7 +10,7 @@ Drop in a deck, an email, call notes or a screenshot. VentureSauce files it unde
 
 ## Why
 
-- Founders' numbers drift: $10M in the deck, $15M on the SEC filing, 30 people in the email, 18 on LinkedIn.
+- Numbers drift. Quartermaster AI's raise was reported as $43M; its SEC filing shows $122.65M sold. Legora announced 400 people; LinkedIn shows 919.
 - Checking by hand means tabs, filings and spreadsheets for every deal.
 - VentureSauce does it in the side panel, and **every number links to its source**.
 
@@ -63,7 +63,7 @@ The model only **reads**. Every verdict comes from plain rules in code, so the s
 </tr>
 <tr>
 <td><b>Deal inbox.</b> Every company, what's flagged, a daily report.</td>
-<td><b>Company report.</b> ● vs. public records &nbsp; ◇ vs. your own sources.</td>
+<td><b>Company report.</b> Every claim against SEC filings, LinkedIn, Crunchbase and press.</td>
 </tr>
 </table>
 
@@ -88,11 +88,11 @@ cd frontend && npm install && npm run dev   # http://localhost:3000/panel
 #         (for local, use the LOCAL line in extension/config.js)
 ```
 
-- **Demo desk:** `localhost:8000/demo`. Fake Gmail, Drive, Notes and CRM to drag items from.
+- **Demo desk:** `localhost:8000/demo`. SEC raise alerts, a deal-flow table of the pipeline's 1,000 startups, and saved announcements to drag in.
 - **Prefilled inbox:** `localhost:3000/panel?ws=demo`
 - **No keys?** `VENTURESAUCE_FAKE=1` replays a sample run.
 
-Acme AI and Northwind Robotics are fictional. Real companies (Daytona, Clerk, Legora, Lovable, Harvey) appear only through their own public statements.
+Everything in the demo is real: SEC filings, Bright Data's LinkedIn, Crunchbase and press data, and companies' own announcements. Nothing is invented.
 
 ## Built with
 

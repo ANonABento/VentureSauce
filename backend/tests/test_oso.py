@@ -36,3 +36,12 @@ def test_crunchbase_total_matches_or_is_context_never_a_flag():
     [other] = v.crunchbase_checks([claim(150_000_000)], cb)
     assert other["verdict"] == "unverifiable"
     assert v.crunchbase_checks([claim(1)], None) == []
+
+
+def test_crunchbase_confirms_a_round_or_says_nothing():
+    cb = {"total_funding_usd": None, "largest_round_usd": 100_000_000, "url": "https://example.com/cb"}
+    rnd = lambda value: {"claim_type": "round_size", "value": value, "claim_text": "raises"}
+    [ok] = v.crunchbase_checks([rnd(100_000_000)], cb)
+    assert ok["verdict"] == "match" and ok["observed_value"] == 100_000_000
+    assert v.crunchbase_checks([rnd(43_000_000)], cb) == []
+    assert v.crunchbase_checks([{"claim_type": "raised", "value": 5, "claim_text": "x"}], cb) == []

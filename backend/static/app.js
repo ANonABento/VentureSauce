@@ -119,10 +119,6 @@ $("runText").addEventListener("click", () => {
   if (!t) return;
   const form = new FormData(); form.append("text", t); start(form);
 });
-$("sample").addEventListener("click", async () => {
-  const blob = await (await fetch(`${API}/sample/acme.pdf`)).blob();
-  sendFile(new File([blob], "acme_ai_deck_FICTIONAL.pdf", { type: "application/pdf" }));
-});
 $("replay").addEventListener("click", async () => {
   render(await (await fetch(`${API}/jobs/${jobId}?replay=1`)).json());
   $("error").hidden = $("replay").hidden = true;
@@ -191,8 +187,6 @@ function sendFile(f) {
 }
 
 health();
-// ?sample=1 runs the fictional Acme deck immediately (demo links, smoke tests).
-if (new URLSearchParams(location.search).has("sample")) $("sample").click();
 
 // ---------------------------------------------------------------------------
 // Talk to your briefing: streamed answers, spoken sentence by sentence, interruptible by voice or text.

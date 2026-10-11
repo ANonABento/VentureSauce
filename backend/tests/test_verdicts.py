@@ -9,7 +9,7 @@ import pytest
 import verdicts as v
 
 TODAY = date(2026, 10, 10)
-ACME = json.loads((Path(__file__).parent.parent / "fixtures" / "acme_ground_truth.json").read_text())
+ACME = json.loads((Path(__file__).parent / "acme_ground_truth.json").read_text())
 
 
 def claim(t, value, text="x"):

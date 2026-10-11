@@ -44,7 +44,7 @@ AMBIGUOUS = {
     "athena": re.compile(r"\b(legal|law|lawyers?|attorneys?)\b", re.I),
     "clerk": re.compile(r"\b(auth|authentication|identity|developers?|user management|anthology|menlo)\b", re.I),
 }
-MAX_FILINGS = 8
+MAX_FILINGS = 20  # frequent small filers (monthly crowdfunding-style) need more than a handful to add up
 # Homepages for the demo companies, for lookups that arrive without a domain (prewarm, a name typed in).
 KNOWN_DOMAINS = {"daytona": "daytona.io", "clerk": "clerk.com", "legora": "legora.com", "tailor-brands": "tailorbrands.com",
                  "base44": "base44.com", "pavoot": "pavoot.com", "athena": "athena.law",
@@ -305,7 +305,8 @@ def lookup(company: str, domain: str | None = None, use_cache: bool = True) -> d
     company = common_name(company)
     key = slug(company)
     cached = _read(CACHE / f"{key}.json")
-    if use_cache and cached:
+    # A lookup cached without a domain had no way to find LinkedIn/Crunchbase; redo it once the domain is known.
+    if use_cache and cached and (cached.get("domain") or not (domain or KNOWN_DOMAINS.get(key))):
         age = datetime.now(timezone.utc) - datetime.fromisoformat(cached["fetched_at"])
         if age.days < CACHE_DAYS:
             return cached
