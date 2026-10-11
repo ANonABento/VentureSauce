@@ -109,3 +109,19 @@ def test_small_earlier_round_without_press_is_not_flagged():
     claims = [claim("round_size", 2_000_000), claim("round_size", 10_000_000)]
     checks = v.press_checks(claims, ACME["press"])
     assert {c["claimed_value"]: c["verdict"] for c in checks} == {2_000_000: "unverifiable", 10_000_000: "match"}
+
+
+def test_a_named_round_labelled_as_raised_matches_its_own_offering():
+    # "Raised a $50M Series C" is one round; the company's Form Ds together total more.
+    fd = form_d(49_999_982, 50_000_000, history=[{"total_sold": 28_999_976, "total_offering": 29_000_000, "url": "u2"},
+                                                {"total_sold": 14_859_986, "total_offering": 15_000_000, "url": "u3"}])
+    c = only(v.form_d_checks([claim("raised", 50_000_000, "Clerk raised a $50 million Series C")], fd, today=TODAY), "raised")
+    assert c["verdict"] == "match"
+
+
+def test_the_round_being_raised_now_is_not_checked():
+    fd = form_d(15_000_000)
+    checks = v.form_d_checks([claim("round_size", 25_000_000, "Raising a $25M Series A")], fd, today=TODAY)
+    checks += v.press_checks([claim("round_size", 25_000_000, "Series A target: $25M, opening November")],
+                             [{"amount_mentioned": 10_000_000, "url": "p", "title": "Acme raises $10M"}])
+    assert not [c for c in checks if c["claim_type"] == "round_size"]

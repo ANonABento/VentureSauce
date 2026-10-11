@@ -10,6 +10,7 @@ only a gap when the difference is large and the filing is old; a HIGHER amount c
 converted SAFEs/notes, so it's never high confidence.
 """
 
+import re
 from datetime import date
 
 HEADCOUNT_MATCH_RATIO = 0.7  # LinkedIn undercounts; 70% of the claim counts as a match
@@ -136,10 +137,19 @@ def _higher_than_claim(claimed: int, sold: int) -> tuple[str, str, str]:
                              "extension, or converted SAFEs/notes counted in this round.")
 
 
+ASK = re.compile(r"\b(raising|raise a|target|opening|seeking|plan(?:s|ning)? to raise|will raise|looking to raise|the ask)\b", re.I)
+NAMED_ROUND = re.compile(r"\b(series [a-f]|seed|pre-seed|round)\b", re.I)
+
+
+def _is_ask(c: dict) -> bool:
+    """A round the company is raising now ("Raising a $25M Series A") hasn't happened, so nothing can confirm it."""
+    return bool(ASK.search(c.get("claim_text") or ""))
+
+
 def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None = None, today: date | None = None) -> list[dict]:
     today = today or date.today()
     out = []
-    money = [c for c in claims if c["claim_type"] in ("raised", "round_size")]
+    money = [c for c in claims if c["claim_type"] in ("raised", "round_size") and not _is_ask(c)]
     common = dict(unit="usd", source="form_d", via="sec_edgar")
     if not form_d:
         who = f" under '{company}'" if company else ""
@@ -169,7 +179,14 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
     all_sold = sum(f.get("total_sold") or 0 for f in _filings(form_d))
     for c in (c for c in money if c["claim_type"] == "raised"):
         claimed = c["value"]
-        if _close(claimed, all_sold):
+        # "Raised a $50M Series C" is one round, not the total to date: check it against that offering.
+        one = next((f for f in _filings(form_d) if _close(claimed, f.get("total_sold") or 0)
+                    or (isinstance(f.get("total_offering"), (int, float)) and _close(claimed, f["total_offering"]))), None)
+        if one and NAMED_ROUND.search(c.get("claim_text") or "") and not _close(claimed, all_sold):
+            add(c, "match", "high", f"Matches the Form D filed {one.get('filing_date')}: {usd(one.get('total_sold') or 0)} sold"
+                + (f" of {usd(one['total_offering'])}" if isinstance(one.get("total_offering"), (int, float)) else "")
+                + f". All of the company's Form D offerings together total {usd(all_sold)}.", one.get("total_sold") or 0)
+        elif _close(claimed, all_sold):
             add(c, "match", "high", f"Form D filings total {usd(all_sold)} sold, consistent with {usd(claimed)} claimed.", all_sold)
         elif all_sold > claimed:
             add(c, *_higher_than_claim(claimed, all_sold), all_sold)
@@ -249,7 +266,7 @@ def press_checks(claims: list[dict], press: list[dict]) -> list[dict]:
     out = []
     common = dict(source="press", via="brightdata")
     amounts = [p for p in press if p.get("amount_mentioned")]
-    rounds = [c for c in claims if c["claim_type"] == "round_size"]
+    rounds = [c for c in claims if c["claim_type"] == "round_size" and not _is_ask(c)]
     largest = max((c["value"] for c in rounds), default=None)
     for c in rounds:
         hit = next((p for p in amounts if _close(p["amount_mentioned"], c["value"])), None)
