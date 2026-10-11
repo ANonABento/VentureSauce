@@ -13,7 +13,7 @@ import { SourceFlow } from "./viz";
 export type DropInput = { file?: File; text?: string; kind?: "email" | "notes" };
 
 /**
- * The home screen's drop zone (decision 46): the landscape with an inset
+ * The home screen's drop zone (decisions 46, 55): the horizon art with an inset
  * dashed frame and a white card. On drop the art breaks into its dot grid and
  * the card becomes the source flow. `tall` is the empty-inbox size.
  */
@@ -51,23 +51,24 @@ export function ArtDropZone({
       }}
       onDragLeave={() => setOver(false)}
       onDrop={onDropFile}
-      className={cn("relative overflow-hidden rounded-xl bg-tray", tall ? "min-h-[300px]" : "min-h-[236px]")}
+      className={cn("relative overflow-hidden rounded-xl bg-paper", tall ? "min-h-[340px]" : "min-h-[290px]")}
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- a static local asset; next/image adds nothing here */}
       <img
-        src="/art/landscape.webp"
+        src="/art/horizon-1x1.webp"
         alt=""
-        className={cn("absolute inset-0 h-full w-full object-cover object-[50%_35%]", busy && "dissolve")}
+        className={cn("absolute inset-0 h-full w-full object-cover object-bottom", busy && "dissolve")}
       />
       {/* The inset frame; amber while something is dragged over it (one of amber's four uses). */}
       <div
         aria-hidden="true"
         className={cn(
           "pointer-events-none absolute inset-2.5 rounded-lg border border-dashed transition-colors duration-150 ease-out",
-          over ? "border-accent bg-accent-wash/30" : busy ? "border-transparent" : "border-surface/90",
+          over ? "border-accent bg-accent-wash/30" : busy ? "border-transparent" : "border-data/30",
         )}
       />
-      <div className="relative flex min-h-[inherit] items-center justify-center p-6">
+      {/* The card sits in the sky; the planet stays visible beneath it. */}
+      <div className="relative flex min-h-[inherit] items-start justify-center px-6 pt-6 pb-24">
         <motion.div
           className="fragment w-full max-w-[290px] rounded-xl px-5 py-5 text-center"
           animate={{ y: over ? -4 : 0, scale: over ? 1.015 : 1 }}

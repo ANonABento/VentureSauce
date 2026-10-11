@@ -138,29 +138,30 @@
  */
 
 /*
- * ---- v3 "Blue hour" palette (2026-10-10, references.md decision 54) ----
- * Overrides every color above. The cream + pine + amber set read as Claude's
- * palette; v3 is cool white, blue-black ink, steel-blue data and one cobalt
- * accent, with no green and no orange. Mirrors frontend/app/globals.css.
- * Contrast (WCAG): ink 16.9:1, graphite 5.4:1, data 6.6:1, signal 5.9:1 on
- * paper; signal 4.9:1 on tray-strong. Cobalt is never used for text.
+ * ---- v3 white + navy (2026-10-10, references.md decisions 54-55) ----
+ * Overrides every color above. Sampled from the horizon art (assets/horizon-*):
+ * paper = its sky, ink = its planet navy, accent = its cobalt atmosphere line.
+ * No green and no orange (cream + pine + amber read as Claude's palette).
+ * Contrast (WCAG): ink 15.2:1, graphite 5.5:1, data 8.4:1, signal 5.8:1 on
+ * paper; graphite 4.6:1 and signal 4.9:1 on tray-strong. Cobalt is never text.
+ * Mirrors frontend/app/globals.css.
  */
 :root {
-  --paper: #f5f7fa;
+  --paper: #f3f6fa;
   --surface: #ffffff;
-  --ink: #0e1621;
-  --graphite: #5b6675;
-  --rule: #e3e8ee;
-  --rule-strong: #cdd5de;
+  --ink: #0a1f3d;           /* navy: titles, primary buttons */
+  --graphite: #55657a;
+  --rule: #e1e7ef;
+  --rule-strong: #c9d3df;
   --signal: #b42846;        /* crimson: discrepancies only */
   --signal-wash: #fbe8ec;
-  --steady: #2f5d7c;        /* "consistent" is data blue, not green */
-  --steady-wash: #e7eef4;
-  --tray: #e9eff4;
-  --tray-strong: #dce5ec;
-  --data: #2f5d7c;
-  --accent: #3b5bff;        /* cobalt: logo, running step, drop hover, selection */
-  --accent-wash: #e4e9ff;
+  --steady: #1f4a7a;        /* "consistent" is data blue, not green */
+  --steady-wash: #e6edf6;
+  --tray: #e8eef6;
+  --tray-strong: #dae3ee;
+  --data: #1f4a7a;
+  --accent: #3f5af5;        /* cobalt: logo, running step, drop hover, selection */
+  --accent-wash: #e3e8fe;
 
   --vs-data: var(--data);
   --vs-bg-tray: var(--tray);
@@ -168,5 +169,5 @@
   --vs-accent: var(--accent);
   --vs-accent-subtle: var(--accent-wash);
   --vs-focus-ring: var(--data);
-  --vs-shadow-fragment: 0 1px 2px rgb(14 22 33 / 0.04), 0 6px 16px -4px rgb(14 22 33 / 0.07);
+  --vs-shadow-fragment: 0 1px 2px rgb(10 31 61 / 0.04), 0 6px 16px -4px rgb(10 31 61 / 0.07);
 }

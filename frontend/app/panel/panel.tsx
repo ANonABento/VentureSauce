@@ -53,7 +53,7 @@ type Screen =
   | { kind: "digest" };
 
 const DEPTH: Record<Screen["kind"], number> = { home: 0, deals: 1, digest: 1, company: 2 };
-const SCENE: Record<Screen["kind"], Scene> = { home: "sunrise", deals: "ridges", company: "river", digest: "mist" };
+const SCENE: Record<Screen["kind"], Scene> = { home: "home", deals: "deals", company: "company", digest: "digest" };
 const screenKey = (screen: Screen) => (screen.kind === "company" ? `company-${screen.id}` : screen.kind);
 
 const JOB_STEP: Record<string, string> = {
@@ -255,9 +255,9 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
 
   return (
     <PanelFrame>
-      {/* The landscape band pans to each screen's part of the valley (decision 53); first run shows the art in its drop zone instead. */}
+      {/* The horizon band pans along the arc per screen (decisions 53, 55); first run shows the art in its drop zone instead. */}
       {!(screen.kind === "home" && firstRun) && <Masthead scene={SCENE[screen.kind]} />}
-      <div className={cn(!(screen.kind === "home" && firstRun) && "relative -mt-12")}>
+      <div className={cn(!(screen.kind === "home" && firstRun) && "relative mt-1")}>
         {status}
         <ScreenTransition id={screenKey(screen)} direction={direction}>
           {screen.kind === "home" && companies === null && (

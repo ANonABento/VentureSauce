@@ -158,9 +158,9 @@ function Cover({
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element -- a static local asset; next/image adds nothing here */}
       <img
-        src="/art/landscape.webp"
+        src="/art/horizon.webp"
         alt=""
-        className="mt-4 h-20 w-full rounded-xl object-cover object-[center_62%]"
+        className="mt-4 h-24 w-full rounded-xl object-cover object-[center_78%]"
       />
       <h1 className="mt-7 font-serif text-[44px] leading-[48px] tracking-[-0.03em] text-ink">
         {name}

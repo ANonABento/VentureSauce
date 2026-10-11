@@ -10,30 +10,30 @@
   color-scheme: light;
 
   /*
-   * "Blue hour" (references.md decision 54): cool white paper, blue-black ink,
-   * steel-blue data, one cobalt accent. No green and no orange; the earlier
-   * cream + pine + amber read as Claude's palette.
+   * White + navy (references.md decision 55), sampled from the horizon art:
+   * paper is its sky (#F3F6FA), ink its planet navy, accent its atmosphere
+   * line. No green and no orange.
    */
-  --paper: #f5f7fa;
+  --paper: #f3f6fa;
   --surface: #ffffff;
-  --ink: #0e1621;
-  --graphite: #5b6675;
-  --rule: #e3e8ee;
-  --rule-strong: #cdd5de;
-  /* Discrepancies only: crimson, a cool red kept apart from the accent. */
+  --ink: #0a1f3d;
+  --graphite: #55657a;
+  --rule: #e1e7ef;
+  --rule-strong: #c9d3df;
+  /* Discrepancies only: crimson, the one warm note, kept apart from the accent. */
   --signal: #b42846;
   --signal-wash: #fbe8ec;
   /* "Consistent" and "nothing flagged" read as data blue, not green. */
-  --steady: #2f5d7c;
-  --steady-wash: #e7eef4;
-  /* Mist trays hold the one hero element per screen. */
-  --tray: #e9eff4;
-  --tray-strong: #dce5ec;
-  /* Neutral figures and source links. */
-  --data: #2f5d7c;
-  /* Cobalt, 4 uses only: logo, running step, drop hover, selection. Never text. */
-  --accent: #3b5bff;
-  --accent-wash: #e4e9ff;
+  --steady: #1f4a7a;
+  --steady-wash: #e6edf6;
+  /* Light navy trays hold the one hero element per screen. */
+  --tray: #e8eef6;
+  --tray-strong: #dae3ee;
+  /* Neutral figures and source links: navy blue. */
+  --data: #1f4a7a;
+  /* Cobalt (the atmosphere line), 4 uses only: logo, running step, drop hover, selection. Never text. */
+  --accent: #3f5af5;
+  --accent-wash: #e3e8fe;
 }
 
 :root[data-theme="dark"] {
@@ -171,8 +171,8 @@
   background: var(--surface);
   border-radius: 8px;
   box-shadow:
-    0 1px 2px rgb(14 22 33 / 0.04),
-    0 6px 16px -4px rgb(14 22 33 / 0.07);
+    0 1px 2px rgb(10 31 61 / 0.04),
+    0 6px 16px -4px rgb(10 31 61 / 0.07);
 }
 
 /*
