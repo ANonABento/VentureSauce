@@ -1,5 +1,6 @@
 """Company view: all of a company's items → merged claims → public-record checks + cross-source contradictions + questions."""
 
+import re
 import logging
 
 import factcheck
@@ -21,12 +22,29 @@ def item_day(item: dict) -> str:
     return (item.get("item_date") or item["received_at"])[:10]
 
 
+def readable(filename: str) -> str:
+    """'00_acme_deck_FICTIONAL.pdf' → 'Acme deck': no numbering, test-data tag, extension or underscores."""
+    base = re.sub(r"\.[A-Za-z0-9]{2,5}$", "", filename)
+    base = re.sub(r"^\d+[_\-\s]+", "", base)
+    base = re.sub(r"[_\-\s]*\(?fictional\b[^)]*\)?", "", base, flags=re.I)
+    base = re.sub(r"_+", " ", base) if " " not in base else base  # a file name, not a page title ("X - Legora")
+    base = re.sub(r"(?<=\w)-(?=\w)", " ", base) if " " not in filename else base
+    base = base.strip()
+    return base[:1].upper() + base[1:] if base else filename
+
+
 def item_label(item: dict) -> str:
-    """'Deck · acme.pdf' for files; just 'Email' / 'Call notes' for pasted text."""
+    """'Acme deck' for files whose name says what they are, 'Deck · Q3 plan' otherwise; just 'Email' / 'Call notes'
+    for pasted text."""
     label = item["label"]
     if label.startswith("Pasted") or label in KIND_NAMES.values():
         return item_name(item)
-    return f"{item_name(item)} · {label}"
+    name = readable(label)
+    words = {w.rstrip("s") for w in re.findall(r"[a-z]+", name.lower())}
+    # Text and notes files can be anything (a press quote, a memo), so their name alone; "Call notes" may be wrong.
+    if item["kind"] in ("notes", "text") or words & {w.rstrip("s") for w in re.findall(r"[a-z]+", item_name(item).lower())}:
+        return name
+    return f"{item_name(item)} · {name}"
 
 
 def all_claims(items: list[dict]) -> list[dict]:
