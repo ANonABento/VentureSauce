@@ -31,7 +31,8 @@ function resolveWorkspace(): string {
     // ?ws=demo shows the prebuilt showcase for this visit only, so plain /panel goes back to your own inbox after.
     if (asked === "demo") return asked;
     // ?ws=new starts a fresh, empty inbox (e.g. right before a live demo).
-    if (asked === "new") localStorage.removeItem("vs.ws");
+    // Older builds saved "demo" as the browser's own inbox; drop it so plain /panel is yours again.
+    if (asked === "new" || localStorage.getItem("vs.ws") === "demo") localStorage.removeItem("vs.ws");
     else if (valid(asked)) localStorage.setItem("vs.ws", asked!);
     const saved = localStorage.getItem("vs.ws");
     if (valid(saved)) return saved!;
