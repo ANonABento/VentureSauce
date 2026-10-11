@@ -5,7 +5,9 @@
   roles work the same as with Data's tables.
 - Press: Google News search fetched through Bright Data's Web Unlocker (BRIGHTDATA_API_TOKEN, BRIGHTDATA_ZONE).
   Every row says `"via": "brightdata"`.
-- LinkedIn: not fetched here (Bright Data's LinkedIn dataset runs as a slow async job); stays None.
+- LinkedIn: the company page its own homepage links to (never a guessed slug: linkedin.com/company/legora is a
+  different 2-person page), fetched through the same Web Unlocker. Headcount is LinkedIn's member count
+  (numberOfEmployees); company_size is the range the company picked. No homepage link → None.
 
 Results are cached in data/gt_cache/ and, for the demo companies, snapshotted in fixtures/ground_truth/ by
 prewarm_sources.py. Lookup order: fresh cache → live → snapshot, and each source fails on its own.
@@ -40,6 +42,9 @@ AMBIGUOUS = {
     "clerk": re.compile(r"\b(auth|authentication|identity|developers?|user management|anthology|menlo)\b", re.I),
 }
 MAX_FILINGS = 8
+# Homepages for the demo companies, for lookups that arrive without a domain (prewarm, a name typed in).
+KNOWN_DOMAINS = {"daytona": "daytona.io", "clerk": "clerk.com", "legora": "legora.com", "tailor-brands": "tailorbrands.com",
+                 "base44": "base44.com", "pavoot": "pavoot.com", "athena": "athena.law"}
 
 _sec_lock = threading.Lock()
 _sec_last = [0.0]
@@ -224,6 +229,55 @@ def press(company: str) -> list[dict]:
     return out
 
 
+# ── LinkedIn via the company's own homepage ──────────────────────────────────
+
+LI_LINK = re.compile(r"linkedin\.com/company/([A-Za-z0-9_\-]+)", re.I)
+BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
+
+
+def _unlocker(url: str) -> str:
+    r = httpx.post("https://api.brightdata.com/request", timeout=60,
+                   headers={"Authorization": f"Bearer {os.environ['BRIGHTDATA_API_TOKEN']}"},
+                   json={"zone": os.environ["BRIGHTDATA_ZONE"], "format": "raw", "url": url})
+    r.raise_for_status()
+    return r.text
+
+
+def linkedin_slug(domain: str) -> str | None:
+    """The LinkedIn company page the homepage links to (the most-linked one if there are several)."""
+    import fetch_url  # the network guard for user-supplied hosts
+    host = re.sub(r"^https?://", "", domain).split("/")[0].lower()
+    fetch_url._public(host)
+    r = httpx.get(f"https://{host}/", follow_redirects=True, timeout=15, headers={"User-Agent": BROWSER_UA})
+    slugs = [m.lower() for m in LI_LINK.findall(r.text)]
+    return max(set(slugs), key=slugs.count) if slugs else None
+
+
+def linkedin(company: str, domain: str | None) -> dict | None:
+    domain = domain or KNOWN_DOMAINS.get(slug(company))
+    if not domain or not os.environ.get("BRIGHTDATA_API_TOKEN") or not os.environ.get("BRIGHTDATA_ZONE"):
+        return None
+    page = linkedin_slug(domain)
+    if not page:
+        return None
+    html = _unlocker(f"https://www.linkedin.com/company/{page}/")
+    org = None
+    for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S):
+        try:
+            data = json.loads(block)
+        except ValueError:
+            continue
+        org = next((o for o in (data.get("@graph") or [data]) if o.get("@type") == "Organization"), None) or org
+    employees = ((org or {}).get("numberOfEmployees") or {}).get("value")
+    if not isinstance(employees, int):
+        return None
+    size = re.search(r"Company size\s*</dt>\s*<dd[^>]*>\s*([^<]+)", html)
+    return {"employees": employees, "company_size": size.group(1).strip() if size else None,
+            "name": org.get("name"), "website": org.get("sameAs"),
+            "url": f"https://www.linkedin.com/company/{page}/", "linked_from": f"https://{domain}/",
+            "fetched_at": datetime.now(timezone.utc).isoformat(), "via": "brightdata"}
+
+
 # ── Lookup with cache and snapshot ───────────────────────────────────────────
 
 def _read(path: Path) -> dict | None:
@@ -242,8 +296,9 @@ def lookup(company: str, domain: str | None = None, use_cache: bool = True) -> d
         if age.days < CACHE_DAYS:
             return cached
     snap = _read(SNAPSHOTS / f"{key}.json") or {}
-    result = {"company": company, "domain": domain, "linkedin": None}
-    for name, fetch in (("form_d", lambda: form_d(company)), ("press", lambda: press(company))):
+    result = {"company": company, "domain": domain}
+    for name, fetch in (("form_d", lambda: form_d(company)), ("linkedin", lambda: linkedin(company, domain)),
+                        ("press", lambda: press(company))):
         try:
             result[name] = fetch()
         except Exception as e:  # partial results: one source failing must not break the rest

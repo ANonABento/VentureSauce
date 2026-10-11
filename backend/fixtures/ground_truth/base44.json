@@ -1,8 +1,17 @@
 {
  "company": "Base44",
  "domain": null,
- "linkedin": null,
  "form_d": null,
+ "linkedin": {
+  "employees": 714,
+  "company_size": "201-500 employees",
+  "name": "Base44",
+  "website": "http://base44.com",
+  "url": "https://www.linkedin.com/company/base44/",
+  "linked_from": "https://base44.com/",
+  "fetched_at": "2026-10-11T01:30:28.541911+00:00",
+  "via": "brightdata"
+ },
  "press": [],
- "fetched_at": "2026-10-11T00:43:48.468252+00:00"
+ "fetched_at": "2026-10-11T01:30:29.659484+00:00"
 }

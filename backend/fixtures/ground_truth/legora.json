@@ -1,7 +1,6 @@
 {
  "company": "Legora",
  "domain": null,
- "linkedin": null,
  "form_d": {
   "entity_name": "Legora, Inc.",
   "cik": "2071663",
@@ -82,6 +81,16 @@
   "first_filing_date": null,
   "via": "sec_edgar"
  },
+ "linkedin": {
+  "employees": 919,
+  "company_size": "501-1,000 employees",
+  "name": "Legora",
+  "website": "legora.com",
+  "url": "https://www.linkedin.com/company/wearelegora/",
+  "linked_from": "https://legora.com/",
+  "fetched_at": "2026-10-11T01:30:19.125010+00:00",
+  "via": "brightdata"
+ },
  "press": [
   {
    "title": "Legora raises $550 million Series D to fuel US growth - Legora",
@@ -138,5 +147,5 @@
    "via": "brightdata"
   }
  ],
- "fetched_at": "2026-10-11T00:43:45.791203+00:00"
+ "fetched_at": "2026-10-11T01:30:20.563785+00:00"
 }

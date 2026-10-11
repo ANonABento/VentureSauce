@@ -135,3 +135,8 @@ def test_a_raised_round_is_checked_against_press_about_that_round():
     [ok] = v.press_checks([claim("raised", 24_000_000, "Daytona raised a $24M Series A")], press)
     assert ok["verdict"] == "match"
     assert v.press_checks([claim("raised", 90_000_000, "Daytona raised a $90M Series B")], press) == []
+
+
+def test_linkedin_far_above_the_claim_is_a_low_confidence_match():
+    [c] = v.headcount_checks([claim("headcount", 40)], {"employees": 76, "url": "https://example.com/li"})
+    assert c["verdict"] == "match" and c["confidence"] == "low" and "more than the 40" in c["note"]

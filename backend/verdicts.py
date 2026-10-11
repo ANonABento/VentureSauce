@@ -94,7 +94,11 @@ def headcount_checks(claims: list[dict], linkedin: dict | None) -> list[dict]:
         ratio = obs / claimed if claimed else 0
         small = obs < 20  # small teams are often missing from LinkedIn
         common.update(observed_value=obs, source_url=linkedin.get("url"), source_date=(linkedin.get("fetched_at") or "")[:10] or None)
-        if ratio >= HEADCOUNT_MATCH_RATIO:
+        if ratio > 1.5:
+            out.append(_check(c, **common, verdict="match", confidence="low",
+                              note=f"LinkedIn lists {obs} people, more than the {claimed} claimed. LinkedIn counts anyone who lists "
+                                   "the company (contractors, people who left), so this doesn't contradict the claim."))
+        elif ratio >= HEADCOUNT_MATCH_RATIO:
             out.append(_check(c, **common, verdict="match", confidence="medium",
                               note=f"LinkedIn lists {obs} employees, consistent with the claim of {claimed}."))
         else:

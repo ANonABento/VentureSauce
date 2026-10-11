@@ -17,7 +17,8 @@ def test_offline_falls_back_to_the_saved_snapshot(monkeypatch, tmp_path):
     monkeypatch.setenv("BRIGHTDATA_ZONE", "z")
     found = minimal_live.lookup("Daytona", use_cache=False)
     assert found["form_d"]["entity_name"] == "Daytona Platforms Inc."
-    assert set(found["from_snapshot"]) == {"form_d", "press"}
+    assert set(found["from_snapshot"]) == {"form_d", "linkedin", "press"}
+    assert found["linkedin"]["url"] == "https://www.linkedin.com/company/daytonaio/"
     assert not list(tmp_path.iterdir())  # a snapshot answer is never cached as if it were live
 
 
@@ -42,3 +43,23 @@ def test_press_keeps_only_the_companys_funding_headlines(monkeypatch):
     assert [p["url"] for p in press] == ["https://x.example/1"]
     assert press[0]["amount_mentioned"] == 50_000_000 and press[0]["via"] == "brightdata"
     assert press[0]["date"] == "2025-07-02"
+
+
+def test_linkedin_needs_a_link_from_the_homepage(monkeypatch):
+    monkeypatch.setenv("BRIGHTDATA_API_TOKEN", "x")
+    monkeypatch.setenv("BRIGHTDATA_ZONE", "x")
+    monkeypatch.setattr(minimal_live, "linkedin_slug", lambda domain: None)
+    monkeypatch.setattr(minimal_live, "_unlocker", lambda url: (_ for _ in ()).throw(AssertionError("guessed a page")))
+    assert minimal_live.linkedin("Legora", "legora.com") is None
+
+
+def test_linkedin_reads_the_member_count(monkeypatch):
+    monkeypatch.setenv("BRIGHTDATA_API_TOKEN", "x")
+    monkeypatch.setenv("BRIGHTDATA_ZONE", "x")
+    monkeypatch.setattr(minimal_live, "linkedin_slug", lambda domain: "wearelegora")
+    page = ('<script type="application/ld+json">{"@graph":[{"@type":"Organization","name":"Legora","sameAs":"legora.com",'
+            '"numberOfEmployees":{"value":919}}]}</script><dt>Company size </dt><dd class="x">501-1,000 employees</dd>')
+    monkeypatch.setattr(minimal_live, "_unlocker", lambda url: page)
+    li = minimal_live.linkedin("Legora", "legora.com")
+    assert li["employees"] == 919 and li["company_size"] == "501-1,000 employees"
+    assert li["url"] == "https://www.linkedin.com/company/wearelegora/"

@@ -1,7 +1,6 @@
 {
  "company": "Daytona",
  "domain": null,
- "linkedin": null,
  "form_d": {
   "entity_name": "Daytona Platforms Inc.",
   "cik": "1977563",
@@ -71,6 +70,16 @@
   "first_filing_date": null,
   "via": "sec_edgar"
  },
+ "linkedin": {
+  "employees": 76,
+  "company_size": "11-50 employees",
+  "name": "Daytona",
+  "website": "https://www.daytona.com",
+  "url": "https://www.linkedin.com/company/daytonaio/",
+  "linked_from": "https://daytona.io/",
+  "fetched_at": "2026-10-11T01:30:02.383186+00:00",
+  "via": "brightdata"
+ },
  "press": [
   {
    "title": "Daytona: $24 Million Series A Raised For Building Composable Computers For AI Agents - Pulse 2.0",
@@ -109,5 +118,5 @@
    "via": "brightdata"
   }
  ],
- "fetched_at": "2026-10-11T00:43:42.363977+00:00"
+ "fetched_at": "2026-10-11T01:30:03.954329+00:00"
 }

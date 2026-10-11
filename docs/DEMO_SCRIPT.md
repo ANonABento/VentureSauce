@@ -29,7 +29,7 @@ The story: an investor's week is a pile of decks, emails, call notes and press. 
 | **Nebius** | Step 2 | The open model reading decks, emails and screenshots. One line is enough. |
 | **Cognition** | Close | How we built it: say what Devin did for us (EDGAR parser, tests). Not on screen. |
 
-**Daytona, what to expect** (checked live on 2026-10-10): the $24M Series A **matches** the Form D filed 2026-02-05 ($23.26M sold of $23.80M); the panel adds that a newer Form D filed 2026-08-17 shows $48.27M sold of a $60M offering, still open ($11.73M unsold), a later round the article doesn't cover. Matt Turck is listed on the filing, and press via Bright Data reports $24M. Say it neutrally ("a newer round still open"). If the network fails, the saved snapshot in `backend/fixtures/ground_truth/` answers instead. LinkedIn headcount isn't fetched yet, so don't promise it.
+**Daytona, what to expect** (checked live on 2026-10-10): the $24M Series A **matches** the Form D filed 2026-02-05 ($23.26M sold of $23.80M); the panel adds that a newer Form D filed 2026-08-17 shows $48.27M sold of a $60M offering, still open ($11.73M unsold), a later round the article doesn't cover. Matt Turck is listed on the filing, and press via Bright Data reports $24M. Say it neutrally ("a newer round still open"). If the network fails, the saved snapshot in `backend/fixtures/ground_truth/` answers instead. LinkedIn (live, the page daytona.io links to) lists 76 people; a team-size claim below that is checked against it.
 
 **Rules:** Acme and Northwind are fictional; say so if asked. Daytona content is only its real reported claims, with the source link. We never put invented claims under a sponsor's name.
 

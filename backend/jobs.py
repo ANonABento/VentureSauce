@@ -82,7 +82,7 @@ def company_view(company_id: str, gt: dict | None = None) -> dict:
 
 
 # Bump when check logic or wording changes: saved views from older code are recomputed when next read.
-CHECKS_VERSION = 7
+CHECKS_VERSION = 8
 
 
 def checked_marker() -> dict:

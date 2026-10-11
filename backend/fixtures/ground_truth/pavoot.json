@@ -1,8 +1,17 @@
 {
  "company": "Pavoot",
  "domain": null,
- "linkedin": null,
  "form_d": null,
+ "linkedin": {
+  "employees": 2,
+  "company_size": "2-10 employees",
+  "name": "Pavoot (YC P26)",
+  "website": "https://pavoot.com/?utm_source=linkedin&utm_medium=outreach&utm_campaign=yc_launch",
+  "url": "https://www.linkedin.com/company/pavoot/",
+  "linked_from": "https://pavoot.com/",
+  "fetched_at": "2026-10-11T01:30:33.342499+00:00",
+  "via": "brightdata"
+ },
  "press": [],
- "fetched_at": "2026-10-11T00:43:50.015473+00:00"
+ "fetched_at": "2026-10-11T01:30:34.508971+00:00"
 }
