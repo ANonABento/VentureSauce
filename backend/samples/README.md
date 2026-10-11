@@ -13,7 +13,16 @@ invented. Drop them in the panel, or drag them from the demo desk's Saved app (`
 
 | Email | Source | What it shows (live) |
 | --- | --- | --- |
-| `Legora.eml` | Legora due diligence report (10 Oct 2026, Research) as an email, PDF attached | Files under Legora as an email item, alongside `12_legora_public_claims.txt` |
+| `Legora.eml` | Legora due diligence report (10 Oct 2026, Research), full text as a plain-text email | Files under Legora as an email item, alongside `12_legora_public_claims.txt` |
+| `BrightData.eml` | Bright Data's About page | No funding round (EMK Capital-owned since 2017): 50,000+ organizations, AR over $300M in 2025, "450+ team members" (2022 figure) |
+| `Base44.eml` | Maor Shlomo's and Wix's posts; Wix's acquisition release | $200M ARR, 10M+ users; acquired by Wix for ~$80M plus earn-outs, no VC round or Form D |
+| `SenseAI.eml` | testwithsenseai.com | Thin: only "1000+ signed up" and tester pay; no funding, team or revenue published |
+| `Clerk.eml` | Clerk's blog | $50M Series C (Menlo, Anthology Fund) vs. its Form D |
+| `Cognition.eml` | Cognition's blog | Over $2B Series E at $48B (a16z, Accel); run-rate revenue almost $900M |
+| `Daytona.eml` | Daytona's blog, press release, Tech.eu, AlleyWatch | $24M Series A (FirstMark), "20-person team", $31M total; the Aug 2026 Form D is newer |
+| `FishAudio.eml` | Fish Audio's blog and press release | $52M seed (Coreline, Capital Today), $21M ARR, 8M+ users, team of 22 |
+| `MongoDB.eml` | MongoDB's Q2 FY27 and Q4 FY26 releases, FY26 10-K | Public company: $771.8M quarterly revenue, 65,200+ customers, 5,636 employees |
+| `Stripe.eml` | Stripe's newsroom and 2025 annual letter | $159B tender offer (Thrive, Coatue, a16z), $1.9T total volume in 2025 |
 
 More real input: any company in the desk's **Deal flow** (1,000 startups from SEC Form D, via Data's pipeline). Drag a
 row with a confirmed website into the panel, and it reads the site and checks it against the filings, LinkedIn and

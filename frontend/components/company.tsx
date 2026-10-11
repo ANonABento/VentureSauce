@@ -21,7 +21,7 @@ import { Collapse } from "./collapse";
 import { DeltaRows } from "./delta-rows";
 import { CountUp } from "./motion";
 import { sauceUrl } from "@/lib/sauce";
-import { DropZone } from "./drop-zone";
+import { DropZone, FILE_ACCEPT } from "./drop-zone";
 import { FigureTile } from "./home";
 import { ItemTag } from "./inbox";
 import { Sheet } from "./sheet";
@@ -517,7 +517,7 @@ export function CompanyScreen({
             ref={fileRef}
             type="file"
             hidden
-            accept=".pdf,.pptx,.png,.jpg,.jpeg,.webp,.eml,.txt,.md"
+            accept={FILE_ACCEPT}
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) onDrop({ file, companyId });

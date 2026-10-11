@@ -1,12 +1,15 @@
 """Any input → plain text with page/slide markers.
 
-Handles: text PDFs, scanned/image PDFs (vision), images (vision), PPTX, .eml emails, web pages (.html), plain text.
+Handles: text PDFs, scanned/image PDFs (vision), images (vision), PPTX, DOCX, .eml emails, web pages (.html),
+plain text and other text files (.csv, .json, ...).
 Raw files are never stored; only the extracted text flows on (legal-and-compliance.md).
 """
 
 import base64
 import io
 import re
+import zipfile
+from html import unescape
 from html.parser import HTMLParser
 from concurrent.futures import ThreadPoolExecutor
 from email import policy
@@ -19,6 +22,28 @@ from llm import transcribe_image
 
 MAX_VISION_PAGES = 25
 IMAGE_EXT = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".heic")
+TEXT_EXT = (".txt", ".md", ".markdown", ".csv", ".tsv", ".json", ".log", ".rtf", ".xml", ".yaml", ".yml")
+
+
+def from_docx(data: bytes) -> str:
+    """Word document → one line per paragraph (and per table row), from word/document.xml. No extra dependency."""
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        xml = z.read("word/document.xml").decode("utf-8", "replace")
+    paras = re.findall(r"<w:p[ >].*?</w:p>", xml, flags=re.S)
+    lines = ("".join(re.findall(r"<w:t(?: [^>]*)?>([^<]*)</w:t>", p)) for p in paras)
+    return "\n".join(unescape(line).strip() for line in lines if line.strip())
+
+
+def _looks_like_text(data: bytes) -> bool:
+    """An unknown file is read as text only if it decodes as UTF-8 and has no binary bytes."""
+    head = data[:4096]
+    if b"\x00" in head:
+        return False
+    try:
+        head.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    return True
 
 
 def _jpeg_b64(img: Image.Image, max_side: int = 1600) -> str:
@@ -38,9 +63,19 @@ def _marked(pages: list[str], label: str = "page") -> str:
     return "\n".join(f"[{label} {i}] {t.strip()}" for i, t in enumerate(pages, 1) if t and t.strip())
 
 
+def _page_text(page) -> str:
+    """Page text; re-read with a tighter word gap when tightly kerned PDFs (e.g. LaTeX reports) lose their spaces.
+    Not the default: the tighter gap splits some numbers ("15000" → "15 000") on ordinary pages."""
+    text = page.extract_text() or ""
+    words = re.findall(r"[A-Za-z]+", text)
+    if words and (sum(len(w) > 18 for w in words) >= 3 or sum(map(len, words)) / len(words) > 8):
+        text = page.extract_text(x_tolerance=1.5) or text
+    return text.strip()
+
+
 def from_pdf(data: bytes) -> tuple[str, str]:
     with pdfplumber.open(io.BytesIO(data)) as pdf:
-        texts = [(p.extract_text() or "").strip() for p in pdf.pages]
+        texts = [_page_text(p) for p in pdf.pages]
         # Scanned/exported-as-image decks have little or no text layer: read those pages with vision.
         thin = [i for i, t in enumerate(texts) if len(t) < 40]
         if thin and len(thin) >= len(texts) / 2:
@@ -130,13 +165,19 @@ def to_text(filename: str | None, data: bytes | None, text: str | None, kind_hin
             body, kind = from_eml(data), "email"
         elif name.endswith(IMAGE_EXT):
             body, kind = _vision([Image.open(io.BytesIO(data))])[0], "image"
-        elif name.endswith((".txt", ".md")):
-            body, kind = data.decode("utf-8", "replace"), kind_hint or "notes"
+        elif name.endswith(".docx"):
+            body, kind = from_docx(data), "notes"
         elif name.endswith((".html", ".htm")) or data[:300].lstrip().lower().startswith((b"<!doctype html", b"<html")):
             title, body = from_html(data)
             kind, filename = kind_hint or "text", title or filename  # the page's title is a better label than its URL
+        elif name.endswith(TEXT_EXT) or _looks_like_text(data):
+            raw = data.decode("utf-8", "replace")
+            # A text file with mail headers is an email (e.g. a saved message without the .eml extension).
+            mail = re.match(r"(?:(?:From|To|Date|Subject|Cc):[^\n]*\n){2,}", raw.lstrip(), flags=re.I)
+            body, kind = raw, kind_hint or ("email" if mail else "notes")
         else:
-            raise ValueError(f"unsupported file type: {filename}. Use PDF, PPTX, an image, .eml, or paste text")
+            raise ValueError(f"unsupported file type: {filename}. Use PDF, PPTX, DOCX, an image, .eml, a text file, "
+                             "or paste text")
     else:
         body, kind = (text or "").strip(), kind_hint or "text"
     if not body.strip():

@@ -49,7 +49,12 @@ def transcribe_image(jpeg_b64: str) -> str:
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{jpeg_b64}"}},
                 ]}],
             )
-            return (r.choices[0].message.content or "").strip()
+            text = (r.choices[0].message.content or "").strip()
+            if text:
+                return text
+            # Reasoning models can spend the whole budget thinking and return no content: try the next model.
+            last = RuntimeError(f"{model} returned no text")
+            log.warning("vision %s returned no text; trying next model", model)
         except Exception as e:
             log.warning("vision %s failed (%s); trying next model", model, e)
             last = e

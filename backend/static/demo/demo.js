@@ -157,20 +157,33 @@ const subject = (r) => `${r.name} raised ${money(r.sold)}${r.target && r.target 
 // Real emails in the inbox (backend/samples/*.eml), above the SEC alerts. Dragging one drops its text into the panel.
 const EMAILS = ["Legora.eml"];
 let MAILS = null;
+// Every .eml in samples/ (from the /samples/ index), falling back to EMAILS if the index can't be read.
+async function emailFiles() {
+  try {
+    const html = await fetch(S).then((r) => (r.ok ? r.text() : ""));
+    const found = [...html.matchAll(/href="\/samples\/([^"]+\.eml)"/g)].map((m) => decodeURIComponent(m[1]));
+    return found.length ? [...new Set(found)] : EMAILS;
+  } catch {
+    return EMAILS;
+  }
+}
 async function emails() {
-  if (!MAILS) MAILS = (await Promise.all(EMAILS.map(async (file) => {
+  if (!MAILS) MAILS = (await Promise.all((await emailFiles()).map(async (file) => {
     const raw = await load(file);
     if (!raw) return null;
     const { headers: h, body } = parseEml(raw);
     const from = h.from || "";
     const date = h.date ? new Date(h.date) : null;
     return { id: file.replace(/\.eml$/, "").toLowerCase(), mail: true, unread: true, subj: h.subject || file, body,
+             from, to: h.to || "", rawDate: h.date || "",
              who: from.replace(/\s*<.*>$/, "") || from, addr: (from.match(/<(.+)>/) || [])[1] || "",
              date: date && !isNaN(date) ? date.toISOString().slice(0, 10) : null };
-  }))).filter(Boolean);
+  }))).filter(Boolean).sort((a, b) => (b.rawDate ? Date.parse(b.rawDate) : 0) - (a.rawDate ? Date.parse(a.rawDate) : 0));
   return MAILS;
 }
-const mailDrag = (m) => `draggable="true" data-text="${esc(`${m.subj}\n\n${m.body}`)}"`;
+// The dragged text keeps the mail headers: the panel files text as an email only when it starts with From:/Subject:.
+const mailText = (m) => `From: ${m.from}\nTo: ${m.to}\nDate: ${m.rawDate}\nSubject: ${m.subj}\n\n${m.body}`;
+const mailDrag = (m) => `draggable="true" data-text="${esc(mailText(m))}"`;
 function emailRow(m) {
   return `<a class="gm-row ${m.unread ? "unread" : ""}" href="#mail/${m.id}" ${mailDrag(m)}>
       <span class="chk"></span><span class="star">${ic("star")}</span>

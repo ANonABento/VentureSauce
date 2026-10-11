@@ -11,14 +11,22 @@ import { JOB_FLOW } from "./loading-steps";
 /** A link (`url`) comes from a paste or drop anywhere in the panel (use-paste-to-file.ts); the backend downloads or reads it. */
 export type DropInput = { file?: File; text?: string; url?: string; kind?: "email" | "notes" };
 
-// What the backend reads (backend/ingest.py): decks, scans, slides, screenshots, emails, notes.
+// What the backend reads (backend/ingest.py): decks, scans, slides, screenshots, emails, Word docs, notes and other
+// text files. Keep in sync with FILE_ACCEPT: a file outside this list is rejected by the strip without a word.
 const ACCEPT = {
   "application/pdf": [".pdf"],
   "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
-  "image/*": [".png", ".jpg", ".jpeg", ".webp"],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  "image/*": [".png", ".jpg", ".jpeg", ".webp", ".gif", ".heic"],
   "message/rfc822": [".eml"],
-  "text/plain": [".txt", ".md"],
+  "text/plain": [".txt", ".md", ".markdown", ".log"],
+  "text/csv": [".csv", ".tsv"],
+  "application/json": [".json"],
+  "text/html": [".html", ".htm"],
 };
+
+/** The same list for plain <input type="file"> pickers. */
+export const FILE_ACCEPT = Object.values(ACCEPT).flat().join(",");
 
 /**
  * The dropzone (decisions 59–60): the shadcn/Kibo UI dropzone, plain. One

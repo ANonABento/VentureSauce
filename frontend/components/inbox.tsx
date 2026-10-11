@@ -14,6 +14,7 @@ import { type CompanySummary, type ItemKind, KIND_NAME } from "@/lib/api";
 import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
 import { Button } from "./button";
 import { cn } from "./cn";
+import { FILE_ACCEPT } from "./drop-zone";
 import { JOB_FLOW } from "./loading-steps";
 import { formatDate } from "./report-utils";
 import { SignalStrip, SourceFlow } from "./viz";
@@ -184,7 +185,7 @@ export function DropStrip({
           ref={fileRef}
           type="file"
           hidden
-          accept=".pdf,.pptx,.png,.jpg,.jpeg,.webp,.eml,.txt,.md"
+          accept={FILE_ACCEPT}
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (file) onDrop({ file });
