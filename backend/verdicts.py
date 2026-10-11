@@ -185,8 +185,24 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
         remaining = form_d.get("total_remaining") or 0
         still_open = (f" Round still open: {usd(remaining)} of {usd(offering)} unsold as of {filed}."
                       if remaining > 0 and offering else "")
+        def fits(f):
+            off = f.get("total_offering") if isinstance(f.get("total_offering"), (int, float)) else None
+            return (off and _close(claimed, off)) or _close(claimed, f.get("total_sold") or 0)
+
+        earlier = next((f for f in _filings(form_d)[1:] if fits(f)), None)
         if (offering and _close(claimed, offering)) or _close(claimed, sold):
             add(c, "match", "high", f"Latest Form D: {usd(offering)} offering, {usd(sold)} sold." + still_open, sold, offering)
+        elif earlier and not fits(form_d):
+            # e.g. a Series A announced in February, and a newer, larger offering filed in August: the claim is
+            # about the earlier round, and the newer filing is context, not a contradiction.
+            e_off = earlier.get("total_offering") if isinstance(earlier.get("total_offering"), (int, float)) else None
+            out.append(_check(c, **{**common, "source_url": earlier.get("url") or url, "source_date": earlier.get("filing_date")},
+                              observed_value=earlier.get("total_sold"), offered=e_off or earlier.get("total_sold"),
+                              verdict="match", confidence=_cap("high", ceiling),
+                              note=f"Matches the Form D filed {earlier.get('filing_date')}: {usd(earlier.get('total_sold') or 0)} sold"
+                                   + (f" of {usd(e_off)}" if e_off else "") + ". A newer Form D filed "
+                                   + f"{filed} shows {usd(sold)} sold" + (f" of {usd(offering)}" if offering else "")
+                                   + ", a later round not covered by this claim." + still_open.replace(" Round still open", " That round is still open") + caveat))
         elif sold > claimed:
             add(c, *_higher_than_claim(claimed, sold), sold, offering)
         else:
@@ -203,12 +219,16 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
                               note="Listed as a related person on Form D." if found
                               else "Not listed on Form D (the filing may predate their appointment)." + caveat))
         roles = {r["name"]: r for r in form_d.get("related_people") or []}
-        if not weak:
+        # Only a board slide (deck, slides, screenshot) lists the board; "X joined the board" in an email or press
+        # piece can't leave anyone out.
+        board_list = [c for c in board if c.get("item_kind") in (None, "pdf", "pdf_scanned", "slides", "image")]
+        if not weak and board_list:
             for p in persons:
                 if not any(_same_person(c["value"], p) for c in board):
                     role = roles.get(p)
-                    if role and not role["director"]:
-                        # An officer or promoter who isn't on the board isn't missing from a board slide: skip.
+                    if role and (not role["director"] or role.get("officer")):
+                        # An officer or promoter who isn't on the board isn't missing from a board slide, and a
+                        # founder/CEO who is a director is expected: skip both. Outside directors are what we flag.
                         continue
                     out.append(_check(None, claim_type="board", claim_text="(not named in the deck)", unit="person",
                                       source="form_d", via="sec_edgar", observed_value=p, source_url=url, source_date=filed,

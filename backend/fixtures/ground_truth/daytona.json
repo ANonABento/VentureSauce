@@ -1,0 +1,113 @@
+{
+ "company": "Daytona",
+ "domain": null,
+ "linkedin": null,
+ "form_d": {
+  "entity_name": "Daytona Platforms Inc.",
+  "cik": "1977563",
+  "accession": "0001977563-26-000002",
+  "filing_date": "2026-08-17",
+  "date_of_first_sale": "2026-07-31",
+  "total_offering": 60000000,
+  "total_sold": 48274000,
+  "total_remaining": 11726000,
+  "num_investors": 6,
+  "url": "https://www.sec.gov/Archives/edgar/data/1977563/000197756326000002/xslFormDX01/primary_doc.xml",
+  "is_amendment": false,
+  "related_persons": [
+   "Ivan Burazin",
+   "Vedran Jukic",
+   "Kevin Zhang",
+   "Matt Turck"
+  ],
+  "related_people": [
+   {
+    "name": "Ivan Burazin",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Vedran Jukic",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Kevin Zhang",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Matt Turck",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   }
+  ],
+  "city": "New York",
+  "state": "NY",
+  "year_of_inc": "2023",
+  "industry_group": "Other Technology",
+  "history": [
+   {
+    "accession": "0001977563-26-000001",
+    "filing_date": "2026-02-05",
+    "date_of_first_sale": "2026-01-22",
+    "total_offering": 23797784,
+    "total_sold": 23259739,
+    "total_remaining": 538045,
+    "num_investors": 9,
+    "url": "https://www.sec.gov/Archives/edgar/data/1977563/000197756326000001/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   }
+  ],
+  "edgar_company_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1977563&type=D",
+  "first_filing_date": null,
+  "via": "sec_edgar"
+ },
+ "press": [
+  {
+   "title": "Daytona: $24 Million Series A Raised For Building Composable Computers For AI Agents - Pulse 2.0",
+   "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTFBfUTI3SUZfNjFfLVp1SVQ5QUR6aElGblY1OFBzaW9wRjd6LWFQRVM3YnFSaldVYlFVTlR2MFAySWNyM3lidjNwdmw4R29weGJqMHJfR25UT2pEbGvSAWBBVV95cUxNLTJ6VDFoNTlxZElReGNlQld1dXQ0MzlvYXZzcXVjT3pxSTlMZFZJVDVtNDJSaXhJMjdyMGFoNWpDdGNPZFdmZ25lZHhTb0d4ZC1jUFh4SDRtYjVRMWdlZGI?oc=5",
+   "date": "2026-02-05",
+   "source": "Pulse 2.0",
+   "snippet": "Daytona: $24 Million Series A Raised For Building Composable Computers For AI Agents",
+   "amount_mentioned": 24000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Daytona Raises $24M to Replace Cloud Infrastructure Built for Humans With One Built for Agents - AlleyWatch",
+   "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOQjVpUnhVeVhZWXZrTk9sNjA0b3ZUZEdvZzQyYk1jdWhPQmo3WnN2ODlPckZ1b1Y0SGxfbU0xU0xXUVJ6OEcwTXF1MWRXOVRuRDRocGVMZXAzdHhDdU1GTnRUTFBkckhiWm5iUEQxaFBnU2tHWE1acHlfbnFuQ2JjWWEtZllVbFFkRlZCa0RpYllvVVJPZ3ZpYWRGeW1TUnQ1M1RhU0R0VldKamFWbUxN?oc=5",
+   "date": "2026-02-23",
+   "source": "AlleyWatch",
+   "snippet": "Daytona Raises $24M to Replace Cloud Infrastructure Built for Humans With One Built for Agents",
+   "amount_mentioned": 24000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Daytona raises $2M to build enterprise-grade alternative to GitHub Codespaces - SiliconANGLE",
+   "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOaUsyMDNyTUZGOEdwQURCSlUtUFdCbU9Vem5UM00yNFdOSDVPbm1pOVpiNEZ5YlpYb2RROTFQeGQ2UklveXZWdVhZc2xBbkZfQnd6OUZVd3ZTX0w1NEJwOXE5QndpZ0lnOWx2akRhOEFaSGpxLVJwRjdHRlNsVlpfSWQtNk52SVlfeVBuNXRjYnUtSkpraWEzdHFNcXdDOXY2SU9rUF9OWDI1M0k?oc=5",
+   "date": "2023-11-06",
+   "source": "SiliconANGLE",
+   "snippet": "Daytona raises $2M to build enterprise-grade alternative to GitHub Codespaces",
+   "amount_mentioned": 2000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Daytona Raises $5M for its Open-Source Development Environment Management Platform - AlleyWatch",
+   "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQWmVnQ08xTExOSXBuYlBNTXVfYWtIY0pGMlJxNDJpdGd4UFFqVTdTdFhSb3ZXbklVNmNSVXFPdTN6T19UMzh0YzVWVGJ1LVNjdkN4MkNzN3QtZ0JUZlR3NjI2TlpMMlJUbUFWSUZrWTVsaTl0bGw1d2J1Vm1GV3dCcDBiUTcwMnVkMGF0bXg5VXpYVzJNQTFKRXh4SDVkLU80akRUT3A0VW4?oc=5",
+   "date": "2024-06-25",
+   "source": "AlleyWatch",
+   "snippet": "Daytona Raises $5M for its Open-Source Development Environment Management Platform",
+   "amount_mentioned": 5000000,
+   "via": "brightdata"
+  }
+ ],
+ "fetched_at": "2026-10-11T00:43:42.363977+00:00"
+}

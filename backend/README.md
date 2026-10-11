@@ -23,7 +23,7 @@ uv run uvicorn main:app --reload --port 8000
 `POST /analyze` also takes optional `kind` (`email` | `notes`) for pasted text and `company_id` to file the item under a known company. Files: PDF (text or scanned), PPTX, PNG/JPG/WEBP, .eml, .txt/.md. A `url` (pasted or dropped link) is downloaded and run the same way; a web page is read as text with its title as the label. Links to private addresses, login-walled share links (DocSend, Drive, Dropbox…) and files over 25 MB are refused with a readable 400; `/samples/…` links are read from disk.
 
 Fake mode replays `fixtures/job_acme.json` (fictional company) with ~1.5s per step.
-`sources/ground_truth.py` is a stub until Data replaces it.
+Public records are live but minimal until Data's version replaces `sources/ground_truth.py`: `sources/minimal_live.py` reads Form D straight from SEC EDGAR (no key) and searches press through Bright Data's Web Unlocker (`BRIGHTDATA_API_TOKEN`, `BRIGHTDATA_ZONE`); LinkedIn headcount isn't fetched yet. Lookups are cached in `data/gt_cache/` (3 days). `uv run python prewarm_sources.py` saves snapshots of the demo companies to `fixtures/ground_truth/` (real fetched data with source links), used when a live lookup fails. Acme AI is still the fictional fixture.
 
 ## Demo reset
 
