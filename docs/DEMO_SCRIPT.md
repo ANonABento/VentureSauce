@@ -8,7 +8,7 @@ The story: an investor's week is a pile of decks, emails, call notes and press. 
 | --- | --- | --- | --- |
 | 1 ★ | **Mail inbox** | Panel open, inbox empty. | "This is an investor's week: a deck, a founder update, call notes, a partner forwarding press. Every one of them makes claims, and nobody checks them against each other." |
 | 2 ★ | **Mail → "Deck for Thursday"** | Drag the *Acme AI deck.pdf* attachment into the panel. | "I drop the deck. It's read by an open model on **Nebius**, filed under Acme AI, and every claim is checked against SEC Form D, plus LinkedIn and press via **Bright Data**." Point at a "via Bright Data" label. |
-| 3 | **Decks → slide 2** (or the panel row) | Click the Form D source link on the "raised" row. | "The deck says $12M raised. The Form D says $15M sold, and lists a director the board slide leaves out. Every row links to its receipt." |
+| 3 | **Decks → slide 13 (the ask)** (or the panel row) | Click the Form D source link on the "raised" row. | "The deck says $12M raised. The Form D says $15M sold, and lists a director the board slide leaves out. Every row links to its receipt." |
 | 4 ★ | **Mail → "Acme AI - September update"** | ⋮ → *Copy message text*, then ⌘V in the panel (or ⋮ → *Download message* and drop the .eml). | "The founder's update says ARR is $2.4M; the deck said $3.1M. 18 people vs 25. Your own sources disagree, and no public database would catch that." |
 | 5 ★ | **Notes → "Acme AI: call with Jane"** | ••• → *Copy page text*, ⌘V. | "My call notes: '$15M total', not $12M. And 'Alex Director helps out', who is on the Form D." |
 | 6 | **Acme AI portal** | ⌘⌃⇧4 a screenshot of the dashboard to the clipboard, ⌘V. | "Even a screenshot: 8% month-over-month here, 20% in the deck." |

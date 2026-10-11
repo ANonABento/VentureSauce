@@ -6,7 +6,7 @@
 
 const S = "/samples/";
 const ME = { name: "Taylor Kim", addr: "taylor@fund.example", fund: "Kettle Peak Ventures" };
-const DECK_PAGES = 6;
+const DECK_PAGES = 13;
 const DECK_PDF = { file: "00_acme_deck_FICTIONAL.pdf", name: "Acme AI deck.pdf" };
 
 const MAIL = [
@@ -19,7 +19,7 @@ const MAIL = [
     attachments: [{ file: DECK_PDF.file, name: DECK_PDF.name, kind: "PDF", thumb: "/static/demo/img/acme-deck-1.webp" }] },
   { id: "shared", from: "Decks", addr: "no-reply@decks.fund.example", when: "Oct 9", date: "Oct 9, 2026, 4:10 PM", unread: true,
     subject: "Jane Founder shared \"Acme AI deck\" with you",
-    body: "Jane Founder (jane@acme-ai.example) shared a document with you.\n\nAcme AI deck\n6 pages\n\n\"Ahead of Thursday - let me know if anything's unclear.\"",
+    body: "Jane Founder (jane@acme-ai.example) shared a document with you.\n\nAcme AI deck\n13 pages\n\n\"Ahead of Thursday - let me know if anything's unclear.\"",
     cta: { label: "View document", href: "#decks/acme" } },
   { id: "daytona", from: "Morgan Lee", addr: "morgan@fund.example", when: "Oct 9", date: "Oct 9, 2026, 6:20 PM", unread: true,
     subject: "Daytona", label: "Deals", clip: "daytona",

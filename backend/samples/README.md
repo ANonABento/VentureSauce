@@ -4,7 +4,7 @@ Drop these in order (tester app at `/`, or the panel at `localhost:3000/panel`).
 
 | File | Kind | What it should show |
 | --- | --- | --- |
-| `00_acme_deck_FICTIONAL.pdf` | Deck | Creates **Acme AI**. Form D, LinkedIn and press checks (fictional ground truth) |
+| `00_acme_deck_FICTIONAL.pdf` | Deck (13 slides) | Creates **Acme AI**. Form D, LinkedIn and press checks (fictional ground truth). Also unverifiable extras (market size, the $25M Series A ask) that become founder questions |
 | `01_acme_founder_email.eml` | Email | Filed under Acme. **Your sources disagree**: ARR $3.1M vs $2.4M, headcount 25 vs 18 |
 | `02_acme_call_notes.txt` | Call notes | Raised $12M vs $15M joins the disagreements; Alex Director flagged |
 | `03_unnamed_quick_note.txt` | Note | No company named: filed under the most recent (Acme). Headcount 30 joins the spread |
