@@ -152,6 +152,36 @@ export type RangeValue = { value: number; label: string };
 
 const LABEL_W = 76;
 const PAD = 5;
+/** Points closer than this share one marker label: theirs would collide whichever row they took. */
+const MERGE_PX = LABEL_W / 2;
+
+/** Points that share one label: equal values, or values that sit within MERGE_PX of the group's first point. */
+type RangeGroup = { x: number; values: number[]; labels: string[] };
+
+function groupPoints(points: (RangeValue & { x: number })[]): RangeGroup[] {
+  const groups: { first: number; xs: number[]; values: number[]; labels: string[] }[] = [];
+  for (const p of points) {
+    const last = groups.at(-1);
+    if (last && (p.value === last.values[0] || p.x - last.first < MERGE_PX)) {
+      groups[groups.length - 1] = {
+        ...last,
+        xs: [...last.xs, p.x],
+        values: [...last.values, p.value],
+        labels: [...last.labels, p.label],
+      };
+    } else {
+      groups.push({ first: p.x, xs: [p.x], values: [p.value], labels: [p.label] });
+    }
+  }
+  return groups.map((g) => ({ x: (g.xs[0] + g.xs[g.xs.length - 1]) / 2, values: g.values, labels: g.labels }));
+}
+
+/** "$12M: Email, Slides, Notes; $15M: Deck, Call notes": every source, grouped by value. */
+function describeRange(sorted: RangeValue[], format: (n: number) => string): string {
+  const byValue = new Map<number, string[]>();
+  for (const v of sorted) byValue.set(v.value, [...(byValue.get(v.value) ?? []), v.label]);
+  return [...byValue].map(([value, labels]) => `${format(value)}: ${labels.join(", ")}`).join("; ");
+}
 
 /** Labels go below the line unless that row is crowded; each takes whichever row leaves it more room. */
 function placeLabels<T extends { x: number }>(points: T[]) {
@@ -169,17 +199,22 @@ function placeLabels<T extends { x: number }>(points: T[]) {
 
 /**
  * Every source's value on one number line. The spread between the lowest and
- * highest is dithered in brick; each dot names its source. Labels that would
- * collide flip above the line.
+ * highest is shaded; each marker names its source. Sources that agree (or sit
+ * too close to label apart) share one marker: one value and "Email +2", with
+ * the full list in the tooltip and the accessible label. Labels that would
+ * still collide flip above the line.
  */
 export function RangePlot({
   values,
   format,
   delay = 0,
+  figure = "serif",
 }: {
   values: RangeValue[];
   format: (n: number) => string;
   delay?: number;
+  /** The value labels' voice: serif (default) or Geist Mono, the "data" voice (decision 66). */
+  figure?: "serif" | "mono";
 }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const sorted = [...values].sort((a, b) => a.value - b.value);
@@ -188,17 +223,22 @@ export function RangePlot({
   const inner = Math.max(0, width - PAD * 2);
   const at = (v: number) => PAD + (hi === lo ? inner / 2 : ((v - lo) / (hi - lo)) * inner);
 
-  const placed = placeLabels(sorted.map((v) => ({ ...v, x: at(v.value) })));
+  const placed = placeLabels(groupPoints(sorted.map((v) => ({ ...v, x: at(v.value) }))));
   const anyAbove = placed.some((p) => !p.below);
   const lineY = anyAbove ? 46 : 8;
   const bandStart = snap(at(lo));
   const bandWidth = Math.max(DOT, snap(at(hi) - at(lo)));
+  // One dot per distinct value; a value several sources share gets a larger dot.
+  const dots = [...new Set(sorted.map((v) => v.value))].map((value) => ({
+    value,
+    shared: sorted.filter((v) => v.value === value).length > 1,
+  }));
 
   return (
     <div
       ref={ref}
       role="img"
-      aria-label={sorted.map((v) => `${v.label}: ${format(v.value)}`).join("; ")}
+      aria-label={describeRange(sorted, format)}
       className="relative w-full"
       style={{ height: lineY + 50 }}
     >
@@ -221,38 +261,64 @@ export function RangePlot({
             animate={{ scaleX: 1 }}
             transition={{ duration: DUR.signature, ease: EASE_ENTER, delay: delay + 0.15 }}
           />
+          {dots.map((dot, i) => {
+            const size = dot.shared ? 13 : 9;
+            return (
+              <motion.span
+                key={dot.value}
+                aria-hidden="true"
+                className="absolute rounded-full bg-ink ring-2 ring-surface"
+                style={{ width: size, height: size, left: at(dot.value) - size / 2, top: lineY - size / 2 + 0.5 }}
+                initial={{ opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ ...SPRING, delay: delay + 0.2 + i * STAGGER * 2 }}
+              />
+            );
+          })}
           {placed.map((p, i) => {
             const edge = i === 0 ? "start" : i === placed.length - 1 ? "end" : "middle";
             const left = Math.min(Math.max(p.x - LABEL_W / 2, 0), width - LABEL_W);
+            const low = Math.min(...p.values);
+            const high = Math.max(...p.values);
+            const more = p.labels.length - 1;
             return (
-              <div key={i} aria-hidden="true">
-                <motion.span
-                  className="absolute h-[9px] w-[9px] rounded-full bg-ink ring-2 ring-surface"
-                  style={{ left: p.x - 4.5, top: lineY - 4 }}
-                  initial={{ opacity: 0, scale: 0.4 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ ...SPRING, delay: delay + 0.2 + i * STAGGER * 2 }}
-                />
-                <motion.span
+              <motion.span
+                key={i}
+                aria-hidden="true"
+                title={p.labels.map((label, j) => `${label}: ${format(p.values[j])}`).join("\n")}
+                className={cn(
+                  "absolute flex flex-col",
+                  edge === "start" && "items-start text-left",
+                  edge === "end" && "items-end text-right",
+                  edge === "middle" && "items-center text-center",
+                )}
+                style={{
+                  width: LABEL_W,
+                  left: edge === "start" ? Math.max(0, p.x - PAD) : edge === "end" ? Math.min(width, p.x + PAD) - LABEL_W : left,
+                  top: p.below ? lineY + 10 : lineY - 44,
+                }}
+                initial={{ opacity: 0, y: p.below ? -4 : 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: DUR.base, ease: EASE_ENTER, delay: delay + 0.3 + i * STAGGER * 2 }}
+              >
+                <span
                   className={cn(
-                    "absolute flex flex-col",
-                    edge === "start" && "items-start text-left",
-                    edge === "end" && "items-end text-right",
-                    edge === "middle" && "items-center text-center",
+                    "whitespace-nowrap text-ink",
+                    figure === "mono"
+                      ? "font-mono font-medium tracking-[-0.03em]"
+                      : "font-serif tracking-[-0.02em]",
+                    // A merged pair of near values prints as a range, a size down so it fits the label.
+                    low === high ? (figure === "mono" ? "text-lg leading-6" : "text-xl leading-6") : "text-[13px] leading-6",
                   )}
-                  style={{
-                    width: LABEL_W,
-                    left: edge === "start" ? Math.max(0, p.x - PAD) : edge === "end" ? Math.min(width, p.x + PAD) - LABEL_W : left,
-                    top: p.below ? lineY + 10 : lineY - 44,
-                  }}
-                  initial={{ opacity: 0, y: p.below ? -4 : 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: DUR.base, ease: EASE_ENTER, delay: delay + 0.3 + i * STAGGER * 2 }}
                 >
-                  <span className="font-serif text-xl leading-6 tracking-[-0.02em] text-ink">{format(p.value)}</span>
-                  <span className="max-w-full truncate text-[11px] leading-4 text-graphite">{p.label}</span>
-                </motion.span>
-              </div>
+                  {low === high ? format(low) : `${format(low)}–${format(high)}`}
+                </span>
+                <span className="flex max-w-full items-baseline gap-1 text-[11px] leading-4 text-graphite">
+                  {/* A shared marker names the first source by kind ("Email · 01_acme.eml" → "Email"); the tooltip has them all. */}
+                  <span className="min-w-0 truncate">{more > 0 ? p.labels[0].split(" · ")[0] : p.labels[0]}</span>
+                  {more > 0 && <span className="shrink-0 font-medium text-ink">+{more}</span>}
+                </span>
+              </motion.span>
             );
           })}
         </>
