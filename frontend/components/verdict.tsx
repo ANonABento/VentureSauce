@@ -4,7 +4,7 @@ import type { DeltaRow, DeltaStatus } from "@/lib/types";
 import { cn } from "./cn";
 import { CountUp } from "./motion";
 import { STATUS } from "./status";
-import { DitherBar, type Tone } from "./viz";
+import { Meter, type Tone } from "./viz";
 
 const ORDER: DeltaStatus[] = ["discrepancy", "consistent", "not_disclosed", "unverified"];
 
@@ -44,7 +44,7 @@ export function Verdict({
           value={discrepancies}
           className={cn(
             "font-serif leading-none tracking-[-0.03em]",
-            size === "page" ? "text-[64px]" : "text-[48px]",
+            size === "page" ? "text-[80px]" : "text-[64px]",
             discrepancies > 0 ? "text-signal" : "text-ink",
           )}
         />
@@ -57,7 +57,7 @@ export function Verdict({
           </span>
         </span>
       </p>
-      <DitherBar
+      <Meter
         className="mt-3"
         delay={0.15}
         segments={present.map((status) => ({ value: count(status), tone: TONE[status] }))}

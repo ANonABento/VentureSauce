@@ -1,11 +1,8 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { motion } from "motion/react";
 import {
-  API,
-  DEFAULT_API,
-  WORKSPACE,
   type Check,
   type CompanySummary,
   type CompanyView,
@@ -16,14 +13,18 @@ import {
   moveItem,
 } from "@/lib/api";
 import type { DeltaReport } from "@/lib/types";
-import { ArrowLeft, CaretDown, ChatCircleDots, CheckCircle, Copy, DownloadSimple, WarningDiamond } from "@phosphor-icons/react/dist/ssr";
-import { DUR, EASE_ENTER, EASE_STATE, RISE, SPRING, STAGGER } from "@/lib/motion";
+import { ArrowLeft, CaretDown, CheckCircle, Copy, DownloadSimple, Plus, WarningDiamond } from "@phosphor-icons/react/dist/ssr";
+import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { Collapse } from "./collapse";
 import { DeltaRows } from "./delta-rows";
 import { CountUp } from "./motion";
-import { DropStrip, ItemTag } from "./inbox";
+import { sauceUrl } from "@/lib/sauce";
+import { DropZone } from "./drop-zone";
+import { FigureTile } from "./home";
+import { ItemTag } from "./inbox";
+import { Sheet } from "./sheet";
 import { InfoTip } from "./info-tip";
 import { PulsePlot, pulseSeries } from "./pulse";
 import { ReportHeader } from "./report-header";
@@ -249,56 +250,7 @@ function QuestionCards({ companyId, questions }: { companyId: string; questions:
 }
 
 export type CompanyTab = "checks" | "items" | "questions";
-
-/** A figure tile on the company screen; tapping it opens the matching details. */
-function NumberTile({
-  glyph,
-  value,
-  caption,
-  onClick,
-  active,
-  index,
-}: {
-  glyph: "dot" | "diamond" | "question";
-  value: number;
-  caption: string;
-  onClick: () => void;
-  active: boolean;
-  index: number;
-}) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "fragment flex flex-col items-start px-3 py-2.5 text-left transition-shadow duration-150",
-        active && "outline-1 outline-data/40",
-      )}
-      initial={{ opacity: 0, y: RISE }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.15 + index * STAGGER }}
-    >
-      {glyph === "question" ? (
-        <ChatCircleDots aria-hidden="true" size={13} weight="duotone" className="text-data" />
-      ) : (
-        <span
-          aria-hidden="true"
-          className={cn(
-            "mt-[3px] block",
-            glyph === "dot" ? "h-[7px] w-[7px] rounded-full bg-signal" : "mx-px h-[6px] w-[6px] rotate-45 border-[1.25px] border-signal",
-          )}
-        />
-      )}
-      <CountUp
-        value={value}
-        delay={0.2 + index * STAGGER}
-        className={cn("mt-1.5 font-serif text-[26px] leading-7", glyph !== "question" && value > 0 ? "text-signal" : "text-ink")}
-      />
-      <span className="text-[11px] leading-4 text-graphite">{caption}</span>
-    </motion.button>
-  );
-}
+type Sheetable = "public" | "contradictions" | "questions" | "items";
 
 /** Actions (decision 50): the top question with Copy, and the way to add another item. */
 function TopQuestion({ question, onAll }: { question: Question; onAll: () => void }) {
@@ -360,7 +312,10 @@ export function CompanyScreen({
 }) {
   const [view, setView] = useState<CompanyView | null>(null);
   const [report, setReport] = useState<DeltaReport | null>(null);
-  const [tab, setTab] = useState<CompanyTab>(initialTab);
+  // The wireframe has no tabs: each figure opens its detail as a sheet (decision 62). `initialTab` opens one on arrival.
+  const [sheet, setSheet] = useState<Sheetable | null>(initialTab === "questions" ? "questions" : null);
+  const closeSheet = useCallback(() => setSheet(null), []);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -397,12 +352,7 @@ export function CompanyScreen({
   const discrepancies = report ? publicRows.filter((r) => r.status === "discrepancy").length : (summary?.discrepancies ?? 0);
   const contradictionCount = view ? contradictions.length : (summary?.contradictions ?? 0);
   const name = view ? view.company.name + (view.company.fictional ? " (fictional)" : "") : summary?.name;
-  // The report opens in a normal tab, whose storage may not be the extension iframe's: pass the inbox (and a custom backend) along.
-  const sauceHref = `/sauce?${new URLSearchParams({
-    company: companyId,
-    ws: WORKSPACE,
-    ...(API !== DEFAULT_API ? { api: API } : {}),
-  })}`;
+  const sauceHref = sauceUrl({ company: companyId, print: true });
 
   const header = name && (
     <div className="flex items-start justify-between gap-3">
@@ -461,16 +411,7 @@ export function CompanyScreen({
 
   const series = pulseSeries(view);
   const disagreeing = (label: string) => contradictions.filter((c) => c.values?.some((v) => label.endsWith(v.item_label.split(" · ").pop() ?? ""))).length;
-  const checkCount = contradictions.length + publicRows.length;
-  const tabs: [CompanyTab, string, number | null][] = [
-    ["checks", "Checks", checkCount || null],
-    ["items", "Items", view.items.length],
-    ["questions", "Questions", view.questions.length],
-  ];
-  const open = (next: CompanyTab) => {
-    setTab(next);
-    document.getElementById(`details-${companyId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const flaggedRows = publicRows.filter((r) => r.status === "discrepancy");
 
   return (
     <>
@@ -480,7 +421,7 @@ export function CompanyScreen({
       )}
       {header}
 
-      {/* The screen's one hero tray: the pulse. */}
+      {/* PLOT: the screen's one hero tray. */}
       <motion.section
         aria-labelledby={`pulse-${companyId}`}
         className="tray mt-5"
@@ -492,7 +433,9 @@ export function CompanyScreen({
           <span>
             Pulse <span className="text-ink">· {series ? series.metric : "items"}</span>
           </span>
-          <span className="font-normal">{view.items.length} items</span>
+          <button type="button" onClick={() => setSheet("items")} className="min-h-6 font-normal text-graphite underline-offset-4 hover:text-ink hover:underline">
+            {view.items.length} items
+          </button>
         </h2>
         {series ? (
           <div className="mt-4">
@@ -506,141 +449,85 @@ export function CompanyScreen({
         )}
       </motion.section>
 
+      {/* NUMBERS: each opens its detail. */}
       <div className="mt-3 grid grid-cols-3 gap-2">
-        <NumberTile glyph="dot" value={discrepancies} caption="vs public" onClick={() => open("checks")} active={false} index={0} />
-        <NumberTile glyph="diamond" value={contradictionCount} caption="between items" onClick={() => open("checks")} active={false} index={1} />
-        <NumberTile glyph="question" value={view.questions.length} caption="to ask" onClick={() => open("questions")} active={false} index={2} />
+        <FigureTile glyph="dot" value={discrepancies} caption="public" label="discrepancies with public records" flag onClick={() => setSheet("public")} index={0} />
+        <FigureTile glyph="diamond" value={contradictionCount} caption="yours" label="contradictions between your items" flag onClick={() => setSheet("contradictions")} index={1} />
+        <FigureTile glyph="question" value={view.questions.length} caption="ask" label="questions to ask" onClick={() => setSheet("questions")} index={2} />
       </div>
 
-      {report?.headline && <p className="mt-4 text-[13px] leading-5 text-graphite">{report.headline}</p>}
+      {/* SUMMARY: the headline and the top differences, one glyph row each. */}
+      <motion.section
+        aria-label="Summary"
+        className="fragment mt-3 px-3.5 py-3"
+        initial={{ opacity: 0, y: RISE }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.25 }}
+      >
+        <p className="text-[13px] leading-5 text-ink">{report?.headline || "Nothing flagged across your items."}</p>
+        {(contradictions.length > 0 || flaggedRows.length > 0) && (
+          <ul className="mt-2.5 space-y-1.5">
+            {contradictions.slice(0, 3).map((c) => {
+              const nums = (c.values ?? []).map((v) => v.value);
+              return (
+                <li key={`${c.claim_type}-${c.metric}`} className="flex items-center gap-2 text-xs leading-4">
+                  <span aria-hidden="true" className="mx-px block h-[6px] w-[6px] shrink-0 rotate-45 border-[1.25px] border-signal" />
+                  <span className="min-w-0 flex-1 truncate text-graphite">{metricLabel(c)}</span>
+                  <span className="shrink-0 font-serif text-sm text-ink">
+                    {fmt(Math.min(...nums), c.unit)}–{fmt(Math.max(...nums), c.unit)}
+                  </span>
+                </li>
+              );
+            })}
+            {flaggedRows.slice(0, 3).map((r) => (
+              <li key={r.signal} className="flex items-center gap-2 text-xs leading-4">
+                <span aria-hidden="true" className="block h-[7px] w-[7px] shrink-0 rounded-full bg-signal" />
+                <span className="min-w-0 flex-1 truncate text-graphite">{r.signal}</span>
+                {r.summaryShort && <span className="shrink-0 font-serif text-sm text-ink">{r.summaryShort}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </motion.section>
 
-      {view.questions[0] && (
-        <motion.section
-          aria-label="Next step"
-          className="fragment mt-4 px-3.5 py-3"
-          initial={{ opacity: 0, y: RISE }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.3 }}
-        >
-          <TopQuestion question={view.questions[0]} onAll={() => open("questions")} />
-        </motion.section>
-      )}
-
-      <div id={`details-${companyId}`} className="scroll-mt-14" />
-      {/* Segmented control (v2): the white pill slides between tabs on a spring. */}
-      <div role="tablist" aria-label="Details" className="mt-6 flex gap-0.5 rounded-full bg-tray-strong p-[3px]">
-        {tabs.map(([id, label, count]) => (
-          <button
-            key={id}
-            role="tab"
-            type="button"
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
-            className={cn(
-              "relative flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full text-[13px] font-medium transition-colors duration-150 ease-out",
-              tab === id ? "text-ink" : "text-graphite hover:text-ink",
-            )}
-          >
-            {tab === id && (
-              <motion.span
-                layoutId={`tab-pill-${companyId}`}
-                className="fragment absolute inset-0 z-0"
-                style={{ borderRadius: 9999 }}
-                transition={SPRING}
-              />
-            )}
-            {/* Labels stack above the pill: mid-slide it passes under its neighbours' text. */}
-            <span className="relative z-10">{label}</span>
-            {count !== null && <span className="relative z-10 text-data">{count}</span>}
-          </button>
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={tab}
-          className="mt-5"
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, transition: { duration: 0.15 } }}
-          transition={{ duration: DUR.base, ease: EASE_STATE }}
-        >
-          {tab === "checks" && (
-            <div className="space-y-8">
-              {contradictions.length > 0 && (
-                <section>
-                  <h2 className="mb-2 flex items-center gap-2 text-sm leading-5 font-medium text-ink">
-                    <span aria-hidden="true" className="mx-px block h-[6px] w-[6px] rotate-45 border-[1.25px] border-signal" />
-                    Between your items <span className="text-signal">{contradictions.length}</span>
-                  </h2>
-                  <ul className="space-y-3">
-                    {contradictions.map((c, i) => (
-                      <ContradictionCard key={`${c.claim_type}-${c.metric}`} check={c} index={i} />
-                    ))}
-                  </ul>
-                </section>
-              )}
-              {publicRows.length > 0 ? (
-                <section>
-                  <h2 className="mb-2 flex items-center gap-2 text-sm leading-5 font-medium text-ink">
-                    <span aria-hidden="true" className="block h-[7px] w-[7px] rounded-full bg-signal" />
-                    Public records <span className="text-data">{publicRows.length}</span>
-                  </h2>
-                  <DeltaRows rows={publicRows} />
-                </section>
-              ) : (
-                <p className="text-[13px] text-graphite">No public-record checks yet.</p>
-              )}
-            </div>
+      {/* ACTIONS: ask the top question, or add another item. */}
+      <motion.section
+        aria-label="Actions"
+        className="fragment mt-3 px-3.5 py-3"
+        initial={{ opacity: 0, y: RISE }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.3 }}
+      >
+        {view.questions[0] ? (
+          <TopQuestion question={view.questions[0]} onAll={() => setSheet("questions")} />
+        ) : (
+          <p className="text-xs leading-4 text-graphite">No open questions.</p>
+        )}
+        <div className="mt-3 border-t border-rule pt-3">
+          {busy ? (
+            <DropZone onPick={() => {}} busy step={step ?? 0} filing={null} />
+          ) : (
+            <Button size="sm" variant="quiet" onClick={() => fileRef.current?.click()}>
+              <Plus aria-hidden="true" size={14} weight="light" className="mr-1.5" />
+              Add an item
+            </Button>
           )}
+          <input
+            ref={fileRef}
+            type="file"
+            hidden
+            accept=".pdf,.pptx,.png,.jpg,.jpeg,.webp,.eml,.txt,.md"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) onDrop({ file, companyId });
+              event.target.value = "";
+            }}
+          />
+        </div>
+      </motion.section>
 
-          {tab === "items" && (
-            <>
-              <ol className="space-y-2">
-                {[...view.items].reverse().map((item, i) => {
-                  const n = disagreeing(item.label);
-                  return (
-                    <motion.li
-                      key={item.id}
-                      className="fragment px-3 py-3"
-                      initial={{ opacity: 0, y: RISE / 2 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: i * STAGGER }}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="flex min-w-0 items-center gap-2">
-                          <ItemTag kind={item.kind} />
-                          <span className="truncate text-[13px] text-ink">{item.label}</span>
-                        </span>
-                        <span className="shrink-0 text-[11px] text-graphite">{formatDate(item.item_date ?? item.received_at)}</span>
-                      </div>
-                      {/* One dot per claim found in the item; the diamonds are the ones another item disputes. */}
-                      <p
-                        role="img"
-                        aria-label={`${item.claim_count} ${item.claim_count === 1 ? "claim" : "claims"}${n ? `, ${n} disputed by another item` : ""}`}
-                        className="mt-2 flex flex-wrap items-center gap-[5px]"
-                      >
-                        {Array.from({ length: Math.min(item.claim_count, 24) }, (_, k) => (
-                          <span key={k} aria-hidden="true" className="block h-[5px] w-[5px] rounded-full bg-data/45" />
-                        ))}
-                        {n > 0 && <SignalStrip discrepancies={0} contradictions={n} delay={i * STAGGER} className="ml-1" />}
-                      </p>
-                    </motion.li>
-                  );
-                })}
-              </ol>
-              <div className="mt-4">
-                <DropStrip busy={busy} step={step} label="Drop another item" onDrop={(input) => onDrop({ ...input, companyId })} />
-              </div>
-            </>
-          )}
-
-          {tab === "questions" && <QuestionCards companyId={companyId} questions={view.questions} />}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* The wireframe's DOWNLOAD: the whole check as a branded PDF. */}
-      <div className="mt-8 flex justify-end">
+      {/* DOWNLOAD: the whole check as a branded PDF. */}
+      <div className="mt-6 flex justify-end">
         <a
           href={sauceHref}
           target="_blank"
@@ -648,10 +535,84 @@ export function CompanyScreen({
           className="inline-flex h-9 items-center gap-2 rounded-full bg-ink px-4 text-[13px] font-medium text-paper transition-colors duration-150 hover:bg-ink/90"
         >
           <DownloadSimple aria-hidden="true" size={15} weight="light" />
-          Download Sauce Report
-          <span className="sr-only"> (PDF, opens in a new tab)</span>
+          Download
+          <span className="sr-only"> the Sauce Report (PDF, opens in a new tab)</span>
         </a>
       </div>
+
+      <Sheet
+        open={sheet === "public"}
+        onClose={closeSheet}
+        title={
+          <>
+            <span aria-hidden="true" className="block h-[7px] w-[7px] rounded-full bg-signal" />
+            Public records <span className="text-data">{publicRows.length}</span>
+          </>
+        }
+      >
+        {publicRows.length ? <DeltaRows rows={publicRows} /> : <p className="text-[13px] text-graphite">No public-record checks yet.</p>}
+      </Sheet>
+      <Sheet
+        open={sheet === "contradictions"}
+        onClose={closeSheet}
+        title={
+          <>
+            <span aria-hidden="true" className="mx-px block h-[6px] w-[6px] rotate-45 border-[1.25px] border-signal" />
+            Between your items <span className="text-signal">{contradictions.length}</span>
+          </>
+        }
+      >
+        {contradictions.length ? (
+          <ul className="space-y-3">
+            {contradictions.map((c, i) => (
+              <ContradictionCard key={`${c.claim_type}-${c.metric}`} check={c} index={i} />
+            ))}
+          </ul>
+        ) : (
+          <p className="text-[13px] text-graphite">Your items agree on every figure.</p>
+        )}
+      </Sheet>
+      <Sheet open={sheet === "questions"} onClose={closeSheet} title={<>Questions to ask <span className="text-data">{view.questions.length}</span></>}>
+        <QuestionCards companyId={companyId} questions={view.questions} />
+      </Sheet>
+      <Sheet open={sheet === "items"} onClose={closeSheet} title={<>Items <span className="text-data">{view.items.length}</span></>}>
+        <ol className="space-y-2">
+          {[...view.items].reverse().map((item) => {
+            const n = disagreeing(item.label);
+            return (
+              <li key={item.id} className="fragment px-3 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <ItemTag kind={item.kind} />
+                    <span className="truncate text-[13px] text-ink">{item.label}</span>
+                  </span>
+                  <span className="shrink-0 text-[11px] text-graphite">{formatDate(item.item_date ?? item.received_at)}</span>
+                </div>
+                {/* One dot per claim found in the item; the diamonds are the ones another item disputes. */}
+                <p
+                  role="img"
+                  aria-label={`${item.claim_count} ${item.claim_count === 1 ? "claim" : "claims"}${n ? `, ${n} disputed by another item` : ""}`}
+                  className="mt-2 flex flex-wrap items-center gap-[5px]"
+                >
+                  {Array.from({ length: Math.min(item.claim_count, 24) }, (_, k) => (
+                    <span key={k} aria-hidden="true" className="block h-[5px] w-[5px] rounded-full bg-data/45" />
+                  ))}
+                  {n > 0 && <SignalStrip discrepancies={0} contradictions={n} className="ml-1" />}
+                </p>
+              </li>
+            );
+          })}
+        </ol>
+      </Sheet>
     </>
   );
 }
+
+const metricLabel = (check: Check) =>
+  check.metric
+    ? check.metric.length <= 4
+      ? check.metric.toUpperCase()
+      : check.metric[0].toUpperCase() + check.metric.slice(1)
+    : check.claim_type === "headcount"
+      ? "Headcount"
+      : "Total raised";

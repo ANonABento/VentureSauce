@@ -1,13 +1,15 @@
 "use client";
 
-import { CaretRight, Stack } from "@phosphor-icons/react/dist/ssr";
+import { useState } from "react";
+import { CaretRight, ChatCircleDots, DownloadSimple, FileText, Headphones, Stack } from "@phosphor-icons/react/dist/ssr";
 import { motion } from "motion/react";
 import type { CompanySummary } from "@/lib/api";
-import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
+import { DUR, EASE_ENTER, RISE, SPRING, STAGGER } from "@/lib/motion";
+import { sauceUrl } from "@/lib/sauce";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { CountUp } from "./motion";
-import { DitherBar, SignalStrip } from "./viz";
+import { Meter, SignalStrip } from "./viz";
 
 /*
  * The home screen's parts (decisions 42–47, 51), following the teammate's
@@ -30,18 +32,18 @@ export function Greeting({ onDeals }: { onDeals?: () => void }) {
   const now = new Date();
   return (
     <div className="flex items-start justify-between gap-3">
-      <div>
+      <div className="min-w-0">
         {/* Rendered on the server too, in its clock; the client's local time replaces it. */}
-        <h1 suppressHydrationWarning className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">
+        <h1 suppressHydrationWarning className="font-serif text-[34px] leading-10 tracking-[-0.025em] text-ink">
           {greeting(now)}
         </h1>
-        <p suppressHydrationWarning className="mt-0.5 text-xs leading-4 text-graphite">
+        <p suppressHydrationWarning className="mt-1 text-[13px] leading-4 text-graphite">
           {now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
         </p>
       </div>
       {onDeals && (
-        <Button size="sm" variant="quiet" onClick={onDeals}>
-          <Stack aria-hidden="true" size={14} weight="light" className="mr-1.5" />
+        <Button variant="quiet" onClick={onDeals} className="mt-1 h-10 px-4 text-sm">
+          <Stack aria-hidden="true" size={17} weight="light" className="mr-2" />
           Deals
         </Button>
       )}
@@ -49,46 +51,61 @@ export function Greeting({ onDeals }: { onDeals?: () => void }) {
   );
 }
 
-/** A glyph, a counted-up figure and a one-word caption. The tiles define ● and ◇ for the whole app. */
-function Tile({
+/** The figure style (decision 63): a big serif number, then the glyph and one small word. Cobalt when it flags something. */
+export function FigureTile({
   glyph,
   value,
   caption,
-  sub,
-  tone,
+  flag = false,
   index,
+  onClick,
+  label,
 }: {
-  glyph: "dot" | "diamond" | "items";
+  glyph: "dot" | "diamond" | "items" | "question";
   value: number;
   caption: string;
-  sub?: string;
-  tone: "signal" | "data";
+  /** Counts that flag something turn cobalt when above zero. */
+  flag?: boolean;
   index: number;
+  onClick?: () => void;
+  /** Accessible description, since the caption is a single word. */
+  label?: string;
 }) {
+  const Tag = onClick ? motion.button : motion.div;
   return (
-    <motion.div
-      className="fragment flex flex-col px-3 py-3"
+    <Tag
+      {...(onClick ? { type: "button" as const, onClick, "aria-haspopup": "dialog" as const } : {})}
+      aria-label={label ? `${value} ${label}` : undefined}
+      className={cn(
+        "fragment flex flex-col items-start px-3.5 pt-3 pb-3 text-left",
+        onClick && "transition-transform duration-150 ease-out hover:-translate-y-0.5",
+      )}
       initial={{ opacity: 0, y: RISE }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.05 + index * STAGGER }}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "block shrink-0",
-          glyph === "dot" && "h-[7px] w-[7px] rounded-full bg-signal",
-          glyph === "diamond" && "mx-px h-[6px] w-[6px] rotate-45 border-[1.25px] border-signal",
-          glyph === "items" && "h-[7px] w-[7px] rounded-[2px] bg-data",
-        )}
-      />
       <CountUp
         value={value}
         delay={0.1 + index * STAGGER}
-        className={cn("mt-2 font-serif text-[30px] leading-8 tracking-[-0.02em]", tone === "signal" && value > 0 ? "text-signal" : "text-ink")}
+        className={cn("font-serif text-[56px] leading-[56px] tracking-[-0.03em]", flag && value > 0 ? "text-signal" : "text-ink")}
       />
-      <span className="mt-0.5 text-[11px] leading-4 text-graphite">{caption}</span>
-      {sub && <span className="text-[11px] leading-4 text-graphite/70">{sub}</span>}
-    </motion.div>
+      <span aria-hidden={label ? true : undefined} className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-graphite">
+        {glyph === "question" ? (
+          <ChatCircleDots aria-hidden="true" size={12} weight="duotone" className="text-data" />
+        ) : (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "block shrink-0",
+              glyph === "dot" && "h-[6px] w-[6px] rounded-full bg-signal",
+              glyph === "diamond" && "mx-px h-[5px] w-[5px] rotate-45 border-[1.25px] border-signal",
+              glyph === "items" && "h-[6px] w-[6px] rounded-[1.5px] bg-data",
+            )}
+          />
+        )}
+        {caption}
+      </span>
+    </Tag>
   );
 }
 
@@ -96,16 +113,61 @@ export function StatTiles({ companies }: { companies: CompanySummary[] }) {
   const sum = (pick: (c: CompanySummary) => number) => companies.reduce((acc, c) => acc + pick(c), 0);
   return (
     <div className="grid grid-cols-3 gap-2">
-      <Tile glyph="dot" value={sum((c) => c.discrepancies)} caption="vs public records" tone="signal" index={0} />
-      <Tile glyph="diamond" value={sum((c) => c.contradictions)} caption="between your items" tone="signal" index={1} />
-      <Tile
-        glyph="items"
-        value={sum((c) => c.item_count)}
-        caption="items filed"
-        sub={`${companies.length} ${companies.length === 1 ? "company" : "companies"}`}
-        tone="data"
-        index={2}
-      />
+      <FigureTile glyph="dot" value={sum((c) => c.discrepancies)} caption="public" label="discrepancies with public records" flag index={0} />
+      <FigureTile glyph="diamond" value={sum((c) => c.contradictions)} caption="yours" label="contradictions between your items" flag index={1} />
+      <FigureTile glyph="items" value={sum((c) => c.item_count)} caption="items" label={`items filed across ${companies.length} companies`} index={2} />
+    </div>
+  );
+}
+
+/**
+ * The report bar (decision 57): the wireframe's "Your weekly report is ready",
+ * as one tap that downloads the digest Sauce Report. Day or week.
+ */
+export function ReportBar({ onListen }: { onListen?: () => void }) {
+  const [period, setPeriod] = useState<"day" | "week">("day");
+  return (
+    <div className="fragment flex items-center gap-1 rounded-xl py-1.5 pr-1.5 pl-1.5">
+      <a
+        href={sauceUrl({ digest: period, print: true })}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-1.5 transition-colors duration-150 hover:bg-tray/60"
+      >
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-ink text-paper">
+          <FileText aria-hidden="true" size={16} weight="light" />
+        </span>
+        <span className="min-w-0 flex-1 font-serif text-lg leading-6 text-ink">
+          {period === "day" ? "Daily report" : "Weekly report"}
+          <span className="sr-only"> (PDF, opens in a new tab)</span>
+        </span>
+        <DownloadSimple aria-hidden="true" size={18} weight="light" className="shrink-0 text-graphite transition-transform duration-150 ease-out group-hover:translate-y-0.5 group-hover:text-ink" />
+      </a>
+      {onListen && (
+        <button
+          type="button"
+          onClick={onListen}
+          aria-label="Listen to the briefing"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-graphite transition-colors duration-150 hover:bg-tray hover:text-ink"
+        >
+          <Headphones aria-hidden="true" size={16} weight="light" />
+        </button>
+      )}
+      <div role="group" aria-label="Report period" className="flex shrink-0 rounded-full bg-tray p-0.5 text-[11px] font-medium">
+        {(["day", "week"] as const).map((p) => (
+          <button
+            key={p}
+            type="button"
+            aria-pressed={period === p}
+            aria-label={p === "day" ? "Daily" : "Weekly"}
+            onClick={() => setPeriod(p)}
+            className={cn("relative h-6 rounded-full px-2.5 transition-colors duration-150", period === p ? "text-ink" : "text-graphite hover:text-ink")}
+          >
+            {period === p && <motion.span layoutId="report-period" className="fragment absolute inset-0 z-0" style={{ borderRadius: 9999 }} transition={SPRING} />}
+            <span aria-hidden="true" className="relative z-10">{p === "day" ? "D" : "W"}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -163,7 +225,7 @@ export function DealsChart({
                     <SignalStrip discrepancies={c.discrepancies} contradictions={c.contradictions} max={6} delay={0.25 + index * STAGGER} />
                   </motion.span>
                 </span>
-                <DitherBar
+                <Meter
                   className="mt-2"
                   delay={0.2 + index * STAGGER}
                   total={scale}

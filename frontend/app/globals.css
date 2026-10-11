@@ -20,9 +20,13 @@
   --graphite: #55657a;
   --rule: #e1e7ef;
   --rule-strong: #c9d3df;
-  /* Discrepancies only: crimson, the one warm note, kept apart from the accent. */
-  --signal: #b42846;
-  --signal-wash: #fbe8ec;
+  /*
+   * Flags (discrepancies and contradictions): cobalt, "needs your eye", not an
+   * alarm. No red anywhere (decision 63). A shade deeper than the art's cobalt
+   * so it passes AA as text on every tray (4.7:1 on tray-strong).
+   */
+  --signal: #3550e6;
+  --signal-wash: #e3e8fe;
   /* "Consistent" and "nothing flagged" read as data blue, not green. */
   --steady: #1f4a7a;
   --steady-wash: #e6edf6;
@@ -31,7 +35,7 @@
   --tray-strong: #dae3ee;
   /* Neutral figures and source links: navy blue. */
   --data: #1f4a7a;
-  /* Cobalt (the atmosphere line), 4 uses only: logo, running step, drop hover, selection. Never text. */
+  /* Cobalt (the atmosphere line): brand marks and anything that needs attention (flags use --signal, a text-safe shade). */
   --accent: #3f5af5;
   --accent-wash: #e3e8fe;
 }
@@ -45,8 +49,8 @@
   --graphite: #9aa6b4;
   --rule: #232b35;
   --rule-strong: #313b47;
-  --signal: #f07a90;
-  --signal-wash: #2a1620;
+  --signal: #8ea0ff;
+  --signal-wash: #1b2340;
   --steady: #8db4d0;
   --steady-wash: #16212b;
   --tray: #161e27;
@@ -72,6 +76,29 @@
   --color-data: var(--data);
   --color-accent: var(--accent);
   --color-accent-wash: var(--accent-wash);
+
+  /*
+   * shadcn's semantic names (components/ui, components/kibo-ui) mapped onto
+   * ours. `accent` stays cobalt with its four uses, so shadcn components use
+   * `muted` for hover instead of `bg-accent` (edited in components/ui/button.tsx).
+   */
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--paper);
+  --color-secondary: var(--tray);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--tray);
+  --color-muted-foreground: var(--graphite);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--signal);
+  --color-border: var(--rule);
+  --color-input: var(--rule-strong);
+  --color-ring: var(--data);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -110,43 +137,6 @@
   background: radial-gradient(circle, currentColor 0.8px, transparent 0.95px) 0 0 / 3px 3px repeat-x;
 }
 
-/*
- * The first-run dissolve (decision 32): the landscape breaks into its own dot
- * grid. A 3px dot mask shrinks from full coverage (r 2.2px covers the tile) to
- * nothing. Reduced motion gets a short crossfade instead.
- */
-@property --dot-r {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 2.2px;
-}
-
-@keyframes dot-dissolve {
-  0% {
-    --dot-r: 2.2px;
-  }
-  100% {
-    --dot-r: 0px;
-    opacity: 0;
-  }
-}
-
-@keyframes fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@utility dissolve {
-  mask-image: radial-gradient(circle, #000 var(--dot-r), transparent calc(var(--dot-r) + 0.4px));
-  mask-size: 3px 3px;
-  animation: dot-dissolve 560ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
-
-  @media (prefers-reduced-motion: reduce) {
-    mask-image: none;
-    animation: fade-out 200ms ease-out forwards;
-  }
-}
 
 /*
  * Small labels ("Filed", "Said", section titles). v2 retires uppercase mono:

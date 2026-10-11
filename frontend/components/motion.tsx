@@ -72,7 +72,14 @@ export function CountUp({
     };
     show(0);
     const controls = animate(0, value, { duration: DUR.reveal, ease: EASE_ENTER, delay, onUpdate: show });
+    // If animation frames stall (a background tab, a print snapshot), a figure must never be left showing a wrong
+    // number: land on the real value shortly after the count-up should have finished, whatever happened.
+    const settle = window.setTimeout(() => {
+      controls.stop();
+      node.textContent = format(value);
+    }, (delay + DUR.reveal) * 1000 + 250);
     return () => {
+      window.clearTimeout(settle);
       controls.stop();
       node.textContent = format(value);
     };

@@ -1,20 +1,14 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { DownloadSimple } from "@phosphor-icons/react/dist/ssr";
-import { type CompanyView, getCompany, getReport } from "@/lib/api";
-import type { DeltaReport } from "@/lib/types";
 import { Button } from "@/components/button";
-import { SauceReport } from "@/components/sauce-report";
+import { type DigestPeriod, DigestReport, digestReportTitle, useDigestReport } from "@/components/digest-report";
+import { SauceReport, useSauceReport } from "@/components/sauce-report";
 
-type State =
-  | { status: "loading" }
-  | { status: "error"; message: string }
-  | { status: "ready"; view: CompanyView; report: DeltaReport | null };
-
-/** `?print=1` waits for the entrance (count-up, dither bars, range plots) to settle before opening the dialog. */
+/** `?print=1` waits for the entrance (count-up, bars, range plots) to settle before opening the dialog. */
 const AUTO_PRINT_DELAY_MS = 1400;
 
 /** Jumps running entrance animations to their end, so a print started mid-reveal shows final values. */
@@ -27,6 +21,38 @@ function settleAnimations() {
 function printReport() {
   settleAnimations();
   window.print();
+}
+
+/**
+ * Print plumbing shared by both reports: the tab title (the saved PDF's
+ * filename), final values on ⌘P, and `?print=1` opening the dialog once the
+ * report is ready. The flag is dropped from the URL so a reload doesn't print again.
+ */
+function usePrintable(title: string | null, ready: boolean) {
+  const autoPrint = useSearchParams().get("print") === "1";
+  const printed = useRef(false);
+
+  useEffect(() => {
+    if (title) document.title = title;
+  }, [title]);
+
+  useEffect(() => {
+    window.addEventListener("beforeprint", settleAnimations);
+    return () => window.removeEventListener("beforeprint", settleAnimations);
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !autoPrint) return;
+    const timer = window.setTimeout(() => {
+      if (printed.current) return;
+      printed.current = true;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("print");
+      window.history.replaceState(null, "", url);
+      document.fonts.ready.then(printReport);
+    }, AUTO_PRINT_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [ready, autoPrint]);
 }
 
 /** The page frame: the screen-only toolbar, then the document column. */
@@ -53,56 +79,35 @@ export function SauceStatus({ children, action }: { children: ReactNode; action?
   );
 }
 
+function DownloadButton() {
+  return (
+    <Button className="gap-1.5" title="Opens the print dialog; choose Save as PDF" onClick={printReport}>
+      <DownloadSimple aria-hidden="true" size={16} weight="light" />
+      Download PDF
+    </Button>
+  );
+}
+
+function RetryButton({ onRetry }: { onRetry: () => void }) {
+  return (
+    <Button variant="quiet" size="xs" onClick={onRetry}>
+      Retry
+    </Button>
+  );
+}
+
+/** /sauce?company=<id> or /sauce?digest=day|week. Either takes `print=1`, `ws` and `api` (lib/api.ts). */
 export function SauceReportPage() {
   const params = useSearchParams();
-  const companyId = params.get("company");
-  const autoPrint = params.get("print") === "1";
-  const [state, setState] = useState<State>({ status: "loading" });
-  const [attempt, setAttempt] = useState(0);
-  const printed = useRef(false);
+  const digest = params.get("digest");
+  if (digest !== null) return <DigestReportPage period={digest === "week" ? "week" : "day"} />;
+  return <CompanyReportPage companyId={params.get("company")} />;
+}
 
-  useEffect(() => {
-    if (!companyId) return;
-    let live = true;
-    Promise.all([getCompany(companyId), getReport({ companyId }).catch(() => null)])
-      .then(([view, report]) => {
-        if (live) setState({ status: "ready", view, report });
-      })
-      .catch((error: unknown) => {
-        if (live) setState({ status: "error", message: error instanceof Error ? error.message : String(error) });
-      });
-    return () => {
-      live = false;
-    };
-  }, [companyId, attempt]);
-
-  // The saved PDF takes its filename from the title.
-  const name = state.status === "ready" ? state.view.company.name : null;
-  useEffect(() => {
-    if (name) document.title = `Sauce Report — ${name}`;
-  }, [name]);
-
-  // ⌘P from the browser menu prints the final state too.
-  useEffect(() => {
-    window.addEventListener("beforeprint", settleAnimations);
-    return () => window.removeEventListener("beforeprint", settleAnimations);
-  }, []);
-
-  // ?print=1: open the print dialog once, after the data and fonts are in. The flag is dropped
-  // from the URL so a reload shows the report instead of printing again.
+function CompanyReportPage({ companyId }: { companyId: string | null }) {
+  const { state, retry } = useSauceReport(companyId);
   const ready = state.status === "ready";
-  useEffect(() => {
-    if (!ready || !autoPrint) return;
-    const timer = window.setTimeout(() => {
-      if (printed.current) return;
-      printed.current = true;
-      const url = new URL(window.location.href);
-      url.searchParams.delete("print");
-      window.history.replaceState(null, "", url);
-      document.fonts.ready.then(printReport);
-    }, AUTO_PRINT_DELAY_MS);
-    return () => window.clearTimeout(timer);
-  }, [ready, autoPrint]);
+  usePrintable(ready ? `Sauce Report — ${state.view.company.name}` : null, ready);
 
   if (!companyId) {
     return (
@@ -122,35 +127,37 @@ export function SauceReportPage() {
 
   if (state.status === "error") {
     return (
-      <SauceStatus
-        action={
-          <Button
-            variant="quiet"
-            size="xs"
-            onClick={() => {
-              setState({ status: "loading" });
-              setAttempt((n) => n + 1);
-            }}
-          >
-            Retry
-          </Button>
-        }
-      >
+      <SauceStatus action={<RetryButton onRetry={retry} />}>
         Couldn&rsquo;t load this report ({state.message}).
       </SauceStatus>
     );
   }
 
   return (
-    <Frame
-      toolbar={
-        <Button className="gap-1.5" title="Opens the print dialog; choose Save as PDF" onClick={printReport}>
-          <DownloadSimple aria-hidden="true" size={16} weight="light" />
-          Download PDF
-        </Button>
-      }
-    >
+    <Frame toolbar={<DownloadButton />}>
       <SauceReport view={state.view} report={state.report} />
+    </Frame>
+  );
+}
+
+function DigestReportPage({ period }: { period: DigestPeriod }) {
+  const { state, retry } = useDigestReport(period);
+  const ready = state.status === "ready";
+  usePrintable(ready ? digestReportTitle(period, state.at) : null, ready);
+
+  if (state.status === "loading") return <SauceStatus>Loading the report</SauceStatus>;
+
+  if (state.status === "error") {
+    return (
+      <SauceStatus action={<RetryButton onRetry={retry} />}>
+        Couldn&rsquo;t load this report ({state.message}).
+      </SauceStatus>
+    );
+  }
+
+  return (
+    <Frame toolbar={<DownloadButton />}>
+      <DigestReport digest={state.digest} at={state.at} />
     </Frame>
   );
 }

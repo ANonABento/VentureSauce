@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { DownloadSimple, MagnifyingGlass, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { API, getHealth } from "@/lib/api";
 import { DUR, EASE_ENTER, RISE } from "@/lib/motion";
-import { ArtDropZone, type DropInput } from "./art-drop";
+import { DropZone, type DropInput } from "./drop-zone";
 import { Button } from "./button";
 import { Greeting } from "./home";
 
@@ -61,7 +61,7 @@ export function FirstRun({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: 0.05 }}
       >
-        <ArtDropZone tall onPick={onPick} busy={busy} step={step} filing={filing} />
+        <DropZone onPick={onPick} busy={busy} step={step} filing={filing} />
       </motion.div>
 
       {onExample && (

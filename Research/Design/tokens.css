@@ -143,7 +143,7 @@
  * paper = its sky, ink = its planet navy, accent = its cobalt atmosphere line.
  * No green and no orange (cream + pine + amber read as Claude's palette).
  * Contrast (WCAG): ink 15.2:1, graphite 5.5:1, data 8.4:1, signal 5.8:1 on
- * paper; graphite 4.6:1 and signal 4.9:1 on tray-strong. Cobalt is never text.
+ * paper; graphite 4.6:1 and signal 4.7:1 on tray-strong. --accent cobalt is decorative; flag text uses --signal.
  * Mirrors frontend/app/globals.css.
  */
 :root {
@@ -153,8 +153,8 @@
   --graphite: #55657a;
   --rule: #e1e7ef;
   --rule-strong: #c9d3df;
-  --signal: #b42846;        /* crimson: discrepancies only */
-  --signal-wash: #fbe8ec;
+  --signal: #3550e6;        /* flags: cobalt, "needs your eye". No red anywhere (decision 63) */
+  --signal-wash: #e3e8fe;
   --steady: #1f4a7a;        /* "consistent" is data blue, not green */
   --steady-wash: #e6edf6;
   --tray: #e8eef6;

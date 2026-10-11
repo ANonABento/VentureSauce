@@ -1,17 +1,18 @@
 "use client";
 
-import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
-import { AddToCompany, type FilingChoice } from "@/components/add-to-company";
-import { ArtDropZone, type DropInput } from "@/components/art-drop";
-import { MiniBrief } from "@/components/brief";
+import { ArrowLeft, CaretRight, DownloadSimple, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
+import { AddToCompanyScreen, type FilingChoice } from "@/components/add-to-company";
+import { DropZone, type DropInput } from "@/components/drop-zone";
+import { FiledToast } from "@/components/company";
+import { SauceReportPreview } from "@/components/sauce-report";
+import { sauceUrl } from "@/lib/sauce";
 import { DealsScreen } from "@/components/deals";
-import { DealsChart, Greeting, StatTiles } from "@/components/home";
+import { DealsChart, Greeting, ReportBar, StatTiles } from "@/components/home";
 import { Masthead, type Scene } from "@/components/masthead";
 import { Button } from "@/components/button";
-import { cn } from "@/components/cn";
 import { ErrorState } from "@/components/error-state";
 import { FirstRun } from "@/components/first-run";
 import { LoadingSteps, jobStep } from "@/components/loading-steps";
@@ -48,12 +49,14 @@ export function Panel() {
 
 type Screen =
   | { kind: "home" }
+  | { kind: "file" }
+  | { kind: "report"; id?: string; filed?: string | null }
   | { kind: "deals" }
   | { kind: "company"; id: string; filed?: string | null; summary?: CompanySummary; tab?: CompanyTab; from?: "home" | "deals" | "digest" }
   | { kind: "digest" };
 
-const DEPTH: Record<Screen["kind"], number> = { home: 0, deals: 1, digest: 1, company: 2 };
-const SCENE: Record<Screen["kind"], Scene> = { home: "home", deals: "deals", company: "company", digest: "digest" };
+const DEPTH: Record<Screen["kind"], number> = { home: 0, deals: 1, digest: 1, file: 1, report: 2, company: 2 };
+const SCENE: Record<Screen["kind"], Scene> = { home: "home", deals: "deals", company: "company", digest: "digest", file: "deals", report: "company" };
 const screenKey = (screen: Screen) => (screen.kind === "company" ? `company-${screen.id}` : screen.kind);
 
 const JOB_STEP: Record<string, string> = {
@@ -173,18 +176,24 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageUrl]);
 
-  /** Files an item. `choice` comes from the add-to-company sheet; drops on a company's screen pass its id. */
+  /**
+   * Files an item. From home it follows the wireframe (decision 61): Add to company → checking → the Sauce Report.
+   * Drops on a company's own screen pass its id and stay there.
+   */
   async function onDrop(input: DropInput & { companyId?: string }, choice: FilingChoice = {}) {
+    const fromHome = !input.companyId;
     setError(null);
     setFiling(itemName(input));
     setJob("parsing");
+    if (fromHome) setScreen({ kind: "report" });
     try {
       const done = await dropItem({ ...input, companyId: input.companyId ?? choice.companyId }, (j) => setJob(j.status));
       let companyId = done.company_id;
       // "+ New company": the backend files by detection, then the item moves to the named company.
       if (choice.newCompany && done.item_id) companyId = (await moveItem(done.item_id, { newCompany: choice.newCompany })).company_id;
       // Fake mode replays a fixture without filing it, so there may be no company to open.
-      if (companyId) setScreen({ kind: "company", id: companyId, filed: done.item_id, from: "home" });
+      if (companyId && fromHome) setScreen({ kind: "report", id: companyId, filed: done.item_id });
+      else if (companyId) setScreen({ kind: "company", id: companyId, filed: done.item_id, from: "home" });
       else setError("Checked, but it wasn't filed under a company.");
     } catch (e) {
       setError((e as Error).message);
@@ -193,18 +202,20 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     setFiling(null);
   }
 
-  // From home, an item first goes through "Add to company" (decision 48); with no companies yet there's nothing to choose.
+  // From home, an item first goes to the "Add to company" screen (decisions 48, 61); with no companies yet there's nothing to choose.
   function onPick(input: DropInput) {
     if (job !== null) return;
     if (!companies?.length) onDrop(input);
-    else setPending(input);
+    else {
+      setPending(input);
+      setScreen({ kind: "file" });
+    }
   }
-  const cancelPick = useCallback(() => setPending(null), []);
 
   // ⌘V anywhere on home or a company: a screenshot or copied file is filed as-is; copied text (outside a text
   // box) is filed as an email when it has mail headers, else as a note. In a text box, only images are taken over.
   useEffect(() => {
-    if (screen.kind === "digest" || screen.kind === "deals" || pending) return;
+    if (screen.kind !== "home" && screen.kind !== "company") return;
     function onPaste(event: ClipboardEvent) {
       if (job !== null || !event.clipboardData) return;
       const target = event.target as HTMLElement | null;
@@ -256,8 +267,8 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   return (
     <PanelFrame>
       {/* The horizon band pans along the arc per screen (decisions 53, 55); first run shows the art in its drop zone instead. */}
-      {!(screen.kind === "home" && firstRun) && <Masthead scene={SCENE[screen.kind]} />}
-      <div className={cn(!(screen.kind === "home" && firstRun) && "relative mt-1")}>
+      <Masthead scene={SCENE[screen.kind]} />
+      <div className="relative mt-1">
         {status}
         <ScreenTransition id={screenKey(screen)} direction={direction}>
           {screen.kind === "home" && companies === null && (
@@ -272,7 +283,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           )}
           {screen.kind === "home" && firstRun && (
             <>
-              {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
+              {error && <p role="alert" className="mb-3 text-xs font-medium text-ink">{error}</p>}
               <FirstRun
                 onPick={onPick}
                 busy={busy}
@@ -296,7 +307,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
                 <StatTiles companies={companies} />
               </div>
               <div className="mt-3">
-                <MiniBrief onOpen={() => setScreen({ kind: "digest" })} />
+                <ReportBar onListen={() => setScreen({ kind: "digest" })} />
               </div>
               <div className="mt-3">
                 <DealsChart
@@ -306,11 +317,39 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
                   onAll={() => setScreen({ kind: "deals" })}
                 />
               </div>
-              {error && <p role="alert" className="mt-3 text-xs text-signal">{error}</p>}
+              {error && <p role="alert" className="mt-3 text-xs font-medium text-ink">{error}</p>}
               <div className="mt-3">
-                <ArtDropZone onPick={onPick} busy={busy} step={step} filing={filing} />
+                <DropZone onPick={onPick} busy={busy} step={step} filing={filing} onError={setError} />
               </div>
             </>
+          )}
+          {screen.kind === "file" && pending && (
+            <AddToCompanyScreen
+              label={itemName(pending)}
+              companies={companies ?? []}
+              onCancel={() => {
+                setPending(null);
+                setScreen({ kind: "home" });
+              }}
+              onSubmit={(choice) => {
+                const input = pending;
+                setPending(null);
+                onDrop(input, choice);
+              }}
+            />
+          )}
+          {screen.kind === "report" && (
+            <ReportScreen
+              companyId={screen.id}
+              filed={screen.filed}
+              busy={busy}
+              step={step}
+              filing={filing}
+              error={error}
+              onHome={() => setScreen({ kind: "home" })}
+              onPulse={(id) => setScreen({ kind: "company", id, from: "home" })}
+              onMoved={(id) => setScreen({ kind: "report", id })}
+            />
           )}
           {screen.kind === "deals" && (
             <DealsScreen
@@ -322,7 +361,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           )}
           {screen.kind === "company" && (
             <>
-              {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
+              {error && <p role="alert" className="mb-3 text-xs font-medium text-ink">{error}</p>}
               <CompanyScreen
                 companyId={screen.id}
                 filedItemId={screen.filed}
@@ -345,18 +384,102 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
           )}
         </ScreenTransition>
       </div>
-      <AddToCompany
-        label={pending ? itemName(pending) : null}
-        companies={companies ?? []}
-        onCancel={cancelPick}
-        onSubmit={(choice) => {
-          const input = pending;
-          setPending(null);
-          if (input) onDrop(input, choice);
-        }}
-      />
     </PanelFrame>
   );
+}
+
+/**
+ * The wireframe's third screen (decision 61): the Sauce Report for what was just
+ * filed, previewed in the panel, with Download and the way into the pulse.
+ * While the item is still being checked it shows the progress card.
+ */
+function ReportScreen({
+  companyId,
+  filed,
+  busy,
+  step,
+  filing,
+  error,
+  onHome,
+  onPulse,
+  onMoved,
+}: {
+  companyId?: string;
+  filed?: string | null;
+  busy: boolean;
+  step: number;
+  filing: string | null;
+  error: string | null;
+  onHome: () => void;
+  onPulse: (id: string) => void;
+  onMoved: (id: string) => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onHome}
+        className="group mb-3 inline-flex min-h-6 items-center gap-1 text-[13px] text-graphite transition-colors duration-150 hover:text-ink"
+      >
+        <ArrowLeft aria-hidden="true" size={14} weight="light" className="transition-transform duration-150 ease-out group-hover:-translate-x-0.5" />
+        Home
+      </button>
+      <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">Sauce Report</h1>
+      {!companyId ? (
+        <div className="mt-5">
+          {busy ? (
+            <DropZone onPick={() => {}} busy step={step} filing={filing} />
+          ) : (
+            error && <p role="alert" className="text-[13px] font-medium text-ink">{error}</p>
+          )}
+          <div aria-hidden="true" className="tray mt-4 h-64 animate-pulse motion-reduce:animate-none" />
+        </div>
+      ) : (
+        <>
+          {filed && <div className="mt-4"><FiledToastFor companyId={companyId} itemId={filed} onMoved={onMoved} /></div>}
+          <div className="mt-4">
+            <SauceReportPreview companyId={companyId} />
+          </div>
+          <div className="mt-6 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => onPulse(companyId)}
+              className="group inline-flex min-h-9 items-center gap-1 text-[13px] font-medium text-ink"
+            >
+              Open pulse
+              <CaretRight aria-hidden="true" size={13} weight="light" className="transition-transform duration-150 group-hover:translate-x-0.5" />
+            </button>
+            <a
+              href={sauceUrl({ company: companyId, print: true })}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-9 items-center gap-2 rounded-full bg-ink px-4 text-[13px] font-medium text-paper transition-colors duration-150 hover:bg-ink/90"
+            >
+              <DownloadSimple aria-hidden="true" size={15} weight="light" />
+              Download
+              <span className="sr-only"> the Sauce Report (PDF, opens in a new tab)</span>
+            </a>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/** "Filed under X · Change" for the report screen, with the company's name looked up. */
+function FiledToastFor({ companyId, itemId, onMoved }: { companyId: string; itemId: string; onMoved: (id: string) => void }) {
+  const [name, setName] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    listCompanies()
+      .then((list) => live && setName(list.find((c) => c.id === companyId)?.name ?? null))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [companyId]);
+  if (!name) return null;
+  return <FiledToast itemId={itemId} company={name} onMoved={onMoved} />;
 }
 
 /** One panel state, rendered from props. Also used by /panel/states. */

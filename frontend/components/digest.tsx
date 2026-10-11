@@ -10,7 +10,8 @@ import { cn } from "./cn";
 import { Collapse } from "./collapse";
 import { KindIcons } from "./inbox";
 import { CountUp, Rise } from "./motion";
-import { DitherBar, Figure } from "./viz";
+import { FigureTile } from "./home";
+import { Meter } from "./viz";
 
 type DigestCompanyData = Digest["companies"][number];
 
@@ -29,32 +30,15 @@ function Diamond() {
   return <span aria-hidden="true" className="mx-px block h-[6px] w-[6px] shrink-0 rotate-45 border-[1.25px] border-signal" />;
 }
 
-/** The glyph key (decision 38): ● and ◇ are defined once, here, by the two top figures. */
+/** The glyph key (decisions 38, 63): ● and ◇ are defined once, here, by the two big figures. */
 function GlyphLegend({ totals }: { totals: Digest["totals"] }) {
+  // totals.discrepancies already includes the contradictions ("across your sources" rows).
   const publicCount = totals.discrepancies - totals.contradictions;
   return (
-    <Rise delay={0.1} className="mt-5 grid grid-cols-2 gap-3">
-      <Figure
-        value={
-          <span className="inline-flex items-center gap-2.5">
-            <Dot />
-            <CountUp value={publicCount} delay={0.15} />
-          </span>
-        }
-        caption="vs public records"
-        tone={publicCount > 0 ? "signal" : "ink"}
-      />
-      <Figure
-        value={
-          <span className="inline-flex items-center gap-2.5">
-            <Diamond />
-            <CountUp value={totals.contradictions} delay={0.15} />
-          </span>
-        }
-        caption="between your items"
-        tone={totals.contradictions > 0 ? "signal" : "ink"}
-      />
-    </Rise>
+    <div className="mt-5 grid grid-cols-2 gap-2">
+      <FigureTile glyph="dot" value={publicCount} caption="public" label="discrepancies with public records" flag index={0} />
+      <FigureTile glyph="diamond" value={totals.contradictions} caption="yours" label="contradictions between your items" flag index={1} />
+    </div>
   );
 }
 
@@ -126,7 +110,7 @@ function DigestCompany({
           </span>
         </span>
       </div>
-      <DitherBar
+      <Meter
         className="mt-2"
         delay={delay + 0.1}
         total={scale}

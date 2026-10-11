@@ -14,12 +14,15 @@ export function InfoTip({
   label,
   children,
   align = "end",
+  inverse = false,
   className,
 }: {
   /** The button's accessible name. */
   label: string;
   children: ReactNode;
   align?: "start" | "end";
+  /** On the navy header. */
+  inverse?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -48,7 +51,13 @@ export function InfoTip({
         onClick={() => setOpen((value) => !value)}
         className={cn(
           "flex h-6 w-6 items-center justify-center rounded-full transition-colors duration-150",
-          open ? "bg-tray text-ink" : "text-graphite hover:text-ink",
+          inverse
+            ? open
+              ? "bg-paper/15 text-paper"
+              : "text-paper/70 hover:text-paper"
+            : open
+              ? "bg-tray text-ink"
+              : "text-graphite hover:text-ink",
         )}
       >
         <Info aria-hidden="true" size={15} weight="light" />
