@@ -25,8 +25,11 @@ export function Collapse({
         className,
       )}
     >
-      {/* Side padding leaves room for focus rings inside the clipped box. */}
-      <div className="-mx-1 min-h-0 overflow-hidden px-1">{children}</div>
+      {/*
+        Padding on all four sides leaves room for a 2px focus ring (and its offset) inside the clipped box;
+        the matching negative margin keeps the layout where it was, open or closed.
+      */}
+      <div className="-m-1 min-h-0 overflow-hidden p-1">{children}</div>
     </div>
   );
 }

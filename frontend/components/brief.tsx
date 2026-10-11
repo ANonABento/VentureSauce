@@ -410,7 +410,8 @@ function Conversation({ analyst, typing }: { analyst: Analyst; typing: boolean }
 
   return (
     <Collapse open={open}>
-      <div className="pt-3">
+      {/* 16px above and below, the rhythm between cards, so the tiles under it start clearly below the input. */}
+      <div className="pt-4 pb-1">
         {analyst.log.length > 0 && (
           <div role="log" aria-label="Conversation with the analyst" className="flex max-h-96 flex-col gap-2 overflow-y-auto">
             {analyst.log.map((m, i) => (
@@ -430,7 +431,7 @@ function Conversation({ analyst, typing }: { analyst: Analyst; typing: boolean }
           </div>
         )}
         {analyst.notice && <p className="mt-2 text-xs leading-4 text-graphite">{analyst.notice}</p>}
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2">
           {typing ? (
             <form className="flex min-w-0 flex-1 items-center gap-1.5" onSubmit={submit}>
               <input
