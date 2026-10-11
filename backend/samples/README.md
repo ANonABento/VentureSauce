@@ -11,6 +11,10 @@ invented. Drop them in the panel, or drag them from the demo desk's Saved app (`
 | `13_lovable_public_claims.txt` | Lovable's blog | $400M Series C matches the Aug 2026 Form D ($382.5M sold of $400.2M, still open) and press |
 | `14_harvey_public_claims.txt` | Harvey's blog | $550M round matches the Sep 2026 Form D ($550.3M sold) and press |
 
+| Email | Source | What it shows (live) |
+| --- | --- | --- |
+| `Legora.eml` | Legora due diligence report (10 Oct 2026, Research) as an email, PDF attached | Files under Legora as an email item, alongside `12_legora_public_claims.txt` |
+
 More real input: any company in the desk's **Deal flow** (1,000 startups from SEC Form D, via Data's pipeline). Drag a
 row with a confirmed website into the panel, and it reads the site and checks it against the filings, LinkedIn and
 Crunchbase.
