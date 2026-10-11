@@ -4,27 +4,26 @@ import { motion } from "motion/react";
 import { DUR, EASE_ENTER } from "@/lib/motion";
 
 /*
- * The masthead (decisions 53, 55, 56): the horizon art flipped, so the navy
- * planet surface continues straight out of the navy header and its ASCII
- * characters dissolve downward past the cobalt atmosphere line into the page.
- * Each screen frames a different stretch of the arc; navigating pans along it.
- * Decorative only: the title sits below, on paper.
+ * The masthead (decisions 53, 55): a band of the horizon art at the top of
+ * every screen: starry sky, the cobalt atmosphere line, the top of the navy
+ * planet fading into the paper. Each screen frames a different stretch of the
+ * arc; moving between screens pans along it. Decorative only: the title sits
+ * below the band, on paper.
  */
 
 export type Scene = "home" | "deals" | "company" | "digest";
 
 /** Horizontal focus along the arc per screen (kept away from the edges so the band never shows blank). */
 const FOCUS_X: Record<Scene, number> = { home: 0.5, deals: 0.3, company: 0.7, digest: 0.4 };
-/** Vertical focus on the flipped art: the densest surface meets the header, the atmosphere line sits low in the band. */
-const FOCUS_Y = 0.33;
+/** Vertical focus: the atmosphere line sits in the upper third, the planet fills the rest and fades out. */
+const FOCUS_Y = 0.77;
 
 export function Masthead({ scene }: { scene: Scene }) {
   return (
     <div
       aria-hidden="true"
-      // Pulled up behind the floating glass header (56px with its margin, plus the page's 12px padding), so the art shows through it.
-      className="pointer-events-none relative -mx-4 -mt-[68px] h-[196px] overflow-hidden"
-      // Solid where it meets the header, gone by the bottom.
+      className="pointer-events-none relative -mx-4 -mt-3 h-[108px] overflow-hidden"
+      // The sky is the paper colour already; only the dense planet fades out at the bottom.
       style={{ maskImage: "linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%)" }}
     >
       <motion.img
@@ -32,15 +31,9 @@ export function Masthead({ scene }: { scene: Scene }) {
         alt=""
         className="absolute top-1/2 left-1/2 w-[220%] max-w-none"
         initial={false}
-        animate={{ x: `${-FOCUS_X[scene] * 100}%`, y: `${-FOCUS_Y * 100}%`, scaleY: -1 }}
+        animate={{ x: `${-FOCUS_X[scene] * 100}%`, y: `${-FOCUS_Y * 100}%` }}
         transition={{ duration: DUR.signature + 0.2, ease: EASE_ENTER }}
       />
-      {/*
-       * Colour for the glass to frost (decision 66): navy deepening into a cobalt glow just under the header,
-       * so the pane blurs a real gradient rather than flat texture.
-       */}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgb(10_31_61/0.55)_0%,rgb(53_80_230/0.45)_38%,rgb(63_90_245/0.18)_58%,transparent_80%)]" />
-      <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(60%_100%_at_70%_0%,rgb(142_160_255/0.45),transparent_70%)]" />
     </div>
   );
 }
