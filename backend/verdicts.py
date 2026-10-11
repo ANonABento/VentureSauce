@@ -272,6 +272,28 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
     return out
 
 
+def crunchbase_checks(claims: list[dict], cb: dict | None) -> list[dict]:
+    """Total raised vs. Crunchbase's disclosed funding. Crunchbase lags and misses rounds, so a different total is
+    context ("couldn't verify" with the figure), never a flag on its own; a close one is a medium-confidence match."""
+    total = (cb or {}).get("total_funding_usd")
+    if not isinstance(total, (int, float)) or total <= 0:
+        return []
+    out = []
+    common = dict(unit="usd", source="crunchbase", via="brightdata", observed_value=total, source_url=cb.get("url"),
+                  source_date=(cb.get("fetched_at") or "")[:10] or None)
+    for c in claims:
+        if c["claim_type"] != "raised" or _is_ask(c):
+            continue
+        if _close(c["value"], total):
+            out.append(_check(c, **common, verdict="match", confidence="medium",
+                              note=f"Crunchbase lists {usd(total)} in disclosed funding."))
+        else:
+            out.append(_check(c, **common, verdict="unverifiable", confidence="low",
+                              note=f"Crunchbase lists {usd(total)} in disclosed funding vs. {usd(c['value'])} claimed. "
+                                   "Crunchbase often misses or lags rounds, so check it against the Form D."))
+    return out
+
+
 def press_checks(claims: list[dict], press: list[dict]) -> list[dict]:
     out = []
     common = dict(source="press", via="brightdata")

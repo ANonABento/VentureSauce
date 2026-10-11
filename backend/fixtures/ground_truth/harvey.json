@@ -1,0 +1,207 @@
+{
+ "company": "Harvey",
+ "domain": "harvey.ai",
+ "crunchbase": null,
+ "form_d": {
+  "entity_name": "Harvey AI Corp",
+  "cik": "1974654",
+  "accession": "0001974654-26-000003",
+  "filing_date": "2026-09-11",
+  "date_of_first_sale": "2026-08-28",
+  "total_offering": "Indefinite",
+  "total_sold": 550299446,
+  "total_remaining": null,
+  "num_investors": 28,
+  "url": "https://www.sec.gov/Archives/edgar/data/1974654/000197465426000003/xslFormDX01/primary_doc.xml",
+  "is_amendment": false,
+  "related_persons": [
+   "Winston Weinberg",
+   "Gabriel Pereyra",
+   "Pat Grady",
+   "Ilya Fushman",
+   "John LaBarre",
+   "Alan Ghelberg",
+   "Katie Burke"
+  ],
+  "related_people": [
+   {
+    "name": "Winston Weinberg",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Gabriel Pereyra",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Pat Grady",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Ilya Fushman",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "John LaBarre",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Alan Ghelberg",
+    "director": false,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Katie Burke",
+    "director": false,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   }
+  ],
+  "city": "SAN FRANCISCO",
+  "state": "CA",
+  "year_of_inc": "2022",
+  "industry_group": "Other Technology",
+  "history": [
+   {
+    "accession": "0001974654-26-000002",
+    "filing_date": "2026-04-06",
+    "date_of_first_sale": "2026-03-24",
+    "total_offering": "Indefinite",
+    "total_sold": 200009773,
+    "total_remaining": null,
+    "num_investors": 10,
+    "url": "https://www.sec.gov/Archives/edgar/data/1974654/000197465426000002/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0001974654-25-000002",
+    "filing_date": "2025-02-14",
+    "date_of_first_sale": "2025-02-11",
+    "total_offering": 299999280,
+    "total_sold": 299999280,
+    "total_remaining": 0,
+    "num_investors": 9,
+    "url": "https://www.sec.gov/Archives/edgar/data/1974654/000197465425000002/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0001974654-24-000004",
+    "filing_date": "2024-07-30",
+    "date_of_first_sale": "2024-07-15",
+    "total_offering": 99999693,
+    "total_sold": 98999753,
+    "total_remaining": 999940,
+    "num_investors": 8,
+    "url": "https://www.sec.gov/Archives/edgar/data/1974654/000197465424000004/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0001974654-24-000002",
+    "filing_date": "2024-01-03",
+    "date_of_first_sale": "2023-12-18",
+    "total_offering": 80000000,
+    "total_sold": 65999855,
+    "total_remaining": 14000145,
+    "num_investors": 3,
+    "url": "https://www.sec.gov/Archives/edgar/data/1974654/000197465424000002/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0001974654-23-000001",
+    "filing_date": "2023-04-26",
+    "date_of_first_sale": "2023-04-10",
+    "total_offering": 25829988,
+    "total_sold": 25829988,
+    "total_remaining": 0,
+    "num_investors": 16,
+    "url": "https://www.sec.gov/Archives/edgar/data/1974654/000197465423000001/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   }
+  ],
+  "edgar_company_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1974654&type=D",
+  "first_filing_date": null,
+  "via": "sec_edgar"
+ },
+ "linkedin": {
+  "employees": 1985,
+  "company_size": "1,001-5,000 employees",
+  "url": "https://www.linkedin.com/company/harvey-ai",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
+ },
+ "press": [
+  {
+   "title": "Harvey Raises $550M at a $15.5B Valuation to Help Legal Teams Own Their Intelligence - Harvey",
+   "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNMzhxRXRqZFpTQnE1TkthcDNTdEl4RnFESFR0LTlvdTlDTGF4WTBPb2Y0dTNKNXFLU0dDNC1LM3N0RUZJOXJIUjR5cTdfVU1ZT3Qwa0d3ZGMtRWhGYnBfeWtYYzdIMkNUU01PWXhuZGswQWFmVWZiSkQ2WUtfcVdlNTFBUko2UnNpRTluU3hvOEM4M1JVMTBZVVUzX0pkT3EwS2JQTEFCcGpjY1RWRDNfbkhoOG9vbVlsZ1lCYw?oc=5",
+   "date": "2026-09-09",
+   "source": "Harvey",
+   "snippet": "Harvey Raises $550M at a $15.5B Valuation to Help Legal Teams Own Their Intelligence",
+   "amount_mentioned": 550000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Harvey raises $550M at $15.5B valuation - SaasRise",
+   "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxPZEVCakxKS3RkREFId0pxbDRaSFJuX1lzWXFOWXZ4R1QzTVJ2UXM4WXV5b0VWbnRjcGhWWnFTMkRCRS1KWEpzamtJM21iVmJwOTMzMkdRZEFwWG55bENtckVmMFBIZEhFUVA4N0s5cGg5Sl9SRXJsa3FCdmNhLTUwSDUxWE51eWdKUzM4bllqWlp3dl9wQ015ai1WdHFnMi0yOEE4d0ZzOWhicTBhWHVmbjNXYlFZbEtETzlxQ1NjV3l2bi1H?oc=5",
+   "date": "2026-10-02",
+   "source": "SaasRise",
+   "snippet": "Harvey raises $550M at $15.5B valuation",
+   "amount_mentioned": 550000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Harvey raises $550M in latest round of funding - ABA Journal",
+   "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxNV1poUkVETVBHNlhEajI0aVlKTXBCMzhHUTZYdXpVVE9ETHBRelo0QkZWMjg0SzFHbWVSM2plSS1aZUpJcFlKcHpKZ0ZlcWlsQk9xY0t6Z1BIWFRaanF6a05makc3MGxuVEJvTFZqT2hwcDFhQnVaM25GSW9vRkZ5cmcxM0NhSjZGaW45UTlKeloxU3NpVW1B?oc=5",
+   "date": "2026-09-10",
+   "source": "ABA Journal",
+   "snippet": "Harvey raises $550M in latest round of funding",
+   "amount_mentioned": 550000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Harvey Raises $550m at $15.5bn Val, Buys Guardrails AI - Artificial Lawyer",
+   "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOWjJvZ1FjWnFqTXBBa1dCa2hUMDBPZDVocEk5Yzd5ZFBoeGtmUzFvM1RvakVOdXdHVU1KMWJxa25SSUJmUEhQQl8yenVzWFZKaUZVOExkNkdGbzNSeDVtc3ZkcUxPWWhUVDhVcGdQWGllTHVEbzBGTXMzZXNGaUdCRUsxanRjcWlJSWN4VFFmSE9MV1Q2c0pBQl9kdGU?oc=5",
+   "date": "2026-09-09",
+   "source": "Artificial Lawyer",
+   "snippet": "Harvey Raises $550m at $15.5bn Val, Buys Guardrails AI",
+   "amount_mentioned": 550000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Harvey raises $550M more to develop AI tools for legal teams - SiliconANGLE",
+   "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNQ0xRZXZfbmpPVmdjVGtlWDNaQURHaUpQZHRBVktiZndtX2FoZ1NOamVCWHFETFNLbkM4MEE0Y2p6ekFnekFQWmVuSW9wMzcyeXBZWHJ1ZVhFeks5bVBZRFU5emJfYmdNX3hEalRIZG5FcGJyTkkwYktoVFdNd0ZLX19McG9kWURaTmFvNms2bk84UEc0UUlpbUJKZVl3elNo?oc=5",
+   "date": "2026-09-09",
+   "source": "SiliconANGLE",
+   "snippet": "Harvey raises $550M more to develop AI tools for legal teams",
+   "amount_mentioned": 550000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Harvey raises US$550M to accelerate AI expansion - Iberian Lawyer",
+   "url": "https://news.google.com/rss/articles/CBMifEFVX3lxTE1ibGcxek92QVQtRllQQnEwTm8tVGtTX1lheS1NNW44cjNVTjYzMVBvbDFrdVpwd29KbHROVlhSbDN3b2NFM3FYdHhKREpRd09OYWZUeXZFd1d6S1dSVU8xZUVFYjhiQU4xbmpDSVp1UzhLX0d4bHk1NkxnWjY?oc=5",
+   "date": "2026-09-09",
+   "source": "Iberian Lawyer",
+   "snippet": "Harvey raises US$550M to accelerate AI expansion",
+   "amount_mentioned": 550000000,
+   "via": "brightdata"
+  }
+ ],
+ "fetched_at": "2026-10-11T02:02:16.951323+00:00"
+}

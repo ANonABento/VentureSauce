@@ -22,7 +22,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 # Order the panel shows them in. Each check's source decides which step adds it.
 STATUSES = ["parsing", "checking_sec", "checking_linkedin", "checking_press", "comparing_sources", "ready"]
-STEP_FOR_SOURCE = {"form_d": "checking_sec", "linkedin": "checking_linkedin", "press": "checking_press",
+STEP_FOR_SOURCE = {"form_d": "checking_sec", "linkedin": "checking_linkedin", "press": "checking_press", "crunchbase": "checking_press",
                    "your_sources": "comparing_sources"}
 
 JOBS: dict[str, dict] = {}
@@ -74,6 +74,7 @@ def company_view(company_id: str, gt: dict | None = None) -> dict:
     checks = (verdicts.form_d_checks(checkable, gt.get("form_d"), co["name"])
               + verdicts.headcount_checks(checkable, gt.get("linkedin"))
               + verdicts.press_checks(checkable, gt.get("press") or [])
+              + verdicts.crunchbase_checks(checkable, gt.get("crunchbase"))
               + analysis.contradictions(claims))
     checks = _honest_unverifiable(checks, gt)
     view = {"company": _company_header(co, gt), "items": [analysis.item_summary(i) for i in items],
@@ -82,7 +83,7 @@ def company_view(company_id: str, gt: dict | None = None) -> dict:
 
 
 # Bump when check logic or wording changes: saved views from older code are recomputed when next read.
-CHECKS_VERSION = 9
+CHECKS_VERSION = 10
 
 
 def checked_marker() -> dict:

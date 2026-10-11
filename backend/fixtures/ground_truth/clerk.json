@@ -1,6 +1,7 @@
 {
  "company": "Clerk",
- "domain": null,
+ "domain": "clerk.com",
+ "crunchbase": null,
  "form_d": {
   "entity_name": "CLERK, INC.",
   "cik": "1959758",
@@ -88,9 +89,9 @@
   "website": "https://clerk.com",
   "url": "https://www.linkedin.com/company/clerkinc/",
   "linked_from": "https://clerk.com/",
-  "fetched_at": "2026-10-11T01:32:22.638165+00:00",
+  "fetched_at": "2026-10-11T02:01:53.780326+00:00",
   "via": "brightdata"
  },
  "press": [],
- "fetched_at": "2026-10-11T01:32:24.554818+00:00"
+ "fetched_at": "2026-10-11T02:01:55.245381+00:00"
 }

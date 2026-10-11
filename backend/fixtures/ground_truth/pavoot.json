@@ -1,17 +1,25 @@
 {
  "company": "Pavoot",
- "domain": null,
+ "domain": "pavoot.com",
+ "crunchbase": {
+  "total_funding_usd": 500000.0,
+  "largest_round_usd": 500000.0,
+  "last_funding_type": "pre_seed",
+  "num_rounds": 1,
+  "url": "https://www.crunchbase.com/organization/pavoot",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
+ },
  "form_d": null,
  "linkedin": {
   "employees": 2,
   "company_size": "2-10 employees",
-  "name": "Pavoot (YC P26)",
-  "website": "https://pavoot.com/?utm_source=linkedin&utm_medium=outreach&utm_campaign=yc_launch",
-  "url": "https://www.linkedin.com/company/pavoot/",
-  "linked_from": "https://pavoot.com/",
-  "fetched_at": "2026-10-11T01:33:00.370329+00:00",
-  "via": "brightdata"
+  "url": "https://www.linkedin.com/company/pavoot",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
  },
  "press": [],
- "fetched_at": "2026-10-11T01:33:03.252450+00:00"
+ "fetched_at": "2026-10-11T02:02:05.512183+00:00"
 }

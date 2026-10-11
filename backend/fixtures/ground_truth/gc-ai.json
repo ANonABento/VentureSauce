@@ -1,0 +1,141 @@
+{
+ "company": "GC AI",
+ "domain": "gc.ai",
+ "crunchbase": {
+  "total_funding_usd": 71646596.0,
+  "largest_round_usd": 60000000.0,
+  "last_funding_type": "series_b",
+  "num_rounds": 3,
+  "url": "https://www.crunchbase.com/organization/general-counsel-ai",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
+ },
+ "form_d": {
+  "entity_name": "General Counsel AI, Inc.",
+  "cik": "2036281",
+  "accession": "0002036281-25-000004",
+  "filing_date": "2025-11-19",
+  "date_of_first_sale": "2025-11-06",
+  "total_offering": 55589951,
+  "total_sold": 55589951,
+  "total_remaining": 0,
+  "num_investors": 7,
+  "url": "https://www.sec.gov/Archives/edgar/data/2036281/000203628125000004/xslFormDX01/primary_doc.xml",
+  "is_amendment": false,
+  "related_persons": [
+   "Cecilia Ziniti",
+   "Bardia Pourvakil",
+   "Lucas Sheiner",
+   "Rory O'Driscoll"
+  ],
+  "related_people": [
+   {
+    "name": "Cecilia Ziniti",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Bardia Pourvakil",
+    "director": false,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Lucas Sheiner",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Rory O'Driscoll",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   }
+  ],
+  "city": "SAN FRANCISCO",
+  "state": "CA",
+  "year_of_inc": "2023",
+  "industry_group": "Other Technology",
+  "history": [
+   {
+    "accession": "0002036281-25-000002",
+    "filing_date": "2025-05-30",
+    "date_of_first_sale": "2025-01-02",
+    "total_offering": 10000000,
+    "total_sold": 10000000,
+    "total_remaining": 0,
+    "num_investors": 27,
+    "url": "https://www.sec.gov/Archives/edgar/data/2036281/000203628125000002/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0002036281-24-000001",
+    "filing_date": "2024-09-17",
+    "date_of_first_sale": "2024-05-22",
+    "total_offering": 1646596,
+    "total_sold": 1646596,
+    "total_remaining": 0,
+    "num_investors": 14,
+    "url": "https://www.sec.gov/Archives/edgar/data/2036281/000203628124000001/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   }
+  ],
+  "edgar_company_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=2036281&type=D",
+  "first_filing_date": null,
+  "via": "sec_edgar"
+ },
+ "linkedin": {
+  "employees": 155,
+  "company_size": "51-200 employees",
+  "url": "https://www.linkedin.com/company/gc-ai",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
+ },
+ "press": [
+  {
+   "title": "GC AI Raises $60m at $0.55 Billion Valuation - Artificial Lawyer",
+   "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxPaEVlUFZ5dHlGYm4zZl9nU1ViMWR5bjZGQkVHZ3Y4OG9ncENXVFNicVBqam9SRHRDS1pCbWJVVlRKV3RPOFNFRjdEUk5HdTVxX0d4NW52OWF0MVQ0QWE5c3Q0X2ptaGw4WlR5YWZkTEhlM1RqdldUcXFZZlBpQndLdlRvS2dSYUJpQXE1MF80U2E?oc=5",
+   "date": "2025-11-12",
+   "source": "Artificial Lawyer",
+   "snippet": "GC AI Raises $60m at $0.55 Billion Valuation",
+   "amount_mentioned": 60000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "GC AI Raises $60 Million Series B to Give Every Company a Legal Advantage - Business Wire",
+   "url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxPaHVRYTlVcV9UclVadUdobHRoekhPdjBBanF5UGZNOEFvSzl0REE1ZW9tcjhVYTN1bG1sZXJWLWhkdGhyMHRNOVYxVUNfRHBha2UxNkw0QXp3LXotTFZWTHJ6aGx1eUU1cWktRllxT3hXUFJSdFdnX0N6alJyRW1aMjlfTUpxTE0tbnAzS0oxZXhkRmhYUFh3b09PVW9rX2dXN3RhQVBDMmpadjFoRlZFS19fUTVqWkJNR0JackQ1M2JzMmdzd3Z6eFJmeGE?oc=5",
+   "date": "2025-11-12",
+   "source": "Business Wire",
+   "snippet": "GC AI Raises $60 Million Series B to Give Every Company a Legal Advantage",
+   "amount_mentioned": 60000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "GC AI Raises $60M in Series B Funding - FinSMEs",
+   "url": "https://news.google.com/rss/articles/CBMifkFVX3lxTE82eHZuZmxHN0NVLVVrRWxPOGdSenZUdUtaR2E1WWV1NWxxQTN3ZjYxTG9aMGdHZUMwUEprR2Z0TDc3SVFnZnFGSUU4MGZHVmNlQUVzRDh4dE1lUGZEenFIVllxbWtGWE9wR0xPcnRsaWNaVms1YllHOE9XVEZvUQ?oc=5",
+   "date": "2025-11-12",
+   "source": "FinSMEs",
+   "snippet": "GC AI Raises $60M in Series B Funding",
+   "amount_mentioned": 60000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "GC AI Raises $60 Million Series B At $555 Million Raised To Empower In-House Legal Teams Worldwide - Pulse 2.0",
+   "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxNdUtpbF9PWjdfTGh0aHkzNEpuckVnWGNGbjJJM3VUYXNubVdjdGUyRFE4Zy1ibGY5OVNXU0dHYmZLQUc4dnlYVXk4bGhXa0NSNjMxdi15UVZwVVRHdVo1aHp5NzRNeVN4Y0JzUWVqLTNhdlQxQnRvX3hscDU0S1l2YUI1enVyUlFKb1dtcTNRZktNczZ3enZ3Tk1Vd2s2LUpsOFlVaEpOUmFHT3VsRGxsODloSk5Nd3fSAbwBQVVfeXFMUDNmNEU0WEt2Nkg1N0I3YTJoemhCWk01X1dMVXpreFpqcFRKNXVVSDlCOHNhcVZFUnVKMHdYWmR1SnlWNnNOQkc5c2w2bGItSXpsSUtaN2I4clFSLWc0VzhhWXVwSEFlMkdrX3BkU1ZwQmlxVl9GeXhaaXpDTWlOa01jTzZKMjRvZlM0UlNKbTUtZy1UTzdyS1lqcFJZWHJxTk1jb3N1c3lGM1U4MV8wN0g3TllLaU1BRVBWX1Y?oc=5",
+   "date": "2025-11-12",
+   "source": "Pulse 2.0",
+   "snippet": "GC AI Raises $60 Million Series B At $555 Million Raised To Empower In-House Legal Teams Worldwide",
+   "amount_mentioned": 60000000,
+   "via": "brightdata"
+  }
+ ],
+ "fetched_at": "2026-10-11T02:02:19.165524+00:00"
+}

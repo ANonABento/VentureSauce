@@ -11,7 +11,8 @@ import analysis
 from verdicts import usd
 
 STATUS = {"gap": "discrepancy", "match": "consistent", "unverifiable": "unverified"}
-SOURCE_LABEL = {"form_d": "SEC Form D", "linkedin": "LinkedIn via Bright Data", "press": "Press via Bright Data"}
+SOURCE_LABEL = {"form_d": "SEC Form D", "linkedin": "LinkedIn via Bright Data", "press": "Press via Bright Data",
+                "crunchbase": "Crunchbase via Bright Data"}
 FIELD = {"headcount": "headcount", "raised": "latest_raise", "round_size": "latest_raise", "board": "leadership",
          "customer": "investors", "metric": "revenue"}
 STATUS_RANK = {"discrepancy": 0, "unverified": 1, "not_disclosed": 2, "consistent": 3}
@@ -65,14 +66,16 @@ def _short(c: dict) -> str:
     if c["source"] == "your_sources":
         return f"{len(c.get('values', []))} sources disagree"
     if c["verdict"] == "unverifiable":
-        return {"form_d": "No Form D found", "press": "No public mention", "linkedin": "No LinkedIn data"}.get(c["source"], "Couldn't verify")
+        return {"form_d": "No Form D found", "press": "No public mention", "linkedin": "No LinkedIn data",
+                "crunchbase": "Crunchbase differs"}.get(c["source"], "Couldn't verify")
     a, b = c.get("claimed_value"), c.get("observed_value")
     if c["verdict"] == "gap" and isinstance(a, (int, float)) and isinstance(b, (int, float)):
         diff = b - a
         sign = "+" if diff > 0 else "−"
         amount = usd(abs(diff)) if c.get("unit") == "usd" else f"{abs(diff):,}"
         return f"{sign}{amount} vs. claim"
-    return {"form_d": "Matches Form D", "linkedin": "Matches LinkedIn", "press": "Matches press"}.get(c["source"], "Matches")
+    return {"form_d": "Matches Form D", "linkedin": "Matches LinkedIn", "press": "Matches press",
+            "crunchbase": "Matches Crunchbase"}.get(c["source"], "Matches")
 
 
 def _visual(c: dict) -> dict | None:

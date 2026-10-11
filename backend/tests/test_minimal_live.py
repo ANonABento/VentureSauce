@@ -70,3 +70,6 @@ def test_a_valuation_is_not_read_as_money_raised():
     assert minimal_live._amount("Legora in Talks to Raise Funds at a Roughly $8.5 Billion Value") is None
     assert minimal_live._amount("Legora extends Series D by $50m, valuing business at $5.6bn") == 50_000_000
     assert minimal_live._amount("Acme raises $10M at $80M valuation") == 10_000_000
+    assert minimal_live._amount("Harvey hits $15.5B valuation, months after reaching $11B") is None
+    assert minimal_live._amount("Lovable doubles its valuation to $13.3 billion as investors place another big bet") is None
+    assert minimal_live._amount("Lovable confirms new $13.3B valuation, raises another $400M") == 400_000_000

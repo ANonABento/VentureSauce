@@ -1,0 +1,169 @@
+{
+ "company": "Lovable",
+ "domain": "lovable.dev",
+ "crunchbase": null,
+ "form_d": {
+  "entity_name": "Lovable Labs Inc",
+  "cik": "2055162",
+  "accession": "0002055162-26-000001",
+  "filing_date": "2026-08-17",
+  "date_of_first_sale": "2026-07-31",
+  "total_offering": 400204068,
+  "total_sold": 382498612,
+  "total_remaining": 17705456,
+  "num_investors": 27,
+  "url": "https://www.sec.gov/Archives/edgar/data/2055162/000205516226000001/xslFormDX01/primary_doc.xml",
+  "is_amendment": false,
+  "related_persons": [
+   "Anton Osika",
+   "Fabian Hedin",
+   "Benjamin Fletcher",
+   "Andy Toung",
+   "Matt Murphy"
+  ],
+  "related_people": [
+   {
+    "name": "Anton Osika",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Fabian Hedin",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Benjamin Fletcher",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Andy Toung",
+    "director": false,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Matt Murphy",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   }
+  ],
+  "city": "Boston",
+  "state": "MA",
+  "year_of_inc": "2023",
+  "industry_group": "Other Technology",
+  "history": [
+   {
+    "accession": "0002055162-25-000005",
+    "filing_date": "2025-12-22",
+    "date_of_first_sale": "2025-12-11",
+    "total_offering": 425615008,
+    "total_sold": 425014960,
+    "total_remaining": 600048,
+    "num_investors": 34,
+    "url": "https://www.sec.gov/Archives/edgar/data/2055162/000205516225000005/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0002055162-25-000002",
+    "filing_date": "2025-07-21",
+    "date_of_first_sale": "2025-06-27",
+    "total_offering": 193434768,
+    "total_sold": 192741446,
+    "total_remaining": 693322,
+    "num_investors": 40,
+    "url": "https://www.sec.gov/Archives/edgar/data/2055162/000205516225000002/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0002055162-25-000001",
+    "filing_date": "2025-02-14",
+    "date_of_first_sale": "2025-01-30",
+    "total_offering": 22772898,
+    "total_sold": 20157542,
+    "total_remaining": 2615356,
+    "num_investors": 36,
+    "url": "https://www.sec.gov/Archives/edgar/data/2055162/000205516225000001/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   }
+  ],
+  "edgar_company_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=2055162&type=D",
+  "first_filing_date": null,
+  "via": "sec_edgar"
+ },
+ "linkedin": {
+  "employees": 1170,
+  "company_size": "51-200 employees",
+  "url": "https://www.linkedin.com/company/lovable-dev",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
+ },
+ "press": [
+  {
+   "title": "Lovable confirms new $13.3B valuation, raises another $400M - TechCrunch",
+   "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQUzR4alhoN3YzcnZnTjIyOWJ5ZlZLOVp1Q1RvbTZ0NmVZS3dRUkNWbnNGSXhmWWZubVAydWtRdzZCc1oxenUwZUp4RFFnb2tfUk1iT21hV0hodS1CSjA1WXFBTmVoQU1YNDhESTNoUjZaNC1xRFpKdDZ2NkcyUTRub0NtV3FQWDBIb1RDTzNpeDVJeFlqREE?oc=5",
+   "date": "2026-08-12",
+   "source": "TechCrunch",
+   "snippet": "Lovable confirms new $13.3B valuation, raises another $400M",
+   "amount_mentioned": 400000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "\ud83c\uddf8\ud83c\uddea Lovable raises $400 million in Series C funding to help people run their businesses - Arctic Today",
+   "url": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNVGVCTVhKY3dqTUtra181eDlVRjFrektNQnM2QUlucWd5OHBnZHpxRDVlY0pjM3dWSXRWMUc1LWt5Q1Eza1QxVE9FeUhNQ0pkeUNsbmczRWlnVkNGNTdLV0lVQklzMjAzVlhVSmcxWGhubDdyS1VBR21kWVBBMWxOZFBJcXRZd0xXbWZrQWQ5LVh6TDViYkZlMHhIM2N6YldUSFJpUV9sSW00MGpkb3lWUDJydU5PSnJMZ3A4WjlvTjh3Sm1lQ2tTQQ?oc=5",
+   "date": "2026-08-12",
+   "source": "Arctic Today",
+   "snippet": "\ud83c\uddf8\ud83c\uddea Lovable raises $400 million in Series C funding to help people run their businesses",
+   "amount_mentioned": 400000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Lovable raises $400M at $13.3B valuation | ETIH EdTech News - EdTech Innovation Hub",
+   "url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQNDJXSVhDYlJVaHE2OFpLTVZrbjY0LVNlbUlXdkhkeWtHQzF5dThnZXRuOVdKX1FEcjFfRGJMQWZMS3ItOURyaEYtdVFTYWxTT0VVMXBJcVRXcGdRZlQ5eGczcHE4NWlmQTE1Mlg1R1o3RHpHYVdJT2FWVVlvcjBXNG9LYmFVZmRQOEVXb2czUkxxelNHejhiTXFfVWk2ZUR4UmxyUVE1MlRPV3VOSGRkNFV0OENiMjNOS2NaSjd3?oc=5",
+   "date": "2026-08-18",
+   "source": "EdTech Innovation Hub",
+   "snippet": "Lovable raises $400M at $13.3B valuation | ETIH EdTech News",
+   "amount_mentioned": 400000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Lovable raises $400M at $13.3B valuation as Menlo, EQT back Europe\u2019s coding unicorn - Tech Funding News",
+   "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxPNEdrQUJ5dGJoMTRTemF5X2g3Qll1dUxCTUJGNzVRZHlRb3ZMQWVCMXdOZjEtazlYVDc0ak5Oc3RGNkhJUkhuZE5kaERvMDUtTzZKcENLY24tbUJuZ1A1ZF9hMHFnWWdmTVU4SW1OSUtRU0J5LVJyUjZpVHl4MG5ZUV9iSQ?oc=5",
+   "date": "2026-08-12",
+   "source": "Tech Funding News",
+   "snippet": "Lovable raises $400M at $13.3B valuation as Menlo, EQT back Europe\u2019s coding unicorn",
+   "amount_mentioned": 400000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Lovable Raises $400M in Series C Funding at $13.3 Billion Valuation - FinSMEs",
+   "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxOc1dSTko0RWROMEVPZGczb3ZHd0hBOG5TWk1SMEY5VmtRV016YzluZE1oMDVlbHk4Y2RiNHJIWnluSkhjODBCTkFpb01SQ3BWWi13bDl4MWZtQ3YySWYwaXpHWUJNVEVwUEtjOF9EM0MyY0hGWGJaR2NsanQwWl81UnE4SU1TM19qTmg0aU5WRUR5RVlfQ29mbEtxUnhWRUJ2RG9WVg?oc=5",
+   "date": "2026-08-12",
+   "source": "FinSMEs",
+   "snippet": "Lovable Raises $400M in Series C Funding at $13.3 Billion Valuation",
+   "amount_mentioned": 400000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Lovable Raises $400 Million, Now A $13.3 Billion Valuation - Cheddar",
+   "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxPNkYzVzlrbzB3UFotbnJxaW1xUW9YVlo4VnJkd2JPYkFKY1VrZkZmclJhdWs4Tm1kdjc3bzVHTDJNWXNqdjVRU29WczJrb0NMa3R1NjM3bDY5NkNLMi14ekRDWW1LZXlzYjNKcDM4SjBnZ21qTjF4Y05KbW1NbHI1ZmdZRXQ0WG0tUFlGNWhR?oc=5",
+   "date": "2026-08-14",
+   "source": "Cheddar",
+   "snippet": "Lovable Raises $400 Million, Now A $13.3 Billion Valuation",
+   "amount_mentioned": 400000000,
+   "via": "brightdata"
+  }
+ ],
+ "fetched_at": "2026-10-11T02:02:11.661237+00:00"
+}

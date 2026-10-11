@@ -18,4 +18,5 @@ def get_ground_truth(company: str, domain: str | None = None, use_cache: bool = 
     if company.strip().lower() in {"acme ai", "acme"}:
         return json.loads((_FIXTURES / "acme_ground_truth.json").read_text())
     found = minimal_live.lookup(company, domain, use_cache)
-    return {"form_d": found.get("form_d"), "linkedin": found.get("linkedin"), "press": found.get("press") or []}
+    return {"form_d": found.get("form_d"), "linkedin": found.get("linkedin"), "press": found.get("press") or [],
+            "crunchbase": found.get("crunchbase")}

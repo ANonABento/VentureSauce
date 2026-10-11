@@ -88,7 +88,7 @@ export type Check = {
   claimed_value: number | string | null;
   observed_value: number | string | null;
   unit: string | null;
-  source: "form_d" | "linkedin" | "press" | "your_sources";
+  source: "form_d" | "linkedin" | "press" | "crunchbase" | "your_sources";
   source_url: string | null;
   source_date: string | null;
   verdict: "match" | "gap" | "unverifiable";

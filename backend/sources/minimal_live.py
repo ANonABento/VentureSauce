@@ -28,6 +28,7 @@ from urllib.parse import quote_plus
 import httpx
 
 import formd_adapter
+from sources import oso
 
 log = logging.getLogger(__name__)
 HERE = Path(__file__).parent.parent
@@ -35,7 +36,9 @@ CACHE = HERE / "data" / "gt_cache"
 SNAPSHOTS = HERE / "fixtures" / "ground_truth"
 CACHE_DAYS = 3
 # CIKs checked by hand against EDGAR (docs/PLAN.md); name search can't tell them from same-named filers.
-KNOWN_CIKS = {"daytona": "1977563", "clerk": "1959758"}
+KNOWN_CIKS = {"daytona": "1977563", "clerk": "1959758",
+              # From Data's judges table (pipeline/), which matched them by website and people.
+              "lovable": "2055162", "harvey": "1974654", "gc-ai": "2036281"}
 # Names shared by many unrelated companies: no Form D unless pinned above, and press must mention their field.
 AMBIGUOUS = {
     "athena": re.compile(r"\b(legal|law|lawyers?|attorneys?)\b", re.I),
@@ -44,7 +47,8 @@ AMBIGUOUS = {
 MAX_FILINGS = 8
 # Homepages for the demo companies, for lookups that arrive without a domain (prewarm, a name typed in).
 KNOWN_DOMAINS = {"daytona": "daytona.io", "clerk": "clerk.com", "legora": "legora.com", "tailor-brands": "tailorbrands.com",
-                 "base44": "base44.com", "pavoot": "pavoot.com", "athena": "athena.law"}
+                 "base44": "base44.com", "pavoot": "pavoot.com", "athena": "athena.law",
+                 "lovable": "lovable.dev", "harvey": "harvey.ai", "gc-ai": "gc.ai"}
 
 _sec_lock = threading.Lock()
 _sec_last = [0.0]
@@ -194,7 +198,10 @@ VALUATION = re.compile(r"^\s*(pre-money\s+|post-money\s+)?valu(e|ation)\b", re.I
 
 
 def _amount(text: str) -> int | None:
-    """The money raised in a headline; a valuation ("$5.55 billion valuation", "at a $8.5B value") is skipped."""
+    """The money raised in a headline; a valuation ("$5.55 billion valuation", "at a $8.5B value") is skipped, and a
+    headline about a valuation with no funding wording ("hits $15.5B valuation, months after reaching $11B") has none."""
+    if re.search(r"valu", text or "", re.I) and not re.search(r"\b(rais|extend|secur|clos|land|bag)|\b(funding|round|series)\b", text or "", re.I):
+        return None
     for m in AMOUNT.finditer(text or ""):
         before, after = text[max(0, m.start() - 12):m.start()], text[m.end():m.end() + 12]
         if VALUATION.search(after) or re.search(r"\b(at|valued at|valuing \w+ at)\s+(a\s+)?(roughly\s+)?$", before, re.I):
@@ -302,8 +309,17 @@ def lookup(company: str, domain: str | None = None, use_cache: bool = True) -> d
         if age.days < CACHE_DAYS:
             return cached
     snap = _read(SNAPSHOTS / f"{key}.json") or {}
+    domain = domain or KNOWN_DOMAINS.get(key)
     result = {"company": company, "domain": domain}
-    for name, fetch in (("form_d", lambda: form_d(company)), ("linkedin", lambda: linkedin(company, domain)),
+    # Data's OSO tables first (LinkedIn/Crunchbase profiles confirmed by website); live fetches fill the gaps.
+    try:
+        found = oso.profiles(domain)
+    except Exception as e:
+        log.warning("OSO profiles failed for %s: %s", company, e)
+        found = {"linkedin": None, "crunchbase": None}
+    result["crunchbase"] = found["crunchbase"]
+    for name, fetch in (("form_d", lambda: form_d(company)),
+                        ("linkedin", lambda: found["linkedin"] or linkedin(company, domain)),
                         ("press", lambda: press(company))):
         try:
             result[name] = fetch()

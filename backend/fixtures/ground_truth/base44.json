@@ -1,17 +1,25 @@
 {
  "company": "Base44",
- "domain": null,
+ "domain": "base44.com",
+ "crunchbase": {
+  "total_funding_usd": null,
+  "largest_round_usd": null,
+  "last_funding_type": "non_equity_assistance",
+  "num_rounds": 1,
+  "url": "https://www.crunchbase.com/organization/base44",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
+ },
  "form_d": null,
  "linkedin": {
   "employees": 714,
   "company_size": "201-500 employees",
-  "name": "Base44",
-  "website": "http://base44.com",
-  "url": "https://www.linkedin.com/company/base44/",
-  "linked_from": "https://base44.com/",
-  "fetched_at": "2026-10-11T01:32:43.833248+00:00",
-  "via": "brightdata"
+  "url": "https://www.linkedin.com/company/base44",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
  },
  "press": [],
- "fetched_at": "2026-10-11T01:32:47.911617+00:00"
+ "fetched_at": "2026-10-11T02:02:03.953078+00:00"
 }

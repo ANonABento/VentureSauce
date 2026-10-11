@@ -1,6 +1,7 @@
 {
  "company": "Legora",
- "domain": null,
+ "domain": "legora.com",
+ "crunchbase": null,
  "form_d": {
   "entity_name": "Legora, Inc.",
   "cik": "2071663",
@@ -84,12 +85,10 @@
  "linkedin": {
   "employees": 919,
   "company_size": "501-1,000 employees",
-  "name": "Legora",
-  "website": "legora.com",
-  "url": "https://www.linkedin.com/company/wearelegora/",
-  "linked_from": "https://legora.com/",
-  "fetched_at": "2026-10-11T01:32:28.221484+00:00",
-  "via": "brightdata"
+  "url": "https://www.linkedin.com/company/wearelegora",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
  },
  "press": [
   {
@@ -147,5 +146,5 @@
    "via": "brightdata"
   }
  ],
- "fetched_at": "2026-10-11T01:32:30.140121+00:00"
+ "fetched_at": "2026-10-11T02:01:57.185148+00:00"
 }

@@ -1,8 +1,25 @@
 {
  "company": "Tailor Brands",
- "domain": null,
+ "domain": "tailorbrands.com",
+ "crunchbase": {
+  "total_funding_usd": null,
+  "largest_round_usd": null,
+  "last_funding_type": "series_d",
+  "num_rounds": 5,
+  "url": "https://www.crunchbase.com/organization/tailor-brands",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
+ },
  "form_d": null,
- "linkedin": null,
+ "linkedin": {
+  "employees": 141,
+  "company_size": "51-200 employees",
+  "url": "https://www.linkedin.com/company/tailor-brands",
+  "fetched_at": "2026-10-11T01:59:51.847522+00:00",
+  "via": "brightdata",
+  "through": "oso"
+ },
  "press": [
   {
    "title": "Tailor Brands raises $4M to have robots design logos for you - TechCrunch",
@@ -23,5 +40,5 @@
    "via": "brightdata"
   }
  ],
- "fetched_at": "2026-10-11T01:32:35.187910+00:00"
+ "fetched_at": "2026-10-11T02:01:59.388615+00:00"
 }
