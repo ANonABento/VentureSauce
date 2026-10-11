@@ -152,7 +152,25 @@ export const getReport = (q: { companyId?: string; url?: string; company?: strin
   );
   return call(`/api/delta?${p}`).then((r) => json<DeltaReport & { questions: Question[]; items: Item[] }>(r));
 };
-export const getDigest = (period: "day" | "week") => call(`/digest?period=${period}`).then((r) => json<Digest>(r));
+/** Data's OSO profiles for a domain (backend GET /oso). A profile is null unless its own website is that domain. */
+export type OsoProfiles = {
+  domain: string;
+  linkedin: { employees: number; company_size: string | null; url: string; fetched_at: string } | null;
+  crunchbase: {
+    total_funding_usd: number | null;
+    largest_round_usd: number | null;
+    last_funding_type: string | null;
+    num_rounds: number | null;
+    url: string;
+    fetched_at: string;
+  } | null;
+  fetched_at: string | null;
+};
+export const getOso = (q: { domain?: string; companyId?: string }) =>
+  call(`/oso?${new URLSearchParams(q.companyId ? { company_id: q.companyId } : { domain: q.domain ?? "" })}`).then((r) =>
+    json<OsoProfiles>(r),
+  );
+export const getDigest =(period: "day" | "week") => call(`/digest?period=${period}`).then((r) => json<Digest>(r));
 export const recordBrief = (script: string) =>
   call(`/digest/audio`, {
     method: "POST",
