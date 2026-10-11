@@ -344,6 +344,8 @@ const DOCS = [
   { id: "daytona", title: "Daytona raises $24M Series A", from: "vcnewsdaily.com", when: "Feb 6, 2026", file: "page_daytona_announcement.pdf", pages: 2, size: "184 KB" },
 ];
 const FILE_COLORS = { pdf: "#ea4335", txt: "#4285f4", sec: "#5f6368" };
+// Every page of each PDF, rendered to an image (backend/static/demo/img/<id>-<page>.webp) for the Drive-style viewer.
+const IMG = "/static/demo/img/";
 const fileIcon = (kind) => `<svg class="fi" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="${FILE_COLORS[kind]}"/><text x="12" y="16" text-anchor="middle" font-size="7" font-weight="700" fill="#fff" font-family="Arial">${{ pdf: "PDF", txt: "≡", sec: "SEC" }[kind]}</text></svg>`;
 
 function filesShell(main, overlay = "") {
@@ -361,7 +363,7 @@ function filesShell(main, overlay = "") {
 async function filesList() {
   const { notes } = await notes_();
   const cards = DOCS.map((d) => `<a class="fd-card" href="#files/${d.id}" draggable="true" data-file="${d.file}">
-      <div class="th"><img src="/static/demo/img/${d.id}-p1.webp" alt="" class="pt"></div>
+      <div class="th"><img src="${IMG}${d.id}-1.webp" alt="" class="pt"></div>
       <div class="cap">${fileIcon("pdf")}<span>${esc(d.title)}</span></div><small>Saved from ${esc(d.from)} · ${d.when}</small></a>`).join("");
   const rows = [
     ...DOCS.map((d) => `<tr data-href="#files/${d.id}" draggable="true" data-file="${d.file}"><td><span class="nm">${fileIcon("pdf")}${esc(d.title)}.pdf</span></td><td>${esc(d.from)}</td><td>${d.when}</td><td>${d.size}</td><td class="acts">${ic("dl")}${ic("share")}</td></tr>`),
@@ -381,14 +383,34 @@ async function filesView(id) {
       <header class="fd-ovtop"><a class="ib" href="#files" aria-label="Close">${ic("back")}</a>${fileIcon("pdf")}<b draggable="true" data-file="${d.file}">${esc(d.title)}.pdf</b>
         <span class="grow"></span><span class="fd-open">Saved from ${esc(d.from)}</span><span class="grow"></span>
         <a class="ib" href="${S + d.file}" download aria-label="Download">${ic("dl")}</a></header>
-      <iframe class="fd-pdf" src="${S + d.file}#toolbar=0&view=FitH" title="${esc(d.title)}"></iframe>
+      <div class="fd-pages">${Array.from({ length: d.pages }, (_, i) =>
+        `<img src="${IMG}${d.id}-${i + 1}.webp" alt="${esc(d.title)}, page ${i + 1}" class="pt" loading="lazy">`).join("")}</div>
+      <div class="fd-pill">Page <b id="fd-pg">1</b> / ${d.pages}</div>
     </div>`;
   return filesShell(await filesList(), overlay);
 }
-function filesWire() {
+function filesWire(id) {
   document.querySelectorAll("tr[data-href]").forEach((r) => (r.onclick = () => (location.hash = r.dataset.href)));
   document.querySelectorAll("tr[data-ext]").forEach((r) => (r.onclick = () => window.open(r.dataset.ext, "_blank")));
+  keys.on = null;
+  const box = $(".fd-pages");
+  if (!DOCS.find((x) => x.id === id) || !box) return;
+  const imgs = [...box.querySelectorAll("img")];
+  const go = (n) => imgs[n - 1]?.scrollIntoView({ block: "start", behavior: "smooth" });
+  const cur = () => Number($("#fd-pg").textContent);
+  box.addEventListener("scroll", () => {
+    const top = box.getBoundingClientRect().top + 80;
+    $("#fd-pg").textContent = imgs.filter((im) => im.getBoundingClientRect().top <= top).length || 1;
+  });
+  keys.on = (e) => {
+    if (["ArrowRight", "ArrowDown", "PageDown"].includes(e.key)) { e.preventDefault(); go(Math.min(imgs.length, cur() + 1)); }
+    if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); go(Math.max(1, cur() - 1)); }
+    if (e.key === "Escape") location.hash = "#files";
+  };
+  $(".fd-ov").addEventListener("click", (e) => { if (e.target.classList.contains("fd-pages")) location.hash = "#files"; });
 }
+const keys = { on: null };
+document.addEventListener("keydown", (e) => keys.on?.(e));
 
 /* ───────────── Notes (Notion-like): company research from public records ───────────── */
 let NOTES_ = null;
@@ -545,6 +567,7 @@ async function route() {
   app = OLD[app] || app;
   if (!APPS[app]) app = "mail";
   const a = APPS[app];
+  keys.on = null;
   $("#app").innerHTML = await a.view(...rest);
   await a.wire?.(...rest);
   document.title = a.title(...rest);

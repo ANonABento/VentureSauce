@@ -373,7 +373,6 @@ a { color: inherit; }
 .df-news small { font-size: 11.5px; color: #5f6368; text-transform: uppercase; letter-spacing: .04em; }
 .df-news b { font-size: 16px; color: #202124; }
 .df-news span { font-size: 12.5px; color: #1a73e8; }
-.fd-pdf { justify-self: center; width: min(900px, 92vw); height: calc(100% - 96px); border: 0; border-radius: 6px; background: #fff; }
 .fd-table tr[data-ext] { cursor: pointer; }
 .nt-body a { color: inherit; text-decoration: underline; text-decoration-color: #c7c6c4; }
 .nt-body mark { background: #fbf3db; padding: 2px 4px; border-radius: 3px; }
