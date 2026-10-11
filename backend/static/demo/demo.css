@@ -222,13 +222,38 @@ body { background: #e4e7ec; }
 .crm-side a:hover { background: rgba(255,255,255,.06); }
 .crm-side a.on { background: rgba(255,255,255,.12); color: #fff; }
 .crm-side h6 { margin: 18px 10px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #8086ad; font-weight: 600; }
-.crm-main { display: grid; grid-template-rows: auto auto 1fr; min-width: 0; }
+.crm-main { display: grid; grid-template-rows: auto auto auto 1fr; min-width: 0; min-height: 0; }
 .crm-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px 10px; }
 .crm-head h1 { margin: 0; font-size: 20px; font-weight: 600; }
 .crm-head .grow { flex: 1; }
 .crm-views { display: flex; gap: 2px; padding: 0 20px; border-bottom: 1px solid #e8e9ef; }
-.crm-views span { padding: 8px 12px; color: #6b6f85; border-bottom: 2px solid transparent; }
-.crm-views span.on { color: #1b1f3b; border-color: #5b4dff; font-weight: 600; }
+.crm-views a, .crm-views span { padding: 8px 12px; color: #6b6f85; border-bottom: 2px solid transparent; text-decoration: none; }
+.crm-views a.on { color: #1b1f3b; border-color: #5b4dff; font-weight: 600; }
+.crm-sub { color: #8a8da3; }
+.crm-search { display: flex; justify-content: space-between; align-items: center; margin: 0 4px 12px; padding: 7px 10px; border-radius: 6px; background: rgba(255,255,255,.07); color: #8086ad; font-size: 12px; }
+.crm-search kbd { font: inherit; font-size: 11px; border: 1px solid rgba(255,255,255,.15); border-radius: 4px; padding: 0 4px; }
+.crm-side .cnt { margin-left: auto; font-size: 11px; background: #5b4dff; color: #fff; border-radius: 8px; padding: 0 6px; }
+.crm-side { display: flex; flex-direction: column; } .crm-me { margin-top: auto; display: flex; gap: 10px; align-items: center; padding: 10px; border-top: 1px solid rgba(255,255,255,.08); }
+.crm-me b { display: block; color: #fff; font-size: 13px; } .crm-me small { color: #8086ad; font-size: 11px; }
+.crm-filters { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-bottom: 1px solid #e8e9ef; }
+.crm-filters .chip { font-size: 12px; padding: 4px 10px; border-radius: 6px; background: #f1f0ff; color: #4b44c9; }
+.crm-filters .chip.ghost { background: none; color: #8a8da3; border: 1px dashed #d6d8e3; }
+.crm-filters .grow { flex: 1; } .crm-filters .sort { color: #8a8da3; font-size: 12px; }
+.crm-tablewrap { overflow: auto; }
+.crm-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.crm-table th { position: sticky; top: 0; background: #fafafc; text-align: left; font-weight: 600; color: #6b6f85; font-size: 12px; padding: 9px 12px; border-bottom: 1px solid #e8e9ef; white-space: nowrap; }
+.crm-table td { padding: 10px 12px; border-bottom: 1px solid #f0f1f5; color: #3b3f5c; white-space: nowrap; }
+.crm-table tbody tr:hover td { background: #f8f8fd; } .crm-table tr[data-href] { cursor: pointer; }
+.crm-table .cb { display: inline-block; width: 14px; height: 14px; border: 1.5px solid #c9cbd6; border-radius: 3px; vertical-align: middle; }
+.crm-table .org { display: flex; align-items: center; gap: 10px; } .crm-table .org b { display: block; color: #1b1f3b; font-size: 13.5px; } .crm-table .org small { color: #8a8da3; font-size: 12px; }
+.crm-table .lg, .crm-card .lg { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.crm-pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 10px; }
+.crm-table .own { display: inline-flex; align-items: center; gap: 7px; } .crm-table .own .av { width: 22px; height: 22px; font-size: 10px; }
+.crm-table .round { font-size: 11px; padding: 2px 7px; border-radius: 4px; background: #eef0ff; color: #4b44c9; font-weight: 600; }
+.crm-table .nil { color: #c9cbd6; }
+.crm-str { display: inline-flex; gap: 3px; align-items: flex-end; height: 14px; } .crm-str i { width: 4px; border-radius: 2px; background: #e3e5ee; }
+.crm-str i:nth-child(1) { height: 5px; } .crm-str i:nth-child(2) { height: 8px; } .crm-str i:nth-child(3) { height: 11px; } .crm-str i:nth-child(4) { height: 14px; }
+.crm-str i.on { background: #2fb37a; }
 .crm-board { display: flex; gap: 14px; padding: 16px 20px; overflow: auto; background: #f6f7fb; align-items: flex-start; }
 .crm-col { width: 268px; flex-shrink: 0; }
 .crm-col h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 12px; font-weight: 600; color: #3b3f5c; text-transform: uppercase; letter-spacing: .04em; }

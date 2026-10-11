@@ -103,13 +103,19 @@ const CLIPS = [
   { id: "acme-press", title: "Acme AI raises $10M seed led by Example Ventures", from: "example.com", saved: "Sep 30",
     text: "Acme AI announced a $10 million seed round led by Example Ventures.", url: "https://example.com/acme/press" },
 ];
-const DEALS = {
-  Sourced: [["Daytona", "Infrastructure for AI-generated code", "Oct 9", "#mail/daytona"], ["Larkspur Labs", "Dev tools for robotics teams", "Oct 9"], ["Cinder Analytics", "Warehouse data platform", "Oct 3"]],
-  "First meeting": [["Northwind Robotics", "Picking arms for small warehouses", "Oct 7", "#mail/northwind", "Pre-seed"]],
-  Diligence: [["Acme AI", "AI ops for logistics", "Oct 9", "#notes/acme-call", "Series A"], ["Orbitwise", "Fleet routing", "Sep 28"]],
-  "Partner meeting": [["Pebblepath", "Last-mile scheduling", "Sep 30", "", "Seed"]],
-  Passed: [["Tidewell", "Cold-chain sensors", "Sep 21"]],
-};
+// [name, what they do, stage, owner, source, last touch, next step, relationship strength 0-4, round, link]
+const DEALS = [
+  ["Acme AI", "AI planning for warehouses", "Diligence", ME.name, "Inbound: founder", "Oct 9", "Partner meeting Thu Oct 15", 4, "Series A", "#notes/acme-call"],
+  ["Northwind Robotics", "Picking arms for small warehouses", "First meeting", ME.name, "Intro: Priya (founder)", "Oct 7", "Intro call Tue", 2, "Pre-seed", "#mail/northwind"],
+  ["Daytona", "Infrastructure for AI-generated code", "Sourced", "Morgan Lee", "Press: Series A coverage", "Oct 9", "Check filings", 1, "", "#mail/daytona"],
+  ["Larkspur Labs", "Dev tools for robotics teams", "Sourced", "Morgan Lee", "Conference", "Oct 9", "Send intro email", 1, ""],
+  ["Cinder Analytics", "Warehouse data platform", "Sourced", ME.name, "Outbound", "Oct 3", "Follow up in two weeks", 1, ""],
+  ["Orbitwise", "Fleet routing", "Diligence", "Morgan Lee", "Intro: co-investor", "Sep 28", "Data room review", 3, "Seed"],
+  ["Pebblepath", "Last-mile scheduling", "Partner meeting", "Morgan Lee", "Intro: portfolio founder", "Sep 30", "IC memo draft", 3, "Seed"],
+  ["Fieldnote", "Voice notes to work orders", "First meeting", ME.name, "Intro: Ravi (angel)", "Sep 25", "Wait for raise", 2, ""],
+  ["Tidewell", "Cold-chain sensors", "Passed", "Morgan Lee", "Inbound", "Sep 21", "Check back next year", 2, "Seed"],
+];
+const STAGE_COLORS = { Sourced: ["#eef0f6", "#4a4f6a"], "First meeting": ["#e3f6fd", "#0f6a8a"], Diligence: ["#efeaff", "#5b3fd1"], "Partner meeting": ["#fff3dc", "#9a5b00"], Passed: ["#f1f1f4", "#7c7f93"] };
 
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -432,22 +438,46 @@ function notesWire(id) {
 }
 
 /* ───────────── CRM ───────────── */
-function crmView() {
-  const dots = { Sourced: "#9aa0b8", "First meeting": "#3cc4ff", Diligence: "#7c5cff", "Partner meeting": "#f5a524", Passed: "#c9cbd6" };
-  const cols = Object.entries(DEALS).map(([stage, deals]) => `<div class="crm-col"><h3><i style="background:${dots[stage]}"></i>${stage}<span>${deals.length}</span></h3>
-    ${deals.map(([nm, ds, last, href, round]) => `<a class="crm-card" ${href ? `href="${href}"` : ""}>
-      <div class="nm"><span class="lg" style="background:${hue(nm)}">${nm[0]}</span>${esc(nm)}</div>
-      <div class="desc">${esc(ds)}</div>
-      <div class="ft"><span>${round ? `<span class="round">${round}</span> ` : ""}Last touch ${last}</span>${avatar(nm === "Acme AI" || nm === "Northwind Robotics" ? ME.name : "Morgan Lee")}</div></a>`).join("")}</div>`).join("");
+const pill = (stage) => `<span class="crm-pill" style="background:${STAGE_COLORS[stage][0]};color:${STAGE_COLORS[stage][1]}">${stage}</span>`;
+const logo = (nm) => `<span class="lg" style="background:${hue(nm)}">${nm[0]}</span>`;
+const strength = (n) => `<span class="crm-str" title="Relationship strength">${[1, 2, 3, 4].map((i) => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</span>`;
+
+function crmView(view) {
+  const board = view === "board";
+  let body;
+  if (board) {
+    const stages = Object.keys(STAGE_COLORS);
+    body = `<div class="crm-board">${stages.map((st) => {
+      const deals = DEALS.filter((d) => d[2] === st);
+      return `<div class="crm-col"><h3><i style="background:${STAGE_COLORS[st][1]}"></i>${st}<span>${deals.length}</span></h3>
+      ${deals.map(([nm, ds, , owner, , last, , , round, href]) => `<a class="crm-card" ${href ? `href="${href}"` : ""}>
+        <div class="nm">${logo(nm)}${esc(nm)}</div><div class="desc">${esc(ds)}</div>
+        <div class="ft"><span>${round ? `<span class="round">${round}</span> ` : ""}Last touch ${last}</span>${avatar(owner)}</div></a>`).join("")}</div>`;
+    }).join("")}</div>`;
+  } else {
+    body = `<div class="crm-tablewrap"><table class="crm-table"><thead><tr><th><span class="cb"></span></th><th>Organization</th><th>Stage</th><th>Owner</th><th>Source</th><th>Last email</th><th>Next step</th><th>Round</th><th>Strength</th></tr></thead><tbody>
+      ${DEALS.map(([nm, ds, st, owner, src, last, next, str, round, href]) => `<tr ${href ? `data-href="${href}"` : ""}>
+        <td><span class="cb"></span></td><td><div class="org">${logo(nm)}<div><b>${esc(nm)}</b><small>${esc(ds)}</small></div></div></td>
+        <td>${pill(st)}</td><td><span class="own">${avatar(owner)}${esc(owner)}</span></td><td>${esc(src)}</td><td>${last}</td><td>${esc(next)}</td>
+        <td>${round ? `<span class="round">${round}</span>` : '<span class="nil">-</span>'}</td><td>${strength(str)}</td></tr>`).join("")}
+      </tbody></table></div>`;
+  }
   return `<div class="crm">
     <aside class="crm-side"><div class="brand"><i></i>Relate</div>
-      <a>Home</a><a>Inbox</a><a>Search</a><h6>Lists</h6><a class="on">Deal pipeline</a><a>Portfolio</a><a>Co-investors</a><a>LPs</a>
-      <h6>Insights</h6><a>Relationship strength</a><a>Introductions</a></aside>
+      <div class="crm-search">Search people, orgs…<kbd>⌘K</kbd></div>
+      <a>Home</a><a>Inbox<span class="cnt">3</span></a><a>Notes</a><a>Reminders<span class="cnt">2</span></a>
+      <h6>Lists</h6><a class="on">Deal pipeline</a><a>Portfolio</a><a>Co-investors</a><a>LPs</a><a>Talent</a>
+      <h6>Insights</h6><a>Relationship strength</a><a>Introductions</a><a>Network map</a>
+      <div class="crm-me">${avatar(ME.name)}<div><b>${ME.name}</b><small>${ME.fund}</small></div></div></aside>
     <section class="crm-main">
-      <div class="crm-head"><h1>Deal pipeline</h1><span style="color:#8a8da3">${Object.values(DEALS).flat().length} organizations</span><span class="grow"></span>
-        <button class="ds-btn">Filter</button><button class="ds-btn pri">+ Add organization</button></div>
-      <div class="crm-views"><span>Table</span><span class="on">Board</span><span>Map</span></div>
-      <div class="crm-board">${cols}</div></section></div>`;
+      <div class="crm-head"><h1>Deal pipeline</h1><span class="crm-sub">${DEALS.length} organizations · updated 4 min ago</span><span class="grow"></span>
+        <button class="ds-btn">Share</button><button class="ds-btn">Export</button><button class="ds-btn pri">+ Add organization</button></div>
+      <div class="crm-views"><a href="#crm" class="${board ? "" : "on"}">▤ Table</a><a href="#crm/board" class="${board ? "on" : ""}">▥ Board</a><span>◫ Map</span><span>+ New view</span></div>
+      <div class="crm-filters"><span class="chip">Stage: All ⌄</span><span class="chip">Owner: Anyone ⌄</span><span class="chip">Round ⌄</span><span class="chip ghost">+ Filter</span><span class="grow"></span><span class="sort">Sorted by Last email ↓</span></div>
+      ${body}</section></div>`;
+}
+function crmWire() {
+  document.querySelectorAll(".crm-table tr[data-href]").forEach((r) => (r.onclick = () => (location.hash = r.dataset.href)));
 }
 
 /* ───────────── Founder portal ───────────── */
@@ -518,7 +548,7 @@ const APPS = {
   notes: { name: "Notes", view: notesView, wire: notesWire,
     title: (id) => NOTES.find((n) => n.id === id)?.title || "Deal notes",
     icon: tile("#fff", '<rect x=".5" y=".5" width="47" height="47" rx="10.5" fill="none" stroke="#ddd"/><path d="M14 12h16l6 6v18H14z" fill="#fff" stroke="#111" stroke-width="2.4" stroke-linejoin="round"/><path d="M19 21h12M19 26h12M19 31h8" stroke="#111" stroke-width="2.2" stroke-linecap="round"/>') },
-  crm: { name: "CRM", view: crmView, title: () => "Deal pipeline · Relate",
+  crm: { name: "CRM", view: crmView, wire: crmWire, title: () => "Deal pipeline · Relate",
     icon: tile("#1b1f3b", '<circle cx="18" cy="20" r="5" fill="#7c5cff"/><circle cx="31" cy="18" r="4" fill="#3cc4ff"/><circle cx="27" cy="31" r="6" fill="#fff"/><path d="M18 20l13-2-4 13z" stroke="#fff" stroke-width="1.5" fill="none" opacity=".6"/>') },
   portal: { name: "Acme AI portal", view: portalView, title: () => "Acme AI · Investor dashboard",
     icon: tile("#111827", '<path d="M12 34h24" stroke="#555" stroke-width="2"/><rect x="14" y="24" width="5" height="10" rx="1" fill="#818cf8"/><rect x="21.5" y="19" width="5" height="15" rx="1" fill="#a5b4fc"/><rect x="29" y="13" width="5" height="21" rx="1" fill="#4f46e5"/>') },
