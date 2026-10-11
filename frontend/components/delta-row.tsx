@@ -13,7 +13,7 @@ import { formatDate } from "./report-utils";
 import { STATUS } from "./status";
 
 /** Which icon stands for a source: SEC filings, LinkedIn, the user's own items, or the press. */
-function sourceIcon(label: string) {
+export function sourceIcon(label: string) {
   if (/sec|form d|edgar/i.test(label)) return Bank;
   if (/linkedin/i.test(label)) return LinkedinLogo;
   if (/email|mail/i.test(label)) return EnvelopeSimple;
@@ -26,7 +26,7 @@ const FIGURE = /^[−+-]?\$?\d[\d,.]*\s?[KMB%]?/;
 const UNIT: Record<string, number> = { K: 1e3, M: 1e6, B: 1e9 };
 
 /** The figure a claim leads with ("$15M", "25"), if it has one. */
-function leadingFigure(claim: Claim | null): { label: string; value: number } | null {
+export function leadingFigure(claim: Claim | null): { label: string; value: number } | null {
   // Dates such as "First sale Feb 11" are not figures.
   if (!claim || claim.field === "first_sale") return null;
   const label = claim.value.match(FIGURE)?.[0].trim();

@@ -253,20 +253,16 @@ function Cover({
           <span className="micro-label text-graphite">Sauce Report</span>
         </div>
       )}
-      {/* eslint-disable-next-line @next/next/no-img-element -- a static local asset; next/image adds nothing here */}
-      <img
-        src="/art/horizon.webp"
-        alt=""
-        className={cn(
-          "w-full object-cover object-[center_78%]",
-          compact ? "h-14 rounded-lg" : "mt-4 h-24 rounded-xl",
-        )}
-      />
+      {/* In the panel the masthead already shows the horizon, so the compact report skips its own strip (decision 69). */}
+      {!compact && (
+        // eslint-disable-next-line @next/next/no-img-element -- a static local asset; next/image adds nothing here
+        <img src="/art/horizon.webp" alt="" className="mt-4 h-24 w-full rounded-xl object-cover object-[center_78%]" />
+      )}
       {/* In the panel the screen's own h1 ("Sauce Report") titles it, so the name steps down a level. */}
       <Title
         className={cn(
           "font-serif text-ink [overflow-wrap:anywhere]",
-          compact ? "mt-4 text-[30px] leading-9 tracking-[-0.025em]" : "mt-7 text-[44px] leading-[48px] tracking-[-0.03em]",
+          compact ? "text-[30px] leading-9 tracking-[-0.025em]" : "mt-7 text-[44px] leading-[48px] tracking-[-0.03em]",
         )}
       >
         {name}
@@ -318,7 +314,7 @@ function Section({
  * even when the panel's screen transition or a throttled frame loop stalls that
  * entrance (the same end-state override the print styles use).
  */
-const STILL_PLOT = "[&_[style*=opacity]]:opacity-100! [&_[style*=transform]]:transform-none!";
+export const STILL_PLOT = "[&_[style*=opacity]]:opacity-100! [&_[style*=transform]]:transform-none!";
 
 function ContradictionBlock({ check, pad, still }: { check: Check; pad: string; still: boolean }) {
   const values = check.values ?? [];

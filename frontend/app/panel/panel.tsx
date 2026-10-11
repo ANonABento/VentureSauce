@@ -3,12 +3,11 @@
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, CaretRight, DownloadSimple, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { AddToCompanyScreen, type FilingChoice } from "@/components/add-to-company";
 import { DropZone, type DropInput } from "@/components/drop-zone";
 import { FiledToast } from "@/components/company";
-import { SauceReportPreview } from "@/components/sauce-report";
-import { sauceUrl } from "@/lib/sauce";
+import { SauceViews } from "@/components/sauce-views";
 import { DealsScreen } from "@/components/deals";
 import { DealsChart, Greeting, ReportBar, StatTiles } from "@/components/home";
 import { Masthead, type Scene } from "@/components/masthead";
@@ -256,7 +255,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   return (
     <PanelFrame>
       {/* The horizon band pans along the arc per screen (decisions 53, 55); first run shows the art in its drop zone instead. */}
-      <Masthead scene={SCENE[screen.kind]} />
+      <Masthead scene={SCENE[screen.kind]} inner={screen.kind !== "home"} />
       {/* Content sits below the art band, on paper. */}
       <div className="relative mt-1">
         {status}
@@ -376,7 +375,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
 
 /**
  * The wireframe's third screen (decision 61): the Sauce Report for what was just
- * filed, previewed in the panel, with Download and the way into the pulse.
+ * filed, in the panel as a Human or Agent view, with Download and the way into the pulse.
  * While the item is still being checked it shows the progress card.
  */
 function ReportScreen({
@@ -410,43 +409,25 @@ function ReportScreen({
         <ArrowLeft aria-hidden="true" size={14} weight="light" className="transition-transform duration-150 ease-out group-hover:-translate-x-0.5" />
         Home
       </button>
-      <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">Sauce Report</h1>
       {!companyId ? (
-        <div className="mt-5">
-          {busy ? (
-            <DropZone onPick={() => {}} busy step={step} filing={filing} />
-          ) : (
-            error && <p role="alert" className="text-[13px] font-medium text-ink">{error}</p>
-          )}
-          <div aria-hidden="true" className="tray mt-4 h-64 animate-pulse motion-reduce:animate-none" />
-        </div>
-      ) : (
         <>
-          {filed && <div className="mt-4"><FiledToastFor companyId={companyId} itemId={filed} onMoved={onMoved} /></div>}
-          <div className="mt-4">
-            <SauceReportPreview companyId={companyId} />
-          </div>
-          <div className="mt-6 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => onPulse(companyId)}
-              className="group inline-flex min-h-9 items-center gap-1 text-[13px] font-medium text-ink"
-            >
-              Open pulse
-              <CaretRight aria-hidden="true" size={13} weight="light" className="transition-transform duration-150 group-hover:translate-x-0.5" />
-            </button>
-            <a
-              href={sauceUrl({ company: companyId, print: true })}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-9 items-center gap-2 rounded-full bg-ink px-4 text-[13px] font-medium text-paper transition-colors duration-150 hover:bg-ink/90"
-            >
-              <DownloadSimple aria-hidden="true" size={15} weight="light" />
-              Download
-              <span className="sr-only"> the Sauce Report (PDF, opens in a new tab)</span>
-            </a>
+          <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">Sauce Report</h1>
+          <div className="mt-5">
+            {busy ? (
+              <DropZone onPick={() => {}} busy step={step} filing={filing} />
+            ) : (
+              error && <p role="alert" className="text-[13px] font-medium text-ink">{error}</p>
+            )}
+            <div aria-hidden="true" className="tray mt-4 h-64 animate-pulse motion-reduce:animate-none" />
           </div>
         </>
+      ) : (
+        // The Human | Agent switch lives here only (decision 70); Download follows it.
+        <SauceViews
+          companyId={companyId}
+          notice={filed && <FiledToastFor companyId={companyId} itemId={filed} onMoved={onMoved} />}
+          onPulse={() => onPulse(companyId)}
+        />
       )}
     </>
   );

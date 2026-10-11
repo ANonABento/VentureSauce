@@ -18,13 +18,23 @@ const FOCUS_X: Record<Scene, number> = { home: 0.5, deals: 0.3, company: 0.7, di
 /** Vertical focus on the flipped art: high enough that the dense surface reaches the top edge at any panel width. */
 const FOCUS_Y = 0.32;
 
-export function Masthead({ scene }: { scene: Scene }) {
+/**
+ * Band height in px, measured from the very top edge. Home keeps the full band (its min-h calc in
+ * panel.tsx counts on it); inner screens use a shorter one so the back link and title sit just under
+ * the art's faded end instead of below a strip of empty paper (decision 69).
+ */
+const BAND = { full: 160, inner: 104 } as const;
+
+export function Masthead({ scene, inner = false }: { scene: Scene; inner?: boolean }) {
   return (
-    <div
+    <motion.div
       aria-hidden="true"
       // Pulled up behind the top bar (44px) and the page's 12px padding, so the art reaches the top edge.
-      className="pointer-events-none relative -mx-4 -mt-[56px] h-[160px] overflow-hidden"
+      className="pointer-events-none relative -mx-4 -mt-[56px] overflow-hidden"
       style={{ maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)" }}
+      initial={false}
+      animate={{ height: inner ? BAND.inner : BAND.full }}
+      transition={{ duration: DUR.base, ease: EASE_ENTER }}
     >
       <motion.img
         src="/art/horizon.webp"
@@ -36,6 +46,6 @@ export function Masthead({ scene }: { scene: Scene }) {
       />
       {/* A soft navy shade where the top bar sits, so the white wordmark reads over the characters. Not a bar: it fades out. */}
       <div className="absolute inset-x-0 top-0 h-[72px] bg-gradient-to-b from-ink/85 via-ink/55 to-transparent" />
-    </div>
+    </motion.div>
   );
 }
