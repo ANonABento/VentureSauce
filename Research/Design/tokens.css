@@ -136,3 +136,38 @@
  *   Mono/Receipt Geist Mono 400 11/16            (receipt lines)
  * Keep `font-variant-numeric: tabular-nums` on body.
  */
+
+/*
+ * ---- v3 white + navy (2026-10-10, references.md decisions 54-55) ----
+ * Overrides every color above. Sampled from the horizon art (assets/horizon-*):
+ * paper = its sky, ink = its planet navy, accent = its cobalt atmosphere line.
+ * No green and no orange (cream + pine + amber read as Claude's palette).
+ * Contrast (WCAG): ink 15.2:1, graphite 5.5:1, data 8.4:1, signal 5.8:1 on
+ * paper; graphite 4.6:1 and signal 4.7:1 on tray-strong. --accent cobalt is decorative; flag text uses --signal.
+ * Mirrors frontend/app/globals.css.
+ */
+:root {
+  --paper: #f3f6fa;
+  --surface: #ffffff;
+  --ink: #0a1f3d;           /* navy: titles, primary buttons */
+  --graphite: #55657a;
+  --rule: #e1e7ef;
+  --rule-strong: #c9d3df;
+  --signal: #3550e6;        /* flags: cobalt, "needs your eye". No red anywhere (decision 63) */
+  --signal-wash: #e3e8fe;
+  --steady: #1f4a7a;        /* "consistent" is data blue, not green */
+  --steady-wash: #e6edf6;
+  --tray: #e8eef6;
+  --tray-strong: #dae3ee;
+  --data: #1f4a7a;
+  --accent: #3f5af5;        /* cobalt: logo, running step, drop hover, selection */
+  --accent-wash: #e3e8fe;
+
+  --vs-data: var(--data);
+  --vs-bg-tray: var(--tray);
+  --vs-bg-tray-strong: var(--tray-strong);
+  --vs-accent: var(--accent);
+  --vs-accent-subtle: var(--accent-wash);
+  --vs-focus-ring: var(--data);
+  --vs-shadow-fragment: 0 1px 2px rgb(10 31 61 / 0.04), 0 6px 16px -4px rgb(10 31 61 / 0.07);
+}

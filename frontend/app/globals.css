@@ -9,45 +9,55 @@
   /* Light is the default; dark is opt-in via data-theme (see ThemeParam). */
   color-scheme: light;
 
-  --paper: #fbfaf7;
+  /*
+   * White + navy (references.md decision 55), sampled from the horizon art:
+   * paper is its sky (#F3F6FA), ink its planet navy, accent its atmosphere
+   * line. No green and no orange.
+   */
+  --paper: #f3f6fa;
   --surface: #ffffff;
-  --ink: #333d34;
-  --graphite: #66726a;
-  --rule: #e6e1d8;
-  --rule-strong: #d4cec2;
-  /* Discrepancies only. */
-  --signal: #a3321f;
-  --signal-wash: #fbe9e5;
-  --steady: #1f6b43;
-  --steady-wash: #e6f1ea;
-  /* Mist trays hold the one hero element per screen. */
-  --tray: #eef3f4;
-  --tray-strong: #e2ebed;
-  /* Neutral figures and source links. */
-  --data: #3f6e7c;
-  /* Amber, 4 uses only: logo sun, running step, drop hover, selection. */
-  --accent: #d9822b;
-  --accent-wash: #fcebd6;
+  --ink: #0a1f3d;
+  --graphite: #55657a;
+  --rule: #e1e7ef;
+  --rule-strong: #c9d3df;
+  /*
+   * Flags (discrepancies and contradictions): cobalt, "needs your eye", not an
+   * alarm. No red anywhere (decision 63). A shade deeper than the art's cobalt
+   * so it passes AA as text on every tray (4.7:1 on tray-strong).
+   */
+  --signal: #3550e6;
+  --signal-wash: #e3e8fe;
+  /* "Consistent" and "nothing flagged" read as data blue, not green. */
+  --steady: #1f4a7a;
+  --steady-wash: #e6edf6;
+  /* Light navy trays hold the one hero element per screen. */
+  --tray: #e8eef6;
+  --tray-strong: #dae3ee;
+  /* Neutral figures and source links: navy blue. */
+  --data: #1f4a7a;
+  /* Cobalt (the atmosphere line): brand marks and anything that needs attention (flags use --signal, a text-safe shade). */
+  --accent: #3f5af5;
+  --accent-wash: #e3e8fe;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --paper: #121211;
-  --surface: #1a1a19;
-  --ink: #edebe6;
-  --graphite: #a3a09a;
-  --rule: #2c2b29;
-  --rule-strong: #3a3936;
-  --signal: #e0794f;
-  --signal-wash: #2a1d17;
-  --steady: #7faf8e;
-  --steady-wash: #18241c;
-  --tray: #1c2224;
-  --tray-strong: #253033;
-  --data: #8fb3be;
-  --accent: #e39a4f;
-  --accent-wash: #2b2117;
+  --paper: #0d1117;
+  --surface: #151b23;
+  --ink: #e8edf3;
+  --graphite: #9aa6b4;
+  --rule: #232b35;
+  --rule-strong: #313b47;
+  --signal: #8ea0ff;
+  --signal-wash: #1b2340;
+  --steady: #8db4d0;
+  --steady-wash: #16212b;
+  --tray: #161e27;
+  --tray-strong: #1f2934;
+  --data: #8db4d0;
+  --accent: #7b93ff;
+  --accent-wash: #1b2340;
 }
 
 @theme inline {
@@ -66,6 +76,29 @@
   --color-data: var(--data);
   --color-accent: var(--accent);
   --color-accent-wash: var(--accent-wash);
+
+  /*
+   * shadcn's semantic names (components/ui, components/kibo-ui) mapped onto
+   * ours. `accent` stays cobalt with its four uses, so shadcn components use
+   * `muted` for hover instead of `bg-accent` (edited in components/ui/button.tsx).
+   */
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--ink);
+  --color-primary-foreground: var(--paper);
+  --color-secondary: var(--tray);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--tray);
+  --color-muted-foreground: var(--graphite);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--signal);
+  --color-border: var(--rule);
+  --color-input: var(--rule-strong);
+  --color-ring: var(--data);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -104,43 +137,6 @@
   background: radial-gradient(circle, currentColor 0.8px, transparent 0.95px) 0 0 / 3px 3px repeat-x;
 }
 
-/*
- * The first-run dissolve (decision 32): the landscape breaks into its own dot
- * grid. A 3px dot mask shrinks from full coverage (r 2.2px covers the tile) to
- * nothing. Reduced motion gets a short crossfade instead.
- */
-@property --dot-r {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 2.2px;
-}
-
-@keyframes dot-dissolve {
-  0% {
-    --dot-r: 2.2px;
-  }
-  100% {
-    --dot-r: 0px;
-    opacity: 0;
-  }
-}
-
-@keyframes fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@utility dissolve {
-  mask-image: radial-gradient(circle, #000 var(--dot-r), transparent calc(var(--dot-r) + 0.4px));
-  mask-size: 3px 3px;
-  animation: dot-dissolve 560ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
-
-  @media (prefers-reduced-motion: reduce) {
-    mask-image: none;
-    animation: fade-out 200ms ease-out forwards;
-  }
-}
 
 /*
  * Small labels ("Filed", "Said", section titles). v2 retires uppercase mono:
@@ -165,8 +161,8 @@
   background: var(--surface);
   border-radius: 8px;
   box-shadow:
-    0 1px 2px rgb(31 43 48 / 0.04),
-    0 6px 16px -4px rgb(31 43 48 / 0.07);
+    0 1px 2px rgb(10 31 61 / 0.04),
+    0 6px 16px -4px rgb(10 31 61 / 0.07);
 }
 
 /*
@@ -190,5 +186,54 @@
     background:
       radial-gradient(circle, var(--dither-on) 0.8px, transparent 0.95px) 0 0.5px / 3px 3px repeat-x,
       radial-gradient(circle, var(--dither-on) 0.8px, transparent 0.95px) 1.5px 3.5px / 3px 3px repeat-x;
+  }
+}
+
+/*
+ * Sauce Report print styles (app/sauce, components/sauce-report.tsx; decision 49).
+ * Download PDF prints the page: colors print exactly (dither dots, brick, mist
+ * blue), fragments trade their shadow for a hairline, and entrance animations
+ * print their end state even if a reveal is still running. Everything but
+ * @page is scoped to the report.
+ */
+@media print {
+  @page {
+    margin: 12mm 12mm 14mm;
+  }
+
+  body:has(.sauce-doc) {
+    background: var(--surface);
+  }
+
+  .sauce-doc {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sauce-doc .fragment {
+    box-shadow: none;
+    border: 1px solid var(--rule);
+  }
+
+  .sauce-doc *,
+  .sauce-doc *::before,
+  .sauce-doc *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* motion.* writes inline opacity/transform while revealing; the end state is opacity 1, no transform.
+     Dot-pattern circles keep their tonal opacity. */
+  .sauce-doc :not(circle)[style*="opacity"] {
+    opacity: 1 !important;
+  }
+
+  .sauce-doc [style*="transform"] {
+    transform: none !important;
+  }
+
+  /* Dither bars reveal through a growing clip; the full bar is the end state. */
+  .sauce-doc g[clip-path] {
+    clip-path: none !important;
   }
 }

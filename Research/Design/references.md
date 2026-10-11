@@ -169,6 +169,55 @@ A teammate's feedback: the panel reads as text overload. Replace prose with diag
 - **Mercury.** Opacity 300ms ease-out `(0,0,0.2,1)`. Accordions use **`grid-template-rows`** over 300ms. Exits use `fadeOutBlur` (500ms). Tab panels fade and translate over 300ms.
 - **The shared pattern:** quick ease-out curves, transform and opacity only, 150ms for feedback, 300ms for state changes, 600–900ms only for reveals, and nothing in a loop.
 
+## Round 5: visual-first home and digest (2026-10-10)
+
+The teammate's feedback: the Digest still reads text-heavy, and judges will navigate by visual cues. They also sent a wireframe for the main flow: greeting, three stat tiles, a "weekly report is ready" bar, a chart/todo card, and a large drop zone.
+
+| # | Topic | Decision |
+|---|---|---|
+| 37 | Digest questions | Cards drop the founder question for a **💬 N chip**. Tapping it opens the company on its Questions tab. |
+| 38 | Glyph key | The **●/◇ meaning is defined once**, by the top figures (digest glance row, home stat tiles). Cards then use glyphs alone ("● 2 ◇ 2"). |
+| 39 | Digest hero | The **player is a visual timeline**: a large ▶ and a dithered waveform shaped from the script's turns (decorative, labelled as such), with company initials marked under where each comes up. The tray's top line is icon + number pairs (items, companies). No headline sentence. |
+| 40 | Talk panel | **Folded into a 🎙 button** in the hero. The conversation opens as bubbles under the hero, and a keyboard icon reveals the text field. |
+| 41 | Scope | Company · Checks: the summary sentence goes, the serif delta stays, sources become icons, and the SEC filer line moves behind ⓘ. Inbox: the digest tray becomes a mini player and the drop label an icon. Footers: the disclaimer moves into one ⓘ popover in the header, with its wording unchanged. Items: claim dots replace "N claims". Questions stay as text. |
+| 42 | Home layout | **Follows the teammate's wireframe**: greeting → 3 stat tiles → report bar → chart card → art drop zone. |
+| 43 | Companies | **They live inside the chart card**: rows ranked by flags, each with a serif name, a dithered bar and ●/◇ glyphs, opening the company on tap. Top 4 shown, then "+N more". |
+| 44 | Stat tiles | **● public · ◇ yours · ▤ items** (companies beneath). Straight counts from `/companies`, so every number is sourced. No summed dollar figure. |
+| 45 | Greeting | **Time of day, no name** ("Good afternoon" + the date). There's no sign-in to read a name from. |
+| 46 | Drop zone | **The landscape art with an inset dashed frame**, which dissolves into the source flow on drop. One layout serves first run too: with an empty inbox only the greeting, the drop zone and the lookup show. |
+| 47 | Report bar | **A mini player**: ▶ plays the brief in place, with a mini waveform and the duration once known. Tapping the bar opens the Digest. Defaults to Today. |
+
+**Round 5b: the teammate's 5-screen wireframe** (home → add to company → Sauce Report → projects → company pulse):
+
+| # | Topic | Decision |
+|---|---|---|
+| 48 | Add to company | After a drop, a **picker sheet** shows the filename, then "✨ Detect from the document" (preselected), each company (serif name + glyphs) and "+ New company", with Cancel and Submit. Drops on a company's own screen skip it. "+ New company" drops with auto-detect, then calls `moveItem(…, { newCompany })`. |
+| 49 | Sauce Report | **A branded one-page report about the company**: cover, verdict bar, range plots, public-record rows with source links, and questions. It previews in the panel; Download prints it to PDF from a print-styled page, so the links survive. |
+| 50 | Company screen | **Pulse timeline as the plot**: item dates on x, and the most-contradicted metric as a stepped line through its values, with ◇ where they disagree. Then ● / ◇ / 💬 numbers, a one-line summary, Actions (top question + Copy, drop another item), and the Checks / Items / Questions details below. Download opens the Sauce Report. |
+| 51 | Deals list | Home's chart card shows the **top 4**. "+N more" and the header's **Deals** button open the full Deals screen: name, mini pulse sparkline, glyphs and date. |
+| 52 | Names | **Deals** (not projects), **Pulse** (the company plot), **Sauce Report** (the download). |
+| 53 | Art across screens | **A masthead band** (~150px) of the landscape at the top of Home, Deals, Company and Digest, fading into the paper. Each screen frames its own part of the valley (sunrise, ridges, river, mist), and the band pans between them on navigation. Titles sit in the faded end; data stays on paper. First run shows the art in its drop zone instead. |
+| 54 | Palette | **"Blue hour"** replaces cream + pine + amber, which a teammate rightly called "so Claude". Paper `#F5F7FA`, ink `#0E1621`, graphite `#5B6675`, tray `#E9EFF4`, data `#2F5D7C`, **cobalt `#3B5BFF`** for the four accent uses (never text), and **crimson `#B42846`** for discrepancies. No green: "consistent" is data blue. Every text pair passes AA. The backdrop art is being regenerated as abstract minimal ASCII art (a wave field) in the same palette. |
+| 55 | Art + palette | **The horizon art** (a teammate's pick): an ASCII planet seen from orbit, with a navy surface, a single cobalt atmosphere line and a sparse starry sky. Crops are `assets/source/horizon-{3x1,16x9,1x1}.png`. The masthead uses the 3:1 (the title sits below the band); the drop zone uses the 1:1 (the card floats in the sky with the planet visible below). **White + navy** is sampled from it: paper `#F3F6FA` (its sky), ink `#0A1F3D` (planet navy), data `#1F4A7A`, accent `#3F5AF5` (the atmosphere line), with crimson `#B42846` kept for discrepancies. It supersedes decision 54's values and the mist-valley art (decisions 1, 32, 53). |
+
+**Round 6: the annotated wireframe, applied closely (2026-10-10):**
+
+| # | Topic | Decision |
+|---|---|---|
+| 56 | Header + art | **The navy header flows into the flipped horizon art.** The header bar is the planet's navy (white wordmark and ⓘ), and the ASCII surface dissolves downward into the white page, so there's no white-to-art edge. |
+| 57 | Report bar | The audio bar becomes a **"Daily report" download**: icon, label and ↓, with almost no text. It downloads a **digest Sauce Report** PDF (`/sauce?digest=day\|week`): every company with new items, as bars, glyphs and its top question. Audio stays on the Digest screen. |
+| 58 | Bars | **shadcn Progress everywhere** in place of dithered bars: a rounded track in tray color and a solid indicator (crimson for flags, navy for neutral). Segmented bars become rounded segments. ASCII texture lives only in the art. |
+| 59 | shadcn | **shadcn is installed** (Tailwind v4 mode): the official Progress (Radix) plus the Kibo UI Dropzone (react-dropzone), themed through shadcn variables mapped to our tokens. `cn()` becomes clsx + tailwind-merge. |
+| 60 | Dropzone | A plain dashed box: an icon and **"Drop a file or click to upload"**. No file-type list, no art, no "Paste text" (⌘V still works). While busy it shows the file name, a progress bar and the source steps. |
+| 61 | Drop flow | **The wireframe's arrows**: drop → full-screen "Add to company" (Cancel / Submit) → checking → the company's **Sauce Report preview** in the panel with Download and "Open pulse ›". |
+| 62 | Company screen | **Exactly the sketch's blocks**: plot, three numbers, a Summary card, an Actions card, Download. The tabs go; tapping a number opens its detail as a sheet (● public rows, ◇ range plots, 💬 questions). |
+| 63 | No red + big figures | **No red anywhere** (teammate: it doesn't look good). Flags take **cobalt as "needs your eye"**: `--signal` is `#3550E6`, a text-safe shade of the art's cobalt (4.7:1 on tray-strong). Glyphs, bars, range bands and counts all use it, and the `accent` rule widens to "brand marks + attention". **Figures are 56px serif** (the report hero 64px) with the glyph and **one 11px word** beneath ("public", "yours", "items", "ask"). The full meaning goes into each tile's accessible label. |
+| 64 | Glass header | The header becomes **frosted navy glass** (`bg-ink/62`, 6px backdrop blur, saturate, a hairline white highlight). The flipped horizon art runs up behind it, so the ASCII surface shows through frosted. The tint is set so the white wordmark stays ≥ 5:1 even when white cards scroll underneath. Greeting enlarged to 34px serif; the Deals button to 40px tall. |
+| 65 | Glass, v2 | The header is a **floating glass pane**: inset 8px, 16px radius, 14px backdrop blur at 1.8× saturation, a translucent border, a specular sheen across its top half and an inner highlight. Over the art it's clear glass with white text. Once content scrolls under it (> 72px) it turns **milky** (`surface/70`) with navy text, so the wordmark keeps its contrast. The art extends behind it. |
+| 66 | Teammate polish | (1) The glass gets **something to frost**: a navy → cobalt gradient and a soft cobalt radial glow behind the header over the art, and a lighter pane tint (`white/8`). (2) The report bar icon goes light (tray circle, data-blue icon) so it no longer dominates. (3) Figure tiles are **square**, with numbers in **Geist Mono** medium at 40px: mono is the "data" voice and echoes the ASCII art; the serif stays the "voice" for names and titles. |
+| 67 | Header, reverted | At the user's request the glass header (64–66's glass and gradient wash) is **removed**. The header is back to the plain paper bar with the navy wordmark, and the horizon backdrop sits under it as in decision 55 (unflipped: starry sky, cobalt line, planet fading into the page; the title below). Square Geist Mono figures and the light report icon (66) stay. |
+| 68 | Inverted art, no seam | The art is **flipped again** (planet at the top edge), and the top bar has **no background** while at the top: a white wordmark over a soft navy shade that fades out, so there's no bar and no white-to-navy edge. Once content scrolls under it (> 64px), it becomes the **plain paper bar** with the navy wordmark (67's look). No glass. |
+
 ## Pending
 
 - **Layout is parked.** A teammate is building the panel layout mockup. Once it's committed, pull it and apply the kit on top. Row layout, screen structure and density decisions wait for it, and parts of that layout may change afterward. The draft recommendation for the truth-table row is a three-line stack (pill and page, quote, then a big CLAIMED → OBSERVED line with confidence, then the source).

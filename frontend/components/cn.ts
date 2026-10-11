@@ -1,4 +1,2 @@
-/** Join class names, skipping falsy values. */
-export function cn(...classes: (string | false | null | undefined)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
+/** Class helper: shadcn's (clsx + tailwind-merge), so later classes win over conflicting earlier ones. */
+export { cn } from "@/lib/utils";

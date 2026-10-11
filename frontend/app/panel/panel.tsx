@@ -1,11 +1,18 @@
 "use client";
 
-import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
-import { CaretRight, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, CaretRight, DownloadSimple, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
+import { AddToCompanyScreen, type FilingChoice } from "@/components/add-to-company";
+import { DropZone, type DropInput } from "@/components/drop-zone";
+import { FiledToast } from "@/components/company";
+import { SauceReportPreview } from "@/components/sauce-report";
+import { sauceUrl } from "@/lib/sauce";
+import { DealsScreen } from "@/components/deals";
+import { DealsChart, Greeting, ReportBar, StatTiles } from "@/components/home";
+import { Masthead, type Scene } from "@/components/masthead";
 import { Button } from "@/components/button";
-import { cn } from "@/components/cn";
 import { ErrorState } from "@/components/error-state";
 import { FirstRun } from "@/components/first-run";
 import { LoadingSteps, jobStep } from "@/components/loading-steps";
@@ -13,10 +20,9 @@ import { ReportHeader } from "@/components/report-header";
 import { ReportView } from "@/components/report-view";
 import { ThemeParam } from "@/components/theme-param";
 import type { DeltaReport } from "@/lib/types";
-import { CompanyScreen } from "@/components/company";
+import { type CompanyTab, CompanyScreen } from "@/components/company";
 import { DigestScreen } from "@/components/digest";
-import { History } from "@/components/history";
-import { type CompanySummary, dropItem, getReport, listCompanies } from "@/lib/api";
+import { type CompanySummary, dropItem, getReport, listCompanies, loadExample, moveItem } from "@/lib/api";
 import { DUR, EASE_ENTER } from "@/lib/motion";
 import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
@@ -43,11 +49,15 @@ export function Panel() {
 }
 
 type Screen =
-  | { kind: "inbox" }
-  | { kind: "company"; id: string; filed?: string | null; summary?: CompanySummary }
+  | { kind: "home" }
+  | { kind: "file" }
+  | { kind: "report"; id?: string; filed?: string | null }
+  | { kind: "deals" }
+  | { kind: "company"; id: string; filed?: string | null; summary?: CompanySummary; tab?: CompanyTab; from?: "home" | "deals" | "digest" }
   | { kind: "digest" };
 
-const DEPTH: Record<Screen["kind"], number> = { inbox: 0, digest: 1, company: 2 };
+const DEPTH: Record<Screen["kind"], number> = { home: 0, deals: 1, digest: 1, file: 1, report: 2, company: 2 };
+const SCENE: Record<Screen["kind"], Scene> = { home: "home", deals: "deals", company: "company", digest: "digest", file: "deals", report: "company" };
 const screenKey = (screen: Screen) => (screen.kind === "company" ? `company-${screen.id}` : screen.kind);
 
 const JOB_STEP: Record<string, string> = {
@@ -59,6 +69,9 @@ const JOB_STEP: Record<string, string> = {
   ready: "Filed",
 };
 
+const itemName = (input: DropInput) =>
+  input.file?.name ?? input.url ?? (input.kind === "notes" ? "Call notes" : input.kind === "email" ? "Founder email" : "Pasted text");
+
 /**
  * Screen changes (decision 33): content slides 12px in the direction of
  * travel and exits with a short blur-fade; shared elements (company name,
@@ -68,57 +81,75 @@ function ScreenTransition({ id, direction, children }: { id: string; direction: 
   return (
     // popLayout takes the exiting screen out of flow; it positions against this box.
     <div className="relative">
-    <AnimatePresence mode="popLayout" initial={false} custom={direction}>
-      <motion.div
-        key={id}
-        custom={direction}
-        variants={{
-          enter: (dir: number) => ({ opacity: 0, x: dir * 12 }),
-          center: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: DUR.base, ease: EASE_ENTER } },
-          exit: { opacity: 0, filter: "blur(4px)", transition: { duration: 0.2, ease: EASE_ENTER } },
-        }}
-        initial="enter"
-        animate="center"
-        exit="exit"
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+      <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+        <motion.div
+          key={id}
+          data-screen={id}
+          custom={direction}
+          variants={{
+            enter: (dir: number) => ({ opacity: 0, x: dir * 12 }),
+            center: { opacity: 1, x: 0, filter: "blur(0px)", transition: { duration: DUR.base, ease: EASE_ENTER } },
+            exit: { opacity: 0, filter: "blur(4px)", transition: { duration: 0.2, ease: EASE_ENTER } },
+          }}
+          initial="enter"
+          animate="center"
+          exit="exit"
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
 
-/** A large serif figure over a one-word caption. */
-function BigFigure({ value, caption, signal = false }: { value: number; caption: string; signal?: boolean }) {
-  return (
-    <span className="flex flex-col">
-      <span className={cn("font-serif text-[40px] leading-10 tracking-[-0.03em]", signal ? "text-signal" : "text-data")}>
-        {value}
-      </span>
-      <span className="text-xs leading-4 text-graphite">{caption}</span>
-    </span>
-  );
-}
-
-/** The deal inbox: Inbox → Company (Checks / Items / Questions) → Digest. */
+/** The deal inbox: Home → Deals → Company (pulse + details), and the Digest. */
 function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   const detected = detectCompany(pageUrl);
-  const [screen, setScreenState] = useState<Screen>({ kind: "inbox" });
+  const [screen, setScreenState] = useState<Screen>({ kind: "home" });
   const [direction, setDirection] = useState(1);
   const [companies, setCompanies] = useState<CompanySummary[] | null>(null);
   const [seen, setSeen] = useState<Record<string, string>>({});
   const [job, setJob] = useState<string | null>(null);
+  const [filing, setFiling] = useState<string | null>(null);
+  const [pending, setPending] = useState<DropInput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notInInbox, setNotInInbox] = useState(false);
+  const [loadingExample, setLoadingExample] = useState(false);
+  const navigated = useRef(false);
+
+  async function onExample() {
+    setError(null);
+    setLoadingExample(true);
+    try {
+      await loadExample();
+      setCompanies(await listCompanies());
+    } catch (e) {
+      setError((e as Error).message);
+    }
+    setLoadingExample(false);
+  }
 
   function setScreen(next: Screen) {
     setDirection(DEPTH[next.kind] >= DEPTH[screen.kind] ? 1 : -1);
     setScreenState(next);
+    navigated.current = true;
     window.scrollTo({ top: 0 });
   }
 
+  // After a screen change, move focus to the new screen's title so keyboard and screen-reader users land there.
   useEffect(() => {
-    if (screen.kind !== "inbox") return;
+    if (!navigated.current) return;
+    const frame = requestAnimationFrame(() => {
+      const title = document.querySelector<HTMLElement>(`[data-screen="${screenKey(screen)}"] h1`);
+      if (!title) return;
+      title.setAttribute("tabindex", "-1");
+      title.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [screen]);
+
+  useEffect(() => {
+    if (screen.kind !== "home" && screen.kind !== "deals") return;
     listCompanies()
       .then((list) => {
         setCompanies(list);
@@ -146,29 +177,51 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageUrl]);
 
-  async function onDrop(input: FileInput) {
+  /**
+   * Files an item. From home it follows the wireframe (decision 61): Add to company → checking → the Sauce Report.
+   * Drops on a company's own screen pass its id and stay there.
+   */
+  async function onDrop(input: FileInput, choice: FilingChoice = {}) {
+    const fromHome = !input.companyId;
     setError(null);
+    setFiling(itemName(input));
     setJob("parsing");
+    if (fromHome) setScreen({ kind: "report" });
     try {
-      const done = await dropItem(input, (j) => setJob(j.status));
+      const done = await dropItem({ ...input, companyId: input.companyId ?? choice.companyId }, (j) => setJob(j.status));
+      let companyId = done.company_id;
+      // "+ New company": the backend files by detection, then the item moves to the named company.
+      if (choice.newCompany && done.item_id) companyId = (await moveItem(done.item_id, { newCompany: choice.newCompany })).company_id;
       // Fake mode replays a fixture without filing it, so there may be no company to open.
-      if (done.company_id) setScreen({ kind: "company", id: done.company_id, filed: done.item_id });
+      if (companyId && fromHome) setScreen({ kind: "report", id: companyId, filed: done.item_id });
+      else if (companyId) setScreen({ kind: "company", id: companyId, filed: done.item_id, from: "home" });
       else setError("Checked, but it wasn't filed under a company.");
     } catch (e) {
       setError((e as Error).message);
     }
     setJob(null);
+    setFiling(null);
+  }
+
+  // From home, an item first goes to the "Add to company" screen (decisions 48, 61); with no companies yet there's nothing to choose.
+  function onPick(input: DropInput) {
+    if (job !== null) return;
+    if (!companies?.length) return onDrop(input);
+    setPending(input);
+    setScreen({ kind: "file" });
   }
 
   // ⌘V or drop a file, link, company name or text anywhere (see use-paste-to-file.ts). Keep this when reskinning.
+  // From home or Deals an item goes through onPick (Add to company → Sauce Report); on a company it's filed there.
+  // A company name, or a homepage of one already in the inbox, opens its company screen.
   usePasteToFile({
-    enabled: job === null && screen.kind !== "digest",
+    enabled: job === null && (screen.kind === "home" || screen.kind === "deals" || screen.kind === "company"),
     companyId: screen.kind === "company" ? screen.id : undefined,
-    onFile: onDrop,
+    onFile: (input) => (input.companyId ? onDrop(input) : onPick(input)),
     openCompany: async (q) => {
       try {
         const id = ((await getReport(q)).company as { id?: string }).id;
-        if (id) setScreen({ kind: "company", id });
+        if (id) setScreen({ kind: "company", id, from: screen.kind === "deals" ? "deals" : "home" });
         return !!id;
       } catch {
         return false;
@@ -197,78 +250,222 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     </p>
   );
   const firstRun = companies !== null && companies.length === 0;
-  const differences = (companies ?? []).reduce((sum, c) => sum + c.discrepancies + c.contradictions, 0);
+  const openCompany = (company: CompanySummary, from: "home" | "deals") =>
+    setScreen({ kind: "company", id: company.id, summary: company, from });
 
   return (
     <PanelFrame>
-      <ScreenTransition id={screenKey(screen)} direction={direction}>
-        {screen.kind === "inbox" && (
-          <>
-            {status}
-            {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
-            {/* The drop card is the page. The lookup only shows while there is no history to pick from. */}
-            <FirstRun
-              onDrop={onDrop}
-              busy={busy}
-              step={step}
-              compact={!firstRun}
-              onLookup={firstRun ? onLookup : undefined}
+      {/* The horizon band pans along the arc per screen (decisions 53, 55); first run shows the art in its drop zone instead. */}
+      <Masthead scene={SCENE[screen.kind]} />
+      {/* Content sits below the art band, on paper. */}
+      <div className="relative mt-1">
+        {status}
+        <ScreenTransition id={screenKey(screen)} direction={direction}>
+          {screen.kind === "home" && companies === null && (
+            <>
+              <Greeting />
+              <div aria-hidden="true" className="mt-5 grid grid-cols-3 gap-2">
+                <div className="tray h-[104px]" />
+                <div className="tray h-[104px]" />
+                <div className="tray h-[104px]" />
+              </div>
+            </>
+          )}
+          {screen.kind === "home" && firstRun && (
+            <>
+              {error && <p role="alert" className="mb-3 text-xs font-medium text-ink">{error}</p>}
+              <FirstRun
+                onPick={onPick}
+                busy={busy}
+                step={step}
+                filing={filing}
+                onLookup={onLookup}
+                onExample={onExample}
+                loadingExample={loadingExample}
+              />
+            </>
+          )}
+          {screen.kind === "home" && companies && companies.length > 0 && (
+            // Fills the panel's height: tiles grow a little, the deals chart and the dropzone take the rest.
+            <div className="flex min-h-[calc(100dvh-192px)] flex-col gap-3">
+              <div className="mb-2">
+                <Greeting onDeals={() => setScreen({ kind: "deals" })} />
+                {notInInbox && detected && (
+                  <p className="mt-2 text-[13px] leading-5 text-graphite">
+                    <span className="text-ink">{detected.domain}</span> isn&apos;t in your inbox yet.
+                  </p>
+                )}
+              </div>
+              <StatTiles companies={companies} />
+              <ReportBar onListen={() => setScreen({ kind: "digest" })} />
+              <DealsChart
+                className="flex-[1.3]"
+                companies={companies}
+                seen={seen}
+                onOpen={(company) => openCompany(company, "home")}
+                onAll={() => setScreen({ kind: "deals" })}
+              />
+              {error && <p role="alert" className="text-xs font-medium text-ink">{error}</p>}
+              <DropZone className="flex-1" onPick={onPick} busy={busy} step={step} filing={filing} onError={setError} />
+            </div>
+          )}
+          {screen.kind === "file" && pending && (
+            <AddToCompanyScreen
+              label={itemName(pending)}
+              companies={companies ?? []}
+              onCancel={() => {
+                setPending(null);
+                setScreen({ kind: "home" });
+              }}
+              onSubmit={(choice) => {
+                const input = pending;
+                setPending(null);
+                onDrop(input, choice);
+              }}
             />
-            {notInInbox && detected && (
-              <p className="mt-4 text-center text-xs leading-4 text-graphite">
-                <span className="text-ink">{detected.domain}</span> isn&apos;t in your inbox yet.
-              </p>
-            )}
-            {companies && companies.length > 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setScreen({ kind: "digest" })}
-                  className="tray group mt-6 flex w-full items-end gap-6 text-left transition-colors duration-150 ease-out hover:bg-tray-strong"
-                >
-                  <BigFigure value={companies.length} caption={companies.length === 1 ? "company" : "companies"} />
-                  <BigFigure value={differences} caption={differences === 1 ? "difference" : "differences"} signal={differences > 0} />
-                  <span className="ml-auto flex items-center gap-1 pb-0.5 text-xs leading-4 text-graphite">
-                    Today&apos;s digest
-                    <CaretRight
-                      aria-hidden="true"
-                      size={14}
-                      weight="light"
-                      className="transition-transform duration-150 ease-out group-hover:translate-x-0.5"
-                    />
-                  </span>
-                </button>
-                <History
-                  companies={companies}
-                  seen={seen}
-                  onOpen={(company) => setScreen({ kind: "company", id: company.id, summary: company })}
-                />
-              </>
-            )}
-          </>
-        )}
-        {screen.kind === "company" && (
-          <>
-            {status}
-            {error && <p role="alert" className="mb-3 text-xs text-signal">{error}</p>}
-            <CompanyScreen
+          )}
+          {screen.kind === "report" && (
+            <ReportScreen
               companyId={screen.id}
-              filedItemId={screen.filed}
-              summary={screen.summary}
+              filed={screen.filed}
               busy={busy}
               step={step}
-              onBack={() => setScreen({ kind: "inbox" })}
-              onOpen={(id, filed) => setScreen({ kind: "company", id, filed })}
-              onDrop={onDrop}
+              filing={filing}
+              error={error}
+              onHome={() => setScreen({ kind: "home" })}
+              onPulse={(id) => setScreen({ kind: "company", id, from: "home" })}
+              onMoved={(id) => setScreen({ kind: "report", id })}
             />
-          </>
-        )}
-        {screen.kind === "digest" && (
-          <DigestScreen onBack={() => setScreen({ kind: "inbox" })} onOpen={(id) => setScreen({ kind: "company", id })} />
-        )}
-      </ScreenTransition>
+          )}
+          {screen.kind === "deals" && (
+            <DealsScreen
+              companies={companies ?? []}
+              seen={seen}
+              onBack={() => setScreen({ kind: "home" })}
+              onOpen={(company) => openCompany(company, "deals")}
+            />
+          )}
+          {screen.kind === "company" && (
+            <>
+              {error && <p role="alert" className="mb-3 text-xs font-medium text-ink">{error}</p>}
+              <CompanyScreen
+                companyId={screen.id}
+                filedItemId={screen.filed}
+                summary={screen.summary}
+                initialTab={screen.tab}
+                backLabel={screen.from === "deals" ? "Deals" : screen.from === "digest" ? "Digest" : "Home"}
+                busy={busy}
+                step={step}
+                onBack={() => setScreen({ kind: screen.from === "deals" ? "deals" : screen.from === "digest" ? "digest" : "home" })}
+                onOpen={(id, filed) => setScreen({ kind: "company", id, filed })}
+                onDrop={(input) => onDrop(input)}
+              />
+            </>
+          )}
+          {screen.kind === "digest" && (
+            <DigestScreen
+              onBack={() => setScreen({ kind: "home" })}
+              onOpen={(id, tab) => setScreen({ kind: "company", id, tab, from: "digest" })}
+            />
+          )}
+        </ScreenTransition>
+      </div>
     </PanelFrame>
   );
+}
+
+/**
+ * The wireframe's third screen (decision 61): the Sauce Report for what was just
+ * filed, previewed in the panel, with Download and the way into the pulse.
+ * While the item is still being checked it shows the progress card.
+ */
+function ReportScreen({
+  companyId,
+  filed,
+  busy,
+  step,
+  filing,
+  error,
+  onHome,
+  onPulse,
+  onMoved,
+}: {
+  companyId?: string;
+  filed?: string | null;
+  busy: boolean;
+  step: number;
+  filing: string | null;
+  error: string | null;
+  onHome: () => void;
+  onPulse: (id: string) => void;
+  onMoved: (id: string) => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onHome}
+        className="group mb-3 inline-flex min-h-6 items-center gap-1 text-[13px] text-graphite transition-colors duration-150 hover:text-ink"
+      >
+        <ArrowLeft aria-hidden="true" size={14} weight="light" className="transition-transform duration-150 ease-out group-hover:-translate-x-0.5" />
+        Home
+      </button>
+      <h1 className="font-serif text-[26px] leading-8 tracking-[-0.02em] text-ink">Sauce Report</h1>
+      {!companyId ? (
+        <div className="mt-5">
+          {busy ? (
+            <DropZone onPick={() => {}} busy step={step} filing={filing} />
+          ) : (
+            error && <p role="alert" className="text-[13px] font-medium text-ink">{error}</p>
+          )}
+          <div aria-hidden="true" className="tray mt-4 h-64 animate-pulse motion-reduce:animate-none" />
+        </div>
+      ) : (
+        <>
+          {filed && <div className="mt-4"><FiledToastFor companyId={companyId} itemId={filed} onMoved={onMoved} /></div>}
+          <div className="mt-4">
+            <SauceReportPreview companyId={companyId} />
+          </div>
+          <div className="mt-6 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => onPulse(companyId)}
+              className="group inline-flex min-h-9 items-center gap-1 text-[13px] font-medium text-ink"
+            >
+              Open pulse
+              <CaretRight aria-hidden="true" size={13} weight="light" className="transition-transform duration-150 group-hover:translate-x-0.5" />
+            </button>
+            <a
+              href={sauceUrl({ company: companyId, print: true })}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-9 items-center gap-2 rounded-full bg-ink px-4 text-[13px] font-medium text-paper transition-colors duration-150 hover:bg-ink/90"
+            >
+              <DownloadSimple aria-hidden="true" size={15} weight="light" />
+              Download
+              <span className="sr-only"> the Sauce Report (PDF, opens in a new tab)</span>
+            </a>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/** "Filed under X · Change" for the report screen, with the company's name looked up. */
+function FiledToastFor({ companyId, itemId, onMoved }: { companyId: string; itemId: string; onMoved: (id: string) => void }) {
+  const [name, setName] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    listCompanies()
+      .then((list) => live && setName(list.find((c) => c.id === companyId)?.name ?? null))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [companyId]);
+  if (!name) return null;
+  return <FiledToast itemId={itemId} company={name} onMoved={onMoved} />;
 }
 
 /** One panel state, rendered from props. Also used by /panel/states. */

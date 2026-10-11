@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { motion } from "motion/react";
+import { Bank, EnvelopeSimple, FileText, LinkedinLogo, Newspaper, Note } from "@phosphor-icons/react/dist/ssr";
 import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
 import type { Claim, DeltaRow as DeltaRowData, Source } from "@/lib/types";
 import { cn } from "./cn";
@@ -10,6 +11,16 @@ import { CompareBars, DeltaVisual } from "./delta-visual";
 import { Figures } from "./figures";
 import { formatDate } from "./report-utils";
 import { STATUS } from "./status";
+
+/** Which icon stands for a source: SEC filings, LinkedIn, the user's own items, or the press. */
+function sourceIcon(label: string) {
+  if (/sec|form d|edgar/i.test(label)) return Bank;
+  if (/linkedin/i.test(label)) return LinkedinLogo;
+  if (/email|mail/i.test(label)) return EnvelopeSimple;
+  if (/note/i.test(label)) return Note;
+  if (/deck|slides|pdf/i.test(label)) return FileText;
+  return Newspaper;
+}
 
 const FIGURE = /^[−+-]?\$?\d[\d,.]*\s?[KMB%]?/;
 const UNIT: Record<string, number> = { K: 1e3, M: 1e6, B: 1e9 };
@@ -143,28 +154,37 @@ export function DeltaRow({
         </div>
 
         {sources.length > 0 && (
-          <p className="mt-2 text-[11px] leading-4 text-graphite">
-            {sources.map((source, index) => (
-              <span key={index}>
-                {index > 0 && " · "}
-                {/* "#item" marks a claim from the user's own item: no page to open. */}
-                {source.url === "#item" ? (
-                  source.label
-                ) : (
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={`Checked ${formatDate(source.checkedAt)}`}
-                    className="font-medium text-data underline decoration-transparent underline-offset-2 transition-colors duration-150 ease-out hover:decoration-current"
+          // Sources as icon links (decision 41): the name is in the tooltip and the accessible label.
+          <p className="mt-2 flex items-center gap-1">
+            {sources.map((source, index) => {
+              const Icon = sourceIcon(source.label);
+              // "#item" marks a claim from the user's own item: no page to open.
+              if (source.url === "#item") {
+                return (
+                  <span
+                    key={index}
+                    title={source.label}
+                    className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tray text-graphite"
                   >
-                    {source.label}
-                    <span aria-hidden="true"> ↗</span>
-                    <span className="sr-only"> (opens in a new tab)</span>
-                  </a>
-                )}
-              </span>
-            ))}
+                    <Icon aria-hidden="true" size={13} weight="duotone" />
+                    <span className="sr-only">{source.label}</span>
+                  </span>
+                );
+              }
+              return (
+                <a
+                  key={index}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${source.label} · checked ${formatDate(source.checkedAt)}`}
+                  aria-label={`${source.label} (opens in a new tab)`}
+                  className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tray text-data transition-colors duration-150 ease-out hover:bg-tray-strong"
+                >
+                  <Icon aria-hidden="true" size={13} weight="duotone" />
+                </a>
+              );
+            })}
           </p>
         )}
 
@@ -217,7 +237,8 @@ function BigFigure({ label, value, className }: { label: string; value: string; 
   return (
     <span>
       <span className="block text-[11px] leading-4 text-graphite">{label}</span>
-      <span className={cn("block font-serif text-[32px] leading-9 tracking-[-0.02em]", className)}>{value}</span>
+      {/* Figures are the mono "data" voice (decision 66). */}
+      <span className={cn("block font-mono text-[28px] leading-9 font-medium tracking-[-0.04em]", className)}>{value}</span>
     </span>
   );
 }

@@ -31,15 +31,15 @@ export const STATUS: Record<
   not_disclosed: {
     label: "not disclosed",
     name: "Not disclosed",
-    mark: "bg-border-strong",
+    mark: "bg-rule-strong",
     pill: "bg-tray text-graphite",
-    dot: "var(--border-strong)",
+    dot: "var(--rule-strong)",
   },
   unverified: {
     label: "unverified",
     name: "Unverified",
-    mark: "bg-border-strong",
-    pill: "border border-dashed border-border-strong text-graphite",
-    dot: "var(--border-strong)",
+    mark: "bg-rule-strong",
+    pill: "border border-dashed border-rule-strong text-graphite",
+    dot: "var(--rule-strong)",
   },
 };
