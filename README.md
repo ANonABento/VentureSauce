@@ -25,7 +25,8 @@ flowchart LR
     B --> C["Claims<br/>raised · round · team<br/>board · ARR"]
     C --> D{"Check"}
     P["SEC Form D<br/>(EDGAR)"] --> D
-    L["LinkedIn + press<br/>(Bright Data)"] --> D
+    O["LinkedIn · Crunchbase<br/>(Bright Data datasets,<br/>our pipeline on OSO)"] --> D
+    L["Live LinkedIn + press<br/>(Bright Data)"] --> D
     Y["Your other items<br/>for this company"] --> D
     D --> R["Report<br/>match · differs · can't verify<br/>+ founder questions"]
     R --> G["Daily / weekly digest<br/>(audio by Fish Audio)"]
@@ -48,8 +49,8 @@ The model only **reads**. Every verdict comes from plain rules in code, so the s
 
 | Claim | Checked against |
 | --- | --- |
-| Money raised, round size | SEC Form D filings, funding press |
-| Team size | LinkedIn (only the page the company's own site links to) |
+| Money raised, round size | SEC Form D filings, funding press, Crunchbase |
+| Team size | LinkedIn (only a profile whose website is the company's own) |
 | Board, executives | People listed on the Form D |
 | ARR, growth, customers | Your other items: deck vs. email vs. notes |
 
@@ -71,7 +72,7 @@ cd frontend && npm install && npm run dev   # http://localhost:3000/panel
 - **Prefilled inbox:** `localhost:3000/panel?ws=demo`
 - **No keys?** `VENTURESAUCE_FAKE=1` replays a sample run.
 
-Acme AI and Northwind Robotics are fictional. Real companies (Daytona, Clerk, Legora) are checked only against their own public statements.
+Acme AI and Northwind Robotics are fictional. Real companies (Daytona, Clerk, Legora, Lovable, Harvey) appear only through their own public statements.
 
 ## Data pipeline
 
@@ -81,7 +82,7 @@ Details: [pipeline README](pipeline/README.md).
 
 ## Built with
 
-**Nebius** (open model) · **Bright Data** (LinkedIn and press) · **Fish Audio** (spoken digest) · **SEC EDGAR** · FastAPI · Next.js · Chrome MV3
+**Nebius** (open model) · **Bright Data** (LinkedIn, Crunchbase, press) · **OSO** (data pipeline) · **Fish Audio** (spoken digest) · **SEC EDGAR** · FastAPI · Next.js · Chrome MV3
 
 ## More
 
