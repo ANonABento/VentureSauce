@@ -1,5 +1,7 @@
 # VentureSauce
 
+## Team 11 — Andi · Surya · Javier · Kevin
+
 **Fact-check every founder claim before the partner meeting.**
 
 Drop in a deck, an email, call notes or a screenshot. VentureSauce files it under the company, checks every claim against public records and against everything else the founder sent you, then hands you the questions to ask.
@@ -71,10 +73,6 @@ Acme AI and Northwind Robotics are fictional. Real companies (Daytona, Clerk, Le
 ## Built with
 
 **Nebius** (open model) · **Bright Data** (LinkedIn and press) · **Fish Audio** (spoken digest) · **SEC EDGAR** · FastAPI · Next.js · Chrome MV3
-
-## Team 11
-
-Andi · Surya · Javier · Kevin
 
 ## More
 
