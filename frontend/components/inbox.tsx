@@ -107,9 +107,14 @@ export function PasteForm({
         placeholder={kind === "email" ? "Paste the founder's email…" : "Paste your notes from the call…"}
         className="mt-2 block w-full rounded-lg border border-rule-strong bg-surface p-3 text-[13px] leading-5 text-ink placeholder:text-graphite"
       />
-      <Button type="submit" size="sm" className="mt-2" disabled={busy}>
-        File it
-      </Button>
+      <div className="mt-2 flex gap-2">
+        <Button type="submit" size="sm" disabled={busy}>
+          File it
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onDone}>
+          Back
+        </Button>
+      </div>
     </form>
   );
 }

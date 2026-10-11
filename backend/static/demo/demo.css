@@ -8,9 +8,9 @@ html, body { margin: 0; height: 100%; }
 body { background: #fff; color: var(--ink); font: 14px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; cursor: pointer; }
 a { color: inherit; }
-/* The dock sits in its own strip under the app, like a desktop taskbar, so it never covers content. */
-body { background: #e4e7ec; }
-#app { height: calc(100% - 72px); overflow: hidden; }
+/* The dock floats over the apps like the macOS one; scrolling areas get room at the end so it never hides the last row. */
+#app { height: 100%; overflow: hidden; }
+.gm-list, .gm-read, .fd-main, .nt-page, .crm-tablewrap, .crm-board, .pt-main, .rd-art, .rd-list, .nt-side { padding-bottom: 84px; }
 .ib { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 0; background: none; color: #444746; flex-shrink: 0; }
 .ib:hover { background: rgba(68, 71, 70, .08); }
 .ib svg { width: 20px; height: 20px; }
@@ -161,10 +161,10 @@ body { background: #e4e7ec; }
 .fd-ovtop .ib { color: #e8eaed; } .fd-ovtop .ib:hover { background: rgba(255,255,255,.12); } .fd-ovtop b { font-weight: 500; font-size: 16px; }
 .fd-ovtop .grow { flex: 1; }
 .fd-open { border: 1px solid #5f6368; border-radius: 20px; padding: 7px 18px; font-size: 14px; background: rgba(0,0,0,.3); }
-.fd-pages { overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 8px 0 90px; cursor: default; }
+.fd-pages { overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 8px 0 150px; cursor: default; }
 .fd-pages img { width: min(960px, 82%); aspect-ratio: 16 / 9; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4); scroll-margin-top: 8px; }
 .fd-pages img.pt { width: min(640px, 60%); aspect-ratio: auto; }
-.fd-pill { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 8px 18px; border-radius: 8px; background: #202124; color: #e8eaed; font-size: 14px; }
+.fd-pill { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 8px 18px; border-radius: 8px; background: #202124; color: #e8eaed; font-size: 14px; }
 .fd-pill i { width: 1px; height: 18px; background: #5f6368; } .fd-pill span svg { width: 16px; height: 16px; vertical-align: middle; }
 
 /* ───────────── Notes (Notion-like) ───────────── */

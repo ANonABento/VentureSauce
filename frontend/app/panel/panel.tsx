@@ -20,6 +20,7 @@ import { type CompanySummary, dropItem, getReport, listCompanies } from "@/lib/a
 import { DUR, EASE_ENTER } from "@/lib/motion";
 import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
+import { type FileInput, usePasteToFile } from "./use-paste-to-file";
 
 export type Status =
   | "idle"
@@ -145,7 +146,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageUrl]);
 
-  async function onDrop(input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string }) {
+  async function onDrop(input: FileInput) {
     setError(null);
     setJob("parsing");
     try {
@@ -158,6 +159,23 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
     }
     setJob(null);
   }
+
+  // ⌘V or drop a file, link, company name or text anywhere (see use-paste-to-file.ts). Keep this when reskinning.
+  usePasteToFile({
+    enabled: job === null && screen.kind !== "digest",
+    companyId: screen.kind === "company" ? screen.id : undefined,
+    onFile: onDrop,
+    openCompany: async (q) => {
+      try {
+        const id = ((await getReport(q)).company as { id?: string }).id;
+        if (id) setScreen({ kind: "company", id });
+        return !!id;
+      } catch {
+        return false;
+      }
+    },
+    onMessage: setError,
+  });
 
   async function onLookup(name: string): Promise<string | null> {
     try {

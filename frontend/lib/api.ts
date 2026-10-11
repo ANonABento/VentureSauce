@@ -168,12 +168,13 @@ export const moveItem = (itemId: string, target: { companyId?: string; newCompan
 
 /** Drop one item (file or pasted text) and follow the job until it's ready. */
 export async function dropItem(
-  input: { file?: File; text?: string; kind?: "email" | "notes"; companyId?: string },
+  input: { file?: File; text?: string; url?: string; kind?: "email" | "notes"; companyId?: string },
   onProgress: (job: Job) => void,
 ): Promise<Job> {
   const form = new FormData();
   if (input.file) form.append("file", input.file);
   if (input.text) form.append("text", input.text);
+  if (input.url) form.append("url", input.url);
   if (input.kind) form.append("kind", input.kind);
   if (input.companyId) form.append("company_id", input.companyId);
   const { job_id } = await call(`/analyze`, { method: "POST", body: form }).then((r) =>
