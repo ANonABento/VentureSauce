@@ -5,3 +5,6 @@ __pycache__/
 .DS_Store
 node_modules/
 backend/data/
+
+# Local MCP config (holds API keys)
+.mcp.json
