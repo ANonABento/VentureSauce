@@ -2,10 +2,7 @@
 
 ## Team 11 — Andi · Surya · Javier · Kevin
 
-> [!NOTE]
-> Huge thanks to [Bright Data](https://brightdata.com) for sponsoring the hackathon. Their SERP API, Scraper APIs and LinkedIn and Crunchbase datasets supply the company profiles, funding rounds and press coverage we check against SEC filings.
-
-**Fact-check every founder claim before the partner meeting.**
+**Fact-check every founder claim before the partner meeting.** Powered by real public data from [Bright Data](https://brightdata.com) and SEC EDGAR.
 
 Drop in a deck, an email, call notes or a screenshot. VentureSauce files it under the company, checks every claim against public records and against everything else the founder sent you, then hands you the questions to ask.
 
@@ -16,6 +13,29 @@ Drop in a deck, an email, call notes or a screenshot. VentureSauce files it unde
 - Founders' numbers drift: $10M in the deck, $15M on the SEC filing, 30 people in the email, 18 on LinkedIn.
 - Checking by hand means tabs, filings and spreadsheets for every deal.
 - VentureSauce does it in the side panel, and **every number links to its source**.
+
+## Powered by Bright Data
+
+A Form D only says *who filed and how much*. Bright Data tells us everything else: team size, funding history, who wrote about the round.
+
+| Bright Data product | What it gives us | Where |
+| --- | --- | --- |
+| **Web Unlocker** | Live funding headlines (Google News) and LinkedIn company pages, on every lookup | [`backend/sources/minimal_live.py`](backend/sources/minimal_live.py) |
+| **SERP API** | Funding news plus LinkedIn and Crunchbase URLs for 1,000 startups | [`pipeline/`](pipeline/) |
+| **LinkedIn dataset + Scraper API** | Headcount, followers, HQ, last round | [`pipeline/`](pipeline/) |
+| **Crunchbase dataset + Scraper API** | Funding rounds, totals, investors | [`pipeline/`](pipeline/) |
+
+**Coverage today:** 1,000 startups built from Form D filings (425 with LinkedIn, 441 with Crunchbase), plus 30 companies tied to this hackathon's judges and mentors. All of it sits in OSO and is read by [`backend/sources/oso.py`](backend/sources/oso.py).
+
+**One real check, end to end** (Legora's own Series D post dropped into the panel):
+
+| Claim | Source | Result |
+| --- | --- | --- |
+| Raised $550M Series D | SEC Form D: $600M offering, $441.5M sold | ✅ match |
+| Raised $550M Series D | Press via Bright Data: "Legora raises $550 million Series D" | ✅ match |
+| 400 team members | LinkedIn via Bright Data: 919 | ✅ match (LinkedIn counts more) |
+
+**Accuracy over coverage.** Matching LinkedIn by name alone put Legora next to a 2-person company at legora.cl. So we only use a profile when **its own website is the company's domain**. Otherwise we say "couldn't verify" and never guess.
 
 ## How it works
 
@@ -73,12 +93,6 @@ cd frontend && npm install && npm run dev   # http://localhost:3000/panel
 - **No keys?** `VENTURESAUCE_FAKE=1` replays a sample run.
 
 Acme AI and Northwind Robotics are fictional. Real companies (Daytona, Clerk, Legora, Lovable, Harvey) appear only through their own public statements.
-
-## Data pipeline
-
-[`pipeline/`](pipeline/) pulls every SEC Form D filing, builds a 1,000-startup deal-flow universe and enriches it with **Bright Data** (SERP API, LinkedIn and Crunchbase datasets). Output lives in OSO; the app reads it through [`backend/sources/oso.py`](backend/sources/oso.py) and uses a profile only when its website matches the company's domain. Live SEC and Bright Data lookups fill the gaps.
-
-Details: [pipeline README](pipeline/README.md).
 
 ## Built with
 
