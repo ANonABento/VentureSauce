@@ -96,12 +96,12 @@ const NOTES = [
     company: "", tags: [["Quick note", "#e3e2e0"]] },
 ];
 const CLIPS = [
-  { id: "daytona", title: "Daytona: Series A", from: "vcnewsdaily.com", file: "10_daytona_public_claims.txt",
-    url: "https://www.vcnewsdaily.com/Daytona/venture-capital-funding/yycfztlnkn", saved: "Oct 8" },
-  { id: "clerk", title: "Clerk: Series C", from: "clerk.com", file: "11_clerk_public_claims.txt",
-    url: "https://clerk.com/blog/series-c", saved: "Oct 7" },
-  { id: "acme-press", title: "Acme AI raises $10M seed led by Example Ventures", from: "example.com", saved: "Sep 30",
-    text: "Acme AI announced a $10 million seed round led by Example Ventures.", url: "https://example.com/acme/press" },
+  { id: "daytona", title: "Daytona raises $24M Series A", pub: "VC News Daily", from: "vcnewsdaily.com", file: "10_daytona_public_claims.txt",
+    url: "https://www.vcnewsdaily.com/Daytona/venture-capital-funding/yycfztlnkn", saved: "Oct 8", tags: ["Dev infra", "Pipeline"], color: "#0b5cad" },
+  { id: "clerk", title: "Clerk raises $50M Series C", pub: "Clerk blog", from: "clerk.com", file: "11_clerk_public_claims.txt",
+    url: "https://clerk.com/blog/series-c", saved: "Oct 7", tags: ["Auth", "Comps"], color: "#6c47ff" },
+  { id: "acme-press", title: "Acme AI raises $10M seed led by Example Ventures", pub: "Example News", from: "example.com", saved: "Sep 30",
+    text: "Acme AI announced a $10 million seed round led by Example Ventures.", url: "https://example.com/acme/press", tags: ["Acme AI"], color: "#e0663a" },
 ];
 // [name, what they do, stage, owner, source, last touch, next step, relationship strength 0-4, round, link]
 const DEALS = [
@@ -542,13 +542,24 @@ async function clipText(c) {
 async function savedView(id) {
   const open = CLIPS.find((c) => c.id === id) || CLIPS[0];
   const article = await clipText(open);
-  const list = CLIPS.map((c) => `<a class="rd-item ${c.id === open.id ? "on" : ""}" href="#saved/${c.id}"><b>${esc(c.title)}</b><span>${esc(c.from)} · Saved ${c.saved}</span></a>`).join("");
-  return `<div class="rd"><aside class="rd-list"><header><i></i>Saved</header>${list}</aside>
-    <section class="rd-art"><article>
-      <div class="src">${esc(open.from)} · Saved ${open.saved}</div>
-      <h1>${esc(open.title)}</h1>
-      <div class="acts"><a href="${open.url}" target="_blank" rel="noreferrer">Open original ↗</a><button data-copy>Copy text</button>${open.file ? `<button data-dl>Download</button>` : ""}</div>
-      <div class="txt">${esc(article)}</div></article></section></div>`;
+  const texts = await Promise.all(CLIPS.map(clipText));
+  const list = CLIPS.map((c, i) => `<a class="rd-item ${c.id === open.id ? "on" : ""}" href="#saved/${c.id}">
+      <span class="fav" style="background:${c.color}">${c.pub[0]}</span>
+      <div><b>${esc(c.title)}</b><p>${esc(texts[i].slice(0, 96))}…</p><span>${esc(c.from)} · 1 min · Saved ${c.saved}</span></div></a>`).join("");
+  // The reader shows each reported statement as a paragraph; the first one is highlighted, as if the reader marked it.
+  const paras = article.split(/\n\n+/).map((t, i) => `<p>${i === 0 ? `<mark>${esc(t)}</mark>` : esc(t)}</p>`).join("");
+  return `<div class="rd"><aside class="rd-list"><header><i></i>Saved<span class="grow"></span><small>${CLIPS.length} items</small></header>
+      <div class="rd-tabs"><span class="on">All</span><span>Favorites</span><span>Highlights</span><span>Archive</span></div>${list}</aside>
+    <section class="rd-art">
+      <div class="rd-bar"><a href="${open.url}" target="_blank" rel="noreferrer">${esc(open.from)} ↗</a><span class="grow"></span>
+        <button data-copy title="Copy text">Copy text</button>${open.file ? `<button data-dl title="Download">Download</button>` : ""}<button title="Favorite">☆</button><button title="Archive">${ic("archive")}</button></div>
+      <article>
+        <div class="src"><span class="fav" style="background:${open.color}">${open.pub[0]}</span>${esc(open.pub)} · 1 min read</div>
+        <h1>${esc(open.title)}</h1>
+        <div class="tags">${open.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>
+        <div class="txt">${paras}</div>
+        <a class="orig" href="${open.url}" target="_blank" rel="noreferrer">Read the original at ${esc(open.from)} ↗</a>
+      </article></section></div>`;
 }
 function savedWire(id) {
   const open = CLIPS.find((c) => c.id === id) || CLIPS[0];

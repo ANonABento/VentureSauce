@@ -310,21 +310,28 @@ body { background: #e4e7ec; }
 .pt-cust .st { margin-left: auto; font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #ecfdf3; color: #067647; }
 
 /* ───────────── Saved (read-later) ───────────── */
-.rd { height: 100%; display: grid; grid-template-columns: 340px 1fr; background: #fbfaf8; }
+.rd { height: 100%; display: grid; grid-template-columns: 360px 1fr; background: #fbfaf8; }
 .rd-list { border-right: 1px solid #ebe8e2; overflow: auto; background: #fff; }
-.rd-list header { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 18px; font-weight: 600; font-size: 16px; border-bottom: 1px solid #f0ede7; }
-.rd-list header i { width: 22px; height: 22px; border-radius: 6px; background: #ef4056; }
-.rd-item { display: block; padding: 14px 18px; border-bottom: 1px solid #f0ede7; text-decoration: none; }
-.rd-item:hover { background: #faf8f5; } .rd-item.on { background: #f3f0ea; }
-.rd-item b { display: block; font-size: 14px; line-height: 1.35; } .rd-item span { font-size: 12px; color: #8b857a; }
-.rd-art { overflow: auto; }
-.rd-art article { max-width: 680px; margin: 0 auto; padding: 48px 32px 100px; font-family: Charter, "Iowan Old Style", Georgia, serif; }
-.rd-art .src { font-family: var(--sans); font-size: 13px; color: #8b857a; display: flex; gap: 10px; align-items: center; }
-.rd-art h1 { font-size: 34px; line-height: 1.2; margin: 10px 0 18px; }
-.rd-art .txt { white-space: pre-wrap; font-size: 19px; line-height: 1.65; color: #2b2925; }
-.rd-art .acts { display: flex; gap: 8px; margin: 22px 0 28px; font-family: var(--sans); }
-.rd-art .acts a, .rd-art .acts button { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 6px; border: 1px solid #e0dcd4; background: #fff; text-decoration: none; font-size: 13px; }
-.rd-art .acts a:hover, .rd-art .acts button:hover { background: #f5f2ec; }
+.rd-list header { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 18px; font-weight: 600; font-size: 16px; }
+.rd-list header i { width: 22px; height: 22px; border-radius: 6px; background: #ef4056; } .rd-list header .grow { flex: 1; } .rd-list header small { font-weight: 400; color: #8b857a; font-size: 12px; }
+.rd-tabs { display: flex; gap: 16px; padding: 0 18px; border-bottom: 1px solid #f0ede7; font-size: 13px; color: #8b857a; }
+.rd-tabs span { padding: 8px 0; } .rd-tabs .on { color: #1f1d1a; border-bottom: 2px solid #ef4056; font-weight: 500; }
+.rd-item { display: flex; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #f0ede7; text-decoration: none; }
+.rd-item:hover { background: #faf8f5; } .rd-item.on { background: #f6f2ec; } .rd-item .fav { color: #fff; font-size: 11px; }
+.rd-item b { display: block; font-size: 14px; line-height: 1.35; } .rd-item p { margin: 4px 0; font-size: 12.5px; color: #6f695f; line-height: 1.4; } .rd-item span { font-size: 12px; color: #8b857a; }
+.fav { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0; font-family: var(--sans); }
+.rd-art { overflow: auto; display: flex; flex-direction: column; }
+.rd-bar { position: sticky; top: 0; display: flex; align-items: center; gap: 6px; height: 52px; padding: 0 20px; background: rgba(251,250,248,.92); backdrop-filter: blur(8px); border-bottom: 1px solid #efebe4; font-size: 13px; }
+.rd-bar a { color: #8b857a; text-decoration: none; } .rd-bar .grow { flex: 1; }
+.rd-bar button { display: inline-flex; align-items: center; height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: none; color: #4a463f; font-size: 13px; }
+.rd-bar button:hover { background: #f0ece5; } .rd-bar svg { width: 17px; height: 17px; }
+.rd-art article { width: 100%; max-width: 680px; margin: 0 auto; padding: 44px 32px 100px; font-family: Charter, "Iowan Old Style", Georgia, serif; }
+.rd-art .src { font-family: var(--sans); font-size: 13px; color: #8b857a; display: flex; gap: 8px; align-items: center; }
+.rd-art h1 { font-size: 38px; line-height: 1.18; margin: 14px 0 14px; letter-spacing: -.01em; }
+.rd-art .tags { display: flex; gap: 6px; margin-bottom: 28px; font-family: var(--sans); } .rd-art .tags span { font-size: 12px; padding: 2px 9px; border-radius: 10px; background: #f0ece5; color: #6f695f; }
+.rd-art .txt p { font-size: 20px; line-height: 1.7; color: #2b2925; margin: 0 0 22px; }
+.rd-art mark { background: #fdf0a6; color: inherit; padding: 1px 0; box-shadow: 0 0 0 2px #fdf0a6; border-radius: 2px; }
+.rd-art .orig { display: inline-block; margin-top: 12px; font-family: var(--sans); font-size: 14px; color: #b0303f; }
 
 @media (max-width: 900px) {
   .gm-body { grid-template-columns: 1fr; } .gm-nav { display: none; } .gm-main { margin: 0 8px 8px; }
