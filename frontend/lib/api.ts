@@ -28,7 +28,11 @@ function resolveWorkspace(): string {
   const valid = (v: string | null | undefined) => !!v && /^[a-z0-9][a-z0-9-]{0,39}$/.test(v);
   try {
     const asked = new URLSearchParams(window.location.search).get("ws")?.toLowerCase();
-    if (valid(asked)) localStorage.setItem("vs.ws", asked!);
+    // ?ws=demo shows the prebuilt showcase for this visit only, so plain /panel goes back to your own inbox after.
+    if (asked === "demo") return asked;
+    // ?ws=new starts a fresh, empty inbox (e.g. right before a live demo).
+    if (asked === "new") localStorage.removeItem("vs.ws");
+    else if (valid(asked)) localStorage.setItem("vs.ws", asked!);
     const saved = localStorage.getItem("vs.ws");
     if (valid(saved)) return saved!;
     const fresh = `t-${crypto.randomUUID().slice(0, 12)}`;
