@@ -12,6 +12,7 @@ uv run uvicorn main:app --reload --port 8000
 - `GET /jobs/{job_id}` → job (poll every 1s; `status` goes parsing → checking_sec → checking_linkedin → checking_press → ready, or `error`)
 - `GET /jobs/{job_id}?replay=1` → cached final result (demo fallback)
 - `GET /companies` → deal inbox list · `GET /companies/{id}` → company view (items, checks, questions) · `DELETE /companies/{id}`
+- `GET /oso?domain=…|company_id=…` (optional `cik`) → `{domain, linkedin, crunchbase, fetched_at}` from Data's OSO tables (`sources/oso.py`, `OSO_API_KEY`). Each profile is `null` unless its own website is that domain; each carries `url` (source link). The key stays on the server: clients call this, never OSO.
 - `GET /api/delta?company_id=…|url=…|company=…` → the Next.js frontend's `DeltaReport` (`frontend/lib/types.ts`) plus `questions`, `items`, `company.id`. 404 until something about that company has been dropped in.
 
 - `GET /digest?period=day|week` → roll-up + on-screen summary + podcast script · `POST /digest/audio {script}` → `{audio_url}` (Fish Audio)

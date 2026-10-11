@@ -21,6 +21,7 @@ import digest
 import fetch_url
 import jobs
 import store
+from sources import oso
 
 load_dotenv()
 # Fake mode replays the Acme fixture. Default: on only when no LLM key is configured.
@@ -139,6 +140,21 @@ def company(company_id: str):
     if not co:
         raise HTTPException(404, "unknown company")
     return jobs.fresh_view(company_id) or {"company": {k: co.get(k) for k in ("id", "name", "domain")}, "items": [], "checks": [], "questions": []}
+
+
+@app.get("/oso")
+def oso_profiles(domain: str | None = None, company_id: str | None = None, cik: str | None = None):
+    """Data's OSO tables for one company (sources/oso.py): LinkedIn + Crunchbase profiles, only where the profile's
+    website is the company's domain. By domain, or by an inbox company's id (its saved domain). Keeps OSO_API_KEY
+    server-side so the extension and frontend never hold it."""
+    if company_id:
+        co = store.get_company(company_id)
+        if not co:
+            raise HTTPException(404, "unknown company")
+        domain = domain or co.get("domain")
+    if not domain:
+        raise HTTPException(400, "give domain or company_id (with a saved domain)")
+    return {"domain": oso.host(domain), **oso.profiles(domain, cik), "fetched_at": oso.tables().get("fetched_at")}
 
 
 @app.get("/api/delta")
