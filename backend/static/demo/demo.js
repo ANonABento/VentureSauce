@@ -327,49 +327,104 @@ function decksWire(id, page) {
 }
 
 /* ───────────── Notes ───────────── */
+// Other rows in the "Deal notes" database: texture only, not openable.
+const NOTE_ROWS = [
+  ["📝", "Kestrel Health: board prep", "Kestrel Health", "Portfolio", "September 23, 2026", "Taylor Kim"],
+  ["🧾", "Copperline: bridge rationale", "Copperline", "Portfolio", "September 22, 2026", "Morgan Lee"],
+  ["📞", "Fieldnote: first call", "Fieldnote", "Call", "September 18, 2026", "Taylor Kim"],
+  ["🚫", "Tidewell: pass note", "Tidewell", "Pass", "September 17, 2026", "Morgan Lee"],
+  ["🔎", "Orbitwise: data room review", "Orbitwise", "Diligence", "September 16, 2026", "Morgan Lee"],
+];
+const TYPE_COLORS = { Call: "#dbeddb", Diligence: "#fadec9", "Quick note": "#e3e2e0", Portfolio: "#d3e5ef", Pass: "#ffe2dd" };
+
+/** A note file → Notion-ish blocks. "Follow-up: a and b" becomes to-dos. */
 function noteHtml(text) {
   const out = [];
   let list = null;
+  const flush = () => { if (list) out.push(`<ul>${list.join("")}</ul>`); list = null; };
   for (const line of text.split("\n")) {
     const li = line.match(/^\s*[-•]\s+(.*)$/);
+    const todo = li && li[1].match(/^Follow-up:\s*(.*)$/i);
+    if (todo) {
+      flush();
+      const items = todo[1].replace(/^ask for /i, "").replace(/\.$/, "").split(/\s+and\s+/);
+      out.push(`<h3>Follow-ups</h3>` + items.map((t) => `<label class="nt-todo"><input type="checkbox"><span>Ask for ${esc(t)}</span></label>`).join(""));
+      continue;
+    }
     if (li) { (list ||= []).push(`<li>${esc(li[1])}</li>`); continue; }
-    if (list) { out.push(`<ul>${list.join("")}</ul>`); list = null; }
-    out.push(`<p>${esc(line)}</p>`);
+    flush();
+    if (line.trim()) out.push(`<p>${esc(line)}</p>`);
   }
-  if (list) out.push(`<ul>${list.join("")}</ul>`);
+  flush();
   return out.join("");
 }
 
-async function notesView(id) {
-  const open = NOTES.find((n) => n.id === id) || NOTES[0];
-  const text = await load(open.file);
-  const side = NOTES.map((n) => `<a class="it sub ${n.id === open.id ? "on" : ""}" href="#notes/${n.id}"><span class="em">${n.icon}</span>${esc(n.title)}</a>`).join("");
-  const tags = open.tags.map(([t, c]) => `<span class="nt-tag" style="background:${c}">${t}</span>`).join("");
-  return `<div class="nt">
-    <aside class="nt-side">
-      <div class="nt-ws"><i>K</i>${esc(ME.fund)}</div>
-      <a class="it"><span class="em">🔍</span>Search</a><a class="it"><span class="em">🏠</span>Home</a><a class="it"><span class="em">📥</span>Inbox</a>
-      <h6>Workspace</h6>
+function notesSide(active) {
+  const side = NOTES.map((n) => `<a class="it sub ${n.id === active ? "on" : ""}" href="#notes/${n.id}"><span class="em">${n.icon}</span>${esc(n.title)}</a>`).join("");
+  return `<aside class="nt-side">
+      <div class="nt-ws"><i>K</i>${esc(ME.fund)}<span class="chev">⌄</span></div>
+      <a class="it"><span class="em">🔍</span>Search</a><a class="it"><span class="em">🏠</span>Home</a><a class="it"><span class="em">📥</span>Inbox<span class="cnt">2</span></a>
+      <h6>Teamspaces</h6>
       <a class="it"><span class="em">📈</span>Pipeline</a>
-      <a class="it"><span class="em">▾</span>Deal notes</a>${side}
-      <a class="it"><span class="em">🗂️</span>IC memos</a><a class="it"><span class="em">🗓️</span>Weekly partner sync</a><a class="it"><span class="em">📚</span>Portfolio</a>
-      <h6>Private</h6><a class="it"><span class="em">✅</span>To-dos</a><a class="it"><span class="em">💡</span>Theses</a>
-    </aside>
+      <a class="it ${active ? "" : "on"}" href="#notes"><span class="em">🗒️</span>Deal notes</a>${side}
+      <a class="it"><span class="em">🗂️</span>IC memos</a><a class="it"><span class="em">🗓️</span>Weekly partner sync</a><a class="it"><span class="em">📚</span>Portfolio</a><a class="it"><span class="em">🧭</span>Theses</a>
+      <h6>Private</h6><a class="it"><span class="em">✅</span>To-dos</a><a class="it"><span class="em">✍️</span>Drafts</a>
+      <div class="nt-sidefoot"><a class="it"><span class="em">⚙️</span>Settings</a><a class="it"><span class="em">🗑️</span>Trash</a></div>
+    </aside>`;
+}
+
+async function notesView(id) {
+  const open = NOTES.find((n) => n.id === id);
+  if (!open) return notesHome();
+  const text = await load(open.file);
+  const tags = open.tags.map(([t, c]) => `<span class="nt-tag" style="background:${c}">${t}</span>`).join("");
+  return `<div class="nt">${notesSide(open.id)}
     <section class="nt-main">
-      <div class="nt-top"><span class="crumb">Deal notes /</span><span>${open.icon} ${esc(open.title)}</span><span class="grow"></span>
+      <div class="nt-top"><span class="crumb">🗒️ Deal notes</span><span class="crumb">/</span><span>${open.icon} ${esc(open.title)}</span><span class="grow"></span>
         <span class="crumb" style="font-size:13px">Edited ${open.when.replace(", 2026", "")}</span>
-        <button class="tb">Share</button><button class="tb" aria-label="Favorite">☆</button><button class="tb" data-more aria-label="More">•••</button></div>
+        <button class="tb">Share</button><button class="tb" aria-label="Comments">💬</button><button class="tb" aria-label="Favorite">☆</button><button class="tb" data-more aria-label="More">•••</button></div>
       <div class="nt-page"><div class="nt-cover"></div><div class="nt-doc">
         <div class="nt-icon">${open.icon}</div><h1>${esc(open.title)}</h1>
-        <dl class="nt-props"><dt>Company</dt><dd>${open.company ? `<span class="nt-tag" style="background:#d3e5ef">${esc(open.company)}</span>` : '<span style="color:#c7c6c4">Empty</span>'}</dd>
-          <dt>Date</dt><dd>${open.when}</dd><dt>Tags</dt><dd>${tags}</dd><dt>Author</dt><dd>${avatar(ME.name)}${ME.name}</dd></dl>
-        <div class="nt-body">${noteHtml(text)}</div></div></div>
+        <dl class="nt-props">
+          <dt>↗ Company</dt><dd>${open.company ? `<span class="nt-rel">🏢 ${esc(open.company)}</span>` : '<span style="color:#c7c6c4">Empty</span>'}</dd>
+          <dt>◷ Date</dt><dd>${open.when}</dd>
+          <dt>≡ Type</dt><dd>${tags}</dd>
+          <dt>◎ Status</dt><dd>${open.company ? '<span class="nt-status"><i></i>In diligence</span>' : '<span class="nt-status todo"><i></i>To file</span>'}</dd>
+          <dt>👤 Owner</dt><dd>${avatar(ME.name)}${ME.name}</dd>
+        </dl>
+        <div class="nt-comment">${avatar(ME.name)}<span>Add a comment…</span></div>
+        <div class="nt-body">${noteHtml(text)}</div>
+        <div class="nt-back">${open.company ? `↙ 2 backlinks · <u>Pipeline</u>, <u>Weekly partner sync</u>` : "↙ No backlinks"}</div>
+      </div></div>
     </section></div>`;
 }
+
+function notesHome() {
+  const real = NOTES.map((n) => [n.icon, n.title, n.company, n.tags[0][0], n.when, ME.name, `#notes/${n.id}`]);
+  const rows = [...real, ...NOTE_ROWS].sort((a, b) => new Date(b[4]) - new Date(a[4])).map(([icon, title, co, type, when, owner, href]) => `
+    <tr ${href ? `data-href="${href}"` : ""}><td class="nm"><span>${icon}</span><b>${esc(title)}</b>${href ? '<span class="open">OPEN</span>' : ""}</td>
+      <td>${co ? `<span class="nt-rel">🏢 ${esc(co)}</span>` : ""}</td>
+      <td><span class="nt-tag" style="background:${TYPE_COLORS[type] || "#e3e2e0"}">${type}</span></td>
+      <td>${when.replace(", 2026", "")}</td><td class="ow">${avatar(owner)}${esc(owner)}</td></tr>`).join("");
+  return `<div class="nt">${notesSide(null)}
+    <section class="nt-main">
+      <div class="nt-top"><span>🗒️ Deal notes</span><span class="grow"></span><span class="crumb" style="font-size:13px">Edited Oct 9</span><button class="tb">Share</button><button class="tb">☆</button><button class="tb">•••</button></div>
+      <div class="nt-page"><div class="nt-db">
+        <div class="nt-icon" style="margin-top:28px;font-size:56px">🗒️</div><h1>Deal notes</h1>
+        <p class="nt-desc">Every call, meeting and hallway note, linked to its company. Use the Call template for anything with a founder.</p>
+        <div class="nt-views"><span class="on">▦ All notes</span><span>⊞ By company</span><span>📞 Calls</span><span class="grow"></span><span>Filter</span><span>Sort</span><span>🔍</span><b class="nt-new">New ⌄</b></div>
+        <table class="nt-table"><thead><tr><th>Aa Name</th><th>↗ Company</th><th>≡ Type</th><th>◷ Date</th><th>👤 Owner</th></tr></thead>
+          <tbody>${rows}<tr class="add"><td colspan="5">+ New page</td></tr></tbody></table>
+        <div class="nt-count">COUNT <b>${real.length + NOTE_ROWS.length}</b></div>
+      </div></div>
+    </section></div>`;
+}
+
 function notesWire(id) {
-  const open = NOTES.find((n) => n.id === id) || NOTES[0];
+  document.querySelectorAll("tr[data-href]").forEach((r) => (r.onclick = () => (location.hash = r.dataset.href)));
+  const open = NOTES.find((n) => n.id === id);
   const more = $("[data-more]");
-  if (more) more.onclick = async (e) => {
+  if (open && more) more.onclick = async (e) => {
     e.stopPropagation();
     const text = await load(open.file);
     menu(more, [["Copy page text", () => copy(text, "Page text copied")], ["Export as .txt", () => download(open.file, `${open.title}.txt`)]]);
@@ -461,7 +516,7 @@ const APPS = {
     title: (id) => (id === "acme" ? "Acme AI deck" : "Shared with me"),
     icon: tile("#1a56db", '<rect x="11" y="13" width="26" height="17" rx="2" fill="#fff"/><path d="M24 30v6M18 36h12" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M15 25l5-5 4 3 6-6" stroke="#1a56db" stroke-width="2.2" fill="none" stroke-linecap="round"/>') },
   notes: { name: "Notes", view: notesView, wire: notesWire,
-    title: (id) => (NOTES.find((n) => n.id === id) || NOTES[0]).title,
+    title: (id) => NOTES.find((n) => n.id === id)?.title || "Deal notes",
     icon: tile("#fff", '<rect x=".5" y=".5" width="47" height="47" rx="10.5" fill="none" stroke="#ddd"/><path d="M14 12h16l6 6v18H14z" fill="#fff" stroke="#111" stroke-width="2.4" stroke-linejoin="round"/><path d="M19 21h12M19 26h12M19 31h8" stroke="#111" stroke-width="2.2" stroke-linecap="round"/>') },
   crm: { name: "CRM", view: crmView, title: () => "Deal pipeline · Relate",
     icon: tile("#1b1f3b", '<circle cx="18" cy="20" r="5" fill="#7c5cff"/><circle cx="31" cy="18" r="4" fill="#3cc4ff"/><circle cx="27" cy="31" r="6" fill="#fff"/><path d="M18 20l13-2-4 13z" stroke="#fff" stroke-width="1.5" fill="none" opacity=".6"/>') },
