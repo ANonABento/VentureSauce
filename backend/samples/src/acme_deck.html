@@ -1,43 +1,272 @@
-<!doctype html><html><head><meta charset="utf-8"><style>
+<!doctype html><html><head><meta charset="utf-8">
+<title>Acme AI deck (FICTIONAL company, demo data)</title>
+<!-- FICTIONAL company and data, written for the VentureSauce demo. The claims the demo relies on (raised, ARR, growth,
+     customers, team, board) must stay exactly as they are; the inbox's contradictions are built around them. -->
+<style>
 @page { size: 1280px 720px; margin: 0 }
-* { box-sizing: border-box; margin: 0 }
-body { font-family: "Helvetica Neue", Arial, sans-serif; color: #0f1b2d; }
-.s { width: 1280px; height: 720px; padding: 72px 88px; position: relative; overflow: hidden; page-break-after: always; background: #fbfaf7; }
-.s.dark { background: #0f1b2d; color: #f4f1ea; }
-.k { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: #e0663a; font-weight: 600 }
-h1 { font-size: 96px; letter-spacing: -.03em; line-height: 1; margin-top: 180px }
-h2 { font-size: 56px; letter-spacing: -.02em; line-height: 1.05; margin-top: 18px; max-width: 980px }
-.sub { font-size: 30px; opacity: .75; margin-top: 22px }
-.url { position: absolute; bottom: 72px; left: 88px; font-size: 20px; opacity: .6 }
-.foot { position: absolute; bottom: 28px; left: 88px; font-size: 13px; font-style: italic; opacity: .55 }
-.pg { position: absolute; bottom: 28px; right: 88px; font-size: 13px; opacity: .45 }
-.big { font-size: 128px; font-weight: 700; letter-spacing: -.04em; color: #e0663a; line-height: 1 }
-.row { display: flex; gap: 32px; margin-top: 56px }
-.card { flex: 1; background: #fff; border-radius: 18px; padding: 32px; box-shadow: 0 2px 0 rgba(15,27,45,.06), 0 12px 32px rgba(15,27,45,.06) }
-.card b { display: block; font-size: 44px; letter-spacing: -.02em } .card span { font-size: 20px; opacity: .65 }
-.body { font-size: 30px; line-height: 1.4; margin-top: 36px; max-width: 1000px }
-.logo { display: inline-flex; align-items: center; gap: 14px; font-weight: 700; font-size: 28px }
-.dot { width: 26px; height: 26px; border-radius: 50%; background: #e0663a; box-shadow: 14px 0 0 #f4b860 }
-.logos { display: flex; gap: 28px; margin-top: 56px } .logos div { flex: 1; height: 120px; border-radius: 16px; background: #fff; display: grid; place-items: center; font-size: 34px; font-weight: 700; color: #3b4a5e; box-shadow: 0 12px 32px rgba(15,27,45,.06) }
-.chart { position: absolute; right: 88px; top: 210px; display: flex; align-items: flex-end; gap: 14px; height: 300px }
-.chart i { width: 34px; background: #e0663a; border-radius: 8px 8px 0 0; opacity: .9 }
+* { box-sizing: border-box; margin: 0; padding: 0 }
+:root { --navy: #0f1b2d; --ink: #0f1b2d; --muted: #5d6878; --paper: #fbfaf7; --orange: #e0663a; --gold: #f4b860; --line: #e6e2d9; --soft: #f3efe7; }
+body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.s { width: 1280px; height: 720px; padding: 64px 80px; position: relative; overflow: hidden; page-break-after: always; background: var(--paper); }
+.s.dark { background: var(--navy); color: #f4f1ea; }
+.k { font-size: 15px; letter-spacing: .16em; text-transform: uppercase; color: var(--orange); font-weight: 700 }
+h1 { font-size: 104px; letter-spacing: -.035em; line-height: .95; font-weight: 700 }
+h2 { font-size: 46px; letter-spacing: -.02em; line-height: 1.08; margin-top: 14px; max-width: 1000px; font-weight: 700 }
+h3 { font-size: 22px; letter-spacing: -.01em; font-weight: 700 }
+p, li { font-size: 19px; line-height: 1.45; color: var(--muted) }
+.dark p { color: rgba(244,241,234,.7) }
+.foot { position: absolute; left: 80px; right: 80px; bottom: 30px; display: flex; justify-content: space-between; font-size: 12px; color: #9aa1ab; letter-spacing: .02em }
+.foot b { color: var(--ink); font-weight: 700 }
+.logo { display: inline-flex; align-items: center; gap: 12px; font-weight: 700; font-size: 24px; letter-spacing: -.01em }
+.dot { width: 22px; height: 22px; border-radius: 50%; background: var(--orange); box-shadow: 12px 0 0 var(--gold); margin-right: 12px }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 44px }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 36px; align-items: start }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 26px 28px }
+.card p { font-size: 17px; margin-top: 8px }
+.num { font-size: 13px; font-weight: 700; color: var(--orange); letter-spacing: .1em; margin-bottom: 14px }
+.pill { display: inline-block; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--soft); color: var(--ink) }
+/* Product window */
+.win { position: absolute; right: -40px; top: 150px; width: 760px; height: 470px; background: #fff; border-radius: 14px; box-shadow: 0 30px 80px rgba(15,27,45,.18), 0 0 0 1px rgba(15,27,45,.06); overflow: hidden; display: grid; grid-template-columns: 170px 1fr; grid-template-rows: 40px 1fr }
+.win .bar { grid-column: 1 / -1; background: #f5f3ee; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 7px; padding: 0 14px }
+.win .bar i { width: 11px; height: 11px; border-radius: 50%; background: #e3ddd2 }
+.win .bar span { margin-left: 16px; font-size: 12px; color: #8a8f98 }
+.win nav { background: var(--navy); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px }
+.win nav b { color: #fff; font-size: 14px; margin-bottom: 14px; display: flex; align-items: center }
+.win nav b .dot { width: 12px; height: 12px; box-shadow: 7px 0 0 var(--gold); margin-right: 14px }
+.win nav span { color: #aab3c2; font-size: 12px; padding: 7px 8px; border-radius: 6px }
+.win nav span.on { background: rgba(255,255,255,.1); color: #fff }
+.win main { padding: 18px 20px; background: #fcfbf9 }
+.win h4 { font-size: 15px; margin-bottom: 12px }
+.ex { display: grid; grid-template-columns: 8px 1fr auto; gap: 12px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; margin-bottom: 9px }
+.ex i { width: 8px; height: 36px; border-radius: 4px; background: var(--orange) }
+.ex i.y { background: var(--gold) } .ex i.g { background: #7fb69a }
+.ex b { font-size: 13px; display: block } .ex small { font-size: 11.5px; color: #7b8494 }
+.ex em { font-style: normal; font-size: 11px; font-weight: 700; color: #fff; background: var(--navy); padding: 6px 10px; border-radius: 6px }
+.ex em.o { background: #fff; color: var(--navy); border: 1px solid var(--line) }
+.sugg { margin-top: 12px; border-radius: 10px; background: #fff6ef; border: 1px solid #f6d9c6; padding: 12px 14px; font-size: 12.5px; color: #6b3a22 }
+.sugg b { color: var(--orange) }
+/* Charts */
+.chart { display: flex; align-items: flex-end; gap: 14px; height: 300px; padding-bottom: 2px; border-bottom: 2px solid var(--line) }
+.chart i { flex: 1; background: linear-gradient(180deg, var(--orange), #e98a5f); border-radius: 6px 6px 0 0 }
+.chart i.past { background: #ead8cb }
+.axis { display: flex; gap: 14px; margin-top: 10px } .axis span { flex: 1; text-align: center; font-size: 12px; color: #9aa1ab }
+.big { font-size: 120px; font-weight: 700; letter-spacing: -.045em; line-height: .9; color: var(--orange) }
+/* Logos */
+.logos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 44px }
+.lg { height: 132px; border-radius: 16px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; font-weight: 800; font-size: 36px; color: #2b3747; letter-spacing: -.02em; position: relative }
+.lg small { position: absolute; top: 14px; right: 16px; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--muted) }
+.quote { margin-top: 36px; padding: 26px 30px; border-left: 4px solid var(--orange); background: #fff; border-radius: 0 14px 14px 0 }
+.quote p { font-size: 24px; color: var(--ink); line-height: 1.4; font-family: Georgia, serif }
+.quote span { display: block; font-size: 14px; margin-top: 10px; color: var(--muted) }
+/* Flow */
+.flow { display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr; align-items: center; margin-top: 56px }
+.flow .arrow { height: 2px; background: var(--line); position: relative } .flow .arrow::after { content: ""; position: absolute; right: 0; top: -5px; border: 6px solid transparent; border-left-color: #cfc8ba }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px }
+/* Market */
+.rings { position: absolute; right: 90px; top: 130px; width: 460px; height: 460px }
+.rings div { position: absolute; border-radius: 50%; display: grid; place-items: start center; padding-top: 22px; font-weight: 700; font-size: 15px }
+/* 2x2 */
+.mx { position: absolute; right: 80px; top: 120px; width: 560px; height: 500px; border-left: 2px solid var(--line); border-bottom: 2px solid var(--line) }
+.mx .lab { position: absolute; font-size: 12px; color: #9aa1ab; letter-spacing: .06em; text-transform: uppercase; font-weight: 700 }
+.mx .co { position: absolute; padding: 9px 14px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: 14px; font-weight: 600; color: #3b4656; white-space: nowrap }
+.mx .co.us { background: var(--orange); color: #fff; border-color: var(--orange); font-size: 16px; padding: 11px 18px; box-shadow: 0 10px 24px rgba(224,102,58,.35) }
+/* People */
+.ppl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 36px }
+.person { display: flex; gap: 16px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px }
+.av { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 22px; flex-shrink: 0 }
+.person b { display: block; font-size: 19px } .person span { font-size: 14px; color: var(--muted) }
+.stat { display: flex; gap: 40px; margin-top: 36px }
+.stat div b { display: block; font-size: 64px; letter-spacing: -.03em; line-height: 1 } .stat div span { font-size: 15px; color: var(--muted) }
+/* Ask */
+.use { margin-top: 18px } .use div { display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 14px; margin-bottom: 14px; font-size: 16px; color: var(--ink) }
+.use i { height: 14px; border-radius: 7px; background: var(--orange) }
+.steps { display: flex; gap: 0; margin-top: 26px }
+.steps div { flex: 1; border-top: 3px solid var(--line); padding-top: 14px; font-size: 15px; color: var(--muted) } .steps div b { display: block; color: var(--ink); font-size: 17px; margin-bottom: 4px }
+.steps div.on { border-color: var(--orange) }
 </style></head><body>
-<section class="s dark"><div class="logo"><span class="dot"></span>&nbsp;&nbsp;Acme AI</div>
-<h1>Acme AI</h1><p class="sub">The reasoning layer for logistics</p>
-<p class="url">www.acme-ai.example</p><p class="foot">FICTIONAL company - synthetic demo deck</p></section>
-<section class="s"><p class="k">Traction</p><h2>$12M raised to date: $2M pre-seed (2025) and a $10M seed led by Example Ventures (June 2026).</h2>
-<div class="row"><div class="card"><b>$2M</b><span>Pre-seed · 2025</span></div><div class="card"><b>$10M</b><span>Seed · June 2026 · led by Example Ventures</span></div><div class="card"><b>$12M</b><span>Raised to date</span></div></div>
-<p class="foot">FICTIONAL company - synthetic demo deck</p><p class="pg">2</p></section>
-<section class="s"><p class="k">Metrics</p><p class="big" style="margin-top:40px">$3.1M ARR</p><h2 style="font-size:44px">$3.1M ARR, growing 20% MoM.</h2>
-<div class="chart"><i style="height:22%"></i><i style="height:28%"></i><i style="height:35%"></i><i style="height:44%"></i><i style="height:55%"></i><i style="height:68%"></i><i style="height:82%"></i><i style="height:100%"></i></div>
-<p class="foot">FICTIONAL company - synthetic demo deck</p><p class="pg">3</p></section>
-<section class="s"><p class="k">Customers</p><h2>Trusted by Globex and Hooli.<br>Signed LOI with Initech.</h2>
-<div class="logos"><div>Globex</div><div>Hooli</div><div style="opacity:.6">Initech · LOI</div></div>
-<p class="foot">FICTIONAL company - synthetic demo deck</p><p class="pg">4</p></section>
-<section class="s"><p class="k">Team</p><h2>A team of 25 AI engineers in San Francisco, plus 6 contractors in Lisbon.</h2><p class="body">Hiring aggressively.</p>
-<div class="row"><div class="card"><b>25</b><span>AI engineers · San Francisco</span></div><div class="card"><b>6</b><span>Contractors · Lisbon</span></div></div>
-<p class="foot">FICTIONAL company - synthetic demo deck</p><p class="pg">5</p></section>
-<section class="s"><p class="k">Board</p><h2>Jane Founder (CEO), Sam Investor (Example Ventures).</h2><p class="body">Advisors: Dr. Ada Smart.</p>
-<div class="row"><div class="card"><b>Jane Founder</b><span>CEO · Board</span></div><div class="card"><b>Sam Investor</b><span>Example Ventures · Board</span></div><div class="card"><b>Dr. Ada Smart</b><span>Advisor</span></div></div>
-<p class="foot">FICTIONAL company - synthetic demo deck</p><p class="pg">6</p></section>
+
+<!-- 1 Cover -->
+<section class="s dark">
+  <div class="logo"><span class="dot"></span>Acme AI</div>
+  <h1 style="margin-top:170px">Acme AI</h1>
+  <p style="font-size:30px;margin-top:22px;color:rgba(244,241,234,.8)">The reasoning layer for logistics</p>
+  <div style="position:absolute;left:80px;bottom:64px;display:flex;gap:40px;font-size:16px;color:rgba(244,241,234,.55)"><span>Series A · October 2026</span><span>www.acme-ai.example</span></div>
+  <div style="position:absolute;right:-120px;top:-120px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(224,102,58,.45), rgba(224,102,58,0) 65%)"></div>
+  <div style="position:absolute;right:120px;bottom:-200px;width:520px;height:520px;border-radius:50%;border:1px solid rgba(244,241,234,.12)"></div>
+</section>
+
+<!-- 2 Problem -->
+<section class="s">
+  <p class="k">The problem</p>
+  <h2>Warehouses still run on spreadsheets, radio calls and gut feel.</h2>
+  <div class="grid3">
+    <div class="card"><p class="num">01</p><h3>Plans break by 10am</h3><p>A late truck or a no-show shift ripples through every dock, and the morning plan is out of date before lunch.</p></div>
+    <div class="card"><p class="num">02</p><h3>Decisions live in people's heads</h3><p>Supervisors re-plan by hand across the WMS, the TMS and a whiteboard. Nothing is written down, so nothing improves.</p></div>
+    <div class="card"><p class="num">03</p><h3>Software follows rules, not reasons</h3><p>Today's tools optimise one step at a time. None of them can weigh a late truck against a labour shortage against a promised ship date.</p></div>
+  </div>
+  <p style="margin-top:40px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#9aa1ab">A typical day on the floor</p>
+  <div class="steps" style="margin-top:12px"><div><b>06:00</b>Plan built in a spreadsheet</div><div class="on"><b>09:40</b>Inbound truck late</div><div class="on"><b>10:15</b>Re-plan over the radio</div><div class="on"><b>14:00</b>Overtime called</div><div class="on"><b>18:30</b>Orders miss the carrier cutoff</div></div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>2</span></div>
+</section>
+
+<!-- 3 Solution -->
+<section class="s">
+  <p class="k">The product</p>
+  <h2 style="max-width:440px">An AI planner that reasons over every order, dock and shift.</h2>
+  <p style="max-width:400px;margin-top:22px">Acme watches the floor in real time, explains what is about to go wrong, and proposes the fix. A supervisor approves it in one click.</p>
+  <div class="chips" style="max-width:420px"><span class="pill">Live exceptions</span><span class="pill">Re-slotting</span><span class="pill">Labour plans</span><span class="pill">Plain-English reasons</span></div>
+  <div class="win">
+    <div class="bar"><i></i><i></i><i></i><span>app.acme-ai.example / today</span></div>
+    <nav><b><span class="dot"></span>Acme</b><span class="on">Today</span><span>Docks</span><span>Labour</span><span>Orders</span><span>Reports</span></nav>
+    <main>
+      <h4>Needs a decision</h4>
+      <div class="ex"><i></i><div><b>Inbound truck late at Dock 4</b><small>Blocks two outbound waves if unchanged</small></div><em>Review</em></div>
+      <div class="ex"><i class="y"></i><div><b>Picker shortage on the evening shift</b><small>Zone C at risk for same-day orders</small></div><em class="o">Review</em></div>
+      <div class="ex"><i class="g"></i><div><b>Carrier pickup moved earlier</b><small>Plan already adjusted</small></div><em class="o">Done</em></div>
+      <div class="sugg"><b>Suggested:</b> move the Dock 4 unload to Dock 2 and start wave 3 early. Same-day orders stay on time; no overtime needed.</div>
+    </main>
+  </div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>3</span></div>
+</section>
+
+<!-- 4 How it works -->
+<section class="s">
+  <p class="k">How it works</p>
+  <h2>Plugs into the systems a warehouse already has. Live in weeks, not quarters.</h2>
+  <div class="flow">
+    <div class="card"><p class="num">CONNECT</p><h3>Read every system</h3><p>WMS, TMS, labour scheduling and yard data, through standard connectors.</p><div class="chips"><span class="pill">WMS</span><span class="pill">TMS</span><span class="pill">ERP</span><span class="pill">Scheduling</span></div></div>
+    <div class="arrow"></div>
+    <div class="card"><p class="num">REASON</p><h3>Model the whole floor</h3><p>A reasoning model weighs trucks, people and promises together, and says why.</p></div>
+    <div class="arrow"></div>
+    <div class="card"><p class="num">ACT</p><h3>One-click fixes</h3><p>Approved plans write straight back to the WMS and the team's handhelds.</p></div>
+  </div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>4</span></div>
+</section>
+
+<!-- 5 Metrics -->
+<section class="s">
+  <p class="k">Traction</p>
+  <div class="grid2" style="grid-template-columns:420px 1fr;margin-top:30px">
+    <div>
+      <p class="big" style="margin-top:20px">$3.1M</p>
+      <h2 style="font-size:36px;margin-top:22px">$3.1M ARR, growing 20% MoM.</h2>
+      <p style="margin-top:18px">Every customer started with one site and expanded.</p>
+    </div>
+    <div style="padding-top:30px">
+      <div class="chart"><i class="past" style="height:22%"></i><i class="past" style="height:28%"></i><i class="past" style="height:35%"></i><i class="past" style="height:44%"></i><i class="past" style="height:55%"></i><i class="past" style="height:68%"></i><i class="past" style="height:82%"></i><i style="height:100%"></i></div>
+      <div class="axis"><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div>
+      <p style="font-size:13px;margin-top:12px">ARR by month, 2026</p>
+    </div>
+  </div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>5</span></div>
+</section>
+
+<!-- 6 Customers -->
+<section class="s">
+  <p class="k">Customers</p>
+  <h2>Trusted by Globex and Hooli.<br>Signed LOI with Initech.</h2>
+  <div class="logos"><div class="lg"><small>LIVE</small>GLOBEX</div><div class="lg"><small>LIVE</small>hooli</div><div class="lg" style="color:#8a93a0"><small>LOI</small>Initech</div></div>
+  <div class="quote"><p>"For the first time, the plan at 4pm looks like the plan at 8am, and when it doesn't, we know why."</p><span>Director of Operations, Globex</span></div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>6</span></div>
+</section>
+
+<!-- 7 Why now -->
+<section class="s dark">
+  <p class="k">Why now</p>
+  <h2 style="color:#f4f1ea">Reasoning models finally make the floor computable.</h2>
+  <div class="grid3">
+    <div class="card" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)"><h3 style="color:#fff">Models can explain</h3><p>Supervisors act on a plan they understand. Black-box optimisers never earned that trust.</p></div>
+    <div class="card" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)"><h3 style="color:#fff">Data is finally there</h3><p>Handhelds, yard cameras and cloud WMSs stream the events a planner needs, in real time.</p></div>
+    <div class="card" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)"><h3 style="color:#fff">Labour is the constraint</h3><p>Operators can't hire their way out. They have to plan their way out.</p></div>
+  </div>
+  <div class="steps" style="margin-top:48px"><div style="border-color:rgba(255,255,255,.15)"><b style="color:#f4f1ea">Rules engines</b>If-this-then-that, set up once by consultants</div><div style="border-color:rgba(255,255,255,.15)"><b style="color:#f4f1ea">Optimisers</b>Fast, but a black box nobody on the floor trusts</div><div class="on"><b style="color:#f4f1ea">Reasoning models</b>Weigh trade-offs and explain them in plain English</div></div>
+  <div class="foot" style="color:rgba(244,241,234,.4)"><span><b style="color:#f4f1ea">Acme AI</b> · Confidential</span><span>7</span></div>
+</section>
+
+<!-- 8 Market -->
+<section class="s">
+  <p class="k">Market</p>
+  <h2 style="max-width:560px">Every warehouse needs a planner. Most still don't have one.</h2>
+  <p style="max-width:520px;margin-top:22px">We start with mid-market third-party logistics operators running several sites, then move up to enterprise retail and down to single-site operators with a self-serve plan.</p>
+  <p style="max-width:520px;margin-top:16px;font-size:15px">Market size is our own estimate of annual spend on warehouse planning software and the planning labour it replaces.</p>
+  <div class="rings">
+    <div style="inset:0;background:#f3e6dc;color:#8a4a2c">$18B · Warehouse planning</div>
+    <div style="inset:90px;background:#efcdb8;color:#7a3a1c">Mid-market 3PLs</div>
+    <div style="inset:185px;background:var(--orange);color:#fff;padding-top:28px">Beachhead</div>
+  </div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>8</span></div>
+</section>
+
+<!-- 9 Business model -->
+<section class="s">
+  <p class="k">Business model</p>
+  <h2>A platform fee plus a licence per site. Customers grow by adding warehouses.</h2>
+  <div class="grid3">
+    <div class="card"><p class="num">LAND</p><h3>One site</h3><p>A paid pilot on the customer's busiest building, live in weeks.</p></div>
+    <div class="card"><p class="num">EXPAND</p><h3>Every site</h3><p>Each new warehouse adds a site licence. Globex added its second warehouse this year.</p></div>
+    <div class="card"><p class="num">EXTEND</p><h3>New modules</h3><p>Labour planning and yard management sold into the same account.</p></div>
+  </div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>9</span></div>
+</section>
+
+<!-- 10 Competition -->
+<section class="s">
+  <p class="k">Competition</p>
+  <h2 style="max-width:500px">Others optimise a step. We reason across the whole floor.</h2>
+  <p style="max-width:440px;margin-top:22px">Legacy WMS add-ons are rule-based and slow to change. Point tools solve routing or labour on their own. Consultants and spreadsheets don't run in real time.</p>
+  <div class="mx">
+    <span class="lab" style="left:12px;top:-26px">Whole floor</span><span class="lab" style="left:12px;bottom:12px">One step</span>
+    <span class="lab" style="right:0;bottom:-26px">Reasons and explains</span><span class="lab" style="left:0;bottom:-26px">Fixed rules</span>
+    <span class="co" style="left:40px;top:120px">Legacy WMS add-ons</span>
+    <span class="co" style="left:70px;top:330px">Spreadsheets + consultants</span>
+    <span class="co" style="left:290px;top:390px">Routing point tools</span>
+    <span class="co" style="left:250px;top:250px">Labour schedulers</span>
+    <span class="co us" style="right:24px;top:40px">Acme AI</span>
+  </div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>10</span></div>
+</section>
+
+<!-- 11 Team -->
+<section class="s">
+  <p class="k">Team</p>
+  <h2>A team of 25 AI engineers in San Francisco, plus 6 contractors in Lisbon.</h2>
+  <div class="ppl">
+    <div class="person"><span class="av" style="background:#e0663a">JF</span><div><b>Jane Founder</b><span>CEO · ran operations at a regional 3PL</span></div></div>
+    <div class="person"><span class="av" style="background:#0f1b2d">TS</span><div><b>Tomás Silva</b><span>CTO · built planning systems for fleets</span></div></div>
+    <div class="person"><span class="av" style="background:#c79a3c">MC</span><div><b>Mei Chen</b><span>Head of Product · supply chain software</span></div></div>
+  </div>
+  <div class="stat"><div><b>25</b><span>AI engineers · San Francisco</span></div><div><b>6</b><span>Contractors · Lisbon</span></div><div><b style="color:var(--orange)">Hiring</b><span>Aggressively, across engineering and GTM</span></div></div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>11</span></div>
+</section>
+
+<!-- 12 Board -->
+<section class="s">
+  <p class="k">Board and advisors</p>
+  <h2>Board: Jane Founder (CEO), Sam Investor (Example Ventures). Advisors: Dr. Ada Smart.</h2>
+  <div class="ppl">
+    <div class="person" style="flex-direction:column;align-items:flex-start;min-height:250px"><span class="av" style="background:#e0663a">JF</span><div><b>Jane Founder</b><span>CEO · Board</span></div><p style="font-size:15px">Ran operations for a regional third-party logistics operator before starting Acme. Leads product and sales.</p></div>
+    <div class="person" style="flex-direction:column;align-items:flex-start;min-height:250px"><span class="av" style="background:#3b5b8c">SI</span><div><b>Sam Investor</b><span>Example Ventures · Board</span></div><p style="font-size:15px">Partner at Example Ventures, which led the seed. Focuses on supply chain and industrial software.</p></div>
+    <div class="person" style="flex-direction:column;align-items:flex-start;min-height:250px"><span class="av" style="background:#6b8f71">AS</span><div><b>Dr. Ada Smart</b><span>Advisor</span></div><p style="font-size:15px">Professor of operations research. Advises on planning models and how we evaluate them.</p></div>
+  </div>
+  <div class="foot"><span><b>Acme AI</b> · Confidential</span><span>12</span></div>
+</section>
+
+<!-- 13 Financing and the ask -->
+<section class="s dark">
+  <p class="k">The ask</p>
+  <h2 style="color:#f4f1ea">Raising a $25M Series A to take Acme from a few sites to every site.</h2>
+  <div class="grid2" style="margin-top:34px">
+    <div>
+      <p style="font-size:14px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--gold)">Use of funds</p>
+      <div class="use"><div style="color:#f4f1ea">Engineering<i style="width:100%"></i></div><div style="color:#f4f1ea">Go-to-market<i style="width:74%"></i></div><div style="color:#f4f1ea">Customer success<i style="width:42%"></i></div><div style="color:#f4f1ea">G&amp;A<i style="width:18%"></i></div></div>
+    </div>
+    <div>
+      <p style="font-size:14px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--gold)">Financing to date</p>
+      <p style="font-size:22px;color:#f4f1ea;margin-top:14px;line-height:1.4">$12M raised to date: $2M pre-seed (2025) and a $10M seed led by Example Ventures (June 2026).</p>
+    </div>
+  </div>
+  <p style="margin-top:34px;font-size:14px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--gold)">What this round buys</p>
+  <div class="steps" style="margin-top:12px"><div style="border-color:rgba(255,255,255,.15)"><b style="color:#f4f1ea">Enterprise</b>First enterprise retail customers</div><div style="border-color:rgba(255,255,255,.15)"><b style="color:#f4f1ea">Labour module</b>Generally available to every site</div><div style="border-color:rgba(255,255,255,.15)"><b style="color:#f4f1ea">Europe</b>Customer success hub in Lisbon</div><div class="on"><b style="color:#f4f1ea">Series B</b>Ready on every metric that matters</div></div>
+  <div class="foot" style="color:rgba(244,241,234,.4)"><span><b style="color:#f4f1ea">Acme AI</b> · Confidential · jane@acme-ai.example</span><span>13</span></div>
+</section>
 </body></html>

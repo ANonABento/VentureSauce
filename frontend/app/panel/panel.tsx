@@ -26,6 +26,7 @@ import { type CompanySummary, dropItem, getReport, listCompanies, loadExample, m
 import { DUR, EASE_ENTER } from "@/lib/motion";
 import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
+import { type FileInput, usePasteToFile } from "./use-paste-to-file";
 
 export type Status =
   | "idle"
@@ -69,7 +70,7 @@ const JOB_STEP: Record<string, string> = {
 };
 
 const itemName = (input: DropInput) =>
-  input.file?.name ?? (input.kind === "notes" ? "Call notes" : input.kind === "email" ? "Founder email" : "Pasted text");
+  input.file?.name ?? input.url ?? (input.kind === "notes" ? "Call notes" : input.kind === "email" ? "Founder email" : "Pasted text");
 
 /**
  * Screen changes (decision 33): content slides 12px in the direction of
@@ -180,7 +181,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
    * Files an item. From home it follows the wireframe (decision 61): Add to company → checking → the Sauce Report.
    * Drops on a company's own screen pass its id and stay there.
    */
-  async function onDrop(input: DropInput & { companyId?: string }, choice: FilingChoice = {}) {
+  async function onDrop(input: FileInput, choice: FilingChoice = {}) {
     const fromHome = !input.companyId;
     setError(null);
     setFiling(itemName(input));
@@ -205,40 +206,28 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   // From home, an item first goes to the "Add to company" screen (decisions 48, 61); with no companies yet there's nothing to choose.
   function onPick(input: DropInput) {
     if (job !== null) return;
-    if (!companies?.length) onDrop(input);
-    else {
-      setPending(input);
-      setScreen({ kind: "file" });
-    }
+    if (!companies?.length) return onDrop(input);
+    setPending(input);
+    setScreen({ kind: "file" });
   }
 
-  // ⌘V anywhere on home or a company: a screenshot or copied file is filed as-is; copied text (outside a text
-  // box) is filed as an email when it has mail headers, else as a note. In a text box, only images are taken over.
-  useEffect(() => {
-    if (screen.kind !== "home" && screen.kind !== "company") return;
-    function onPaste(event: ClipboardEvent) {
-      if (job !== null || !event.clipboardData) return;
-      const target = event.target as HTMLElement | null;
-      const typing = !!target && (target.isContentEditable || ["INPUT", "TEXTAREA"].includes(target.tagName));
-      const companyId = screen.kind === "company" ? screen.id : undefined;
-      const file = Array.from(event.clipboardData.files)[0];
-      let input: DropInput | null = null;
-      if (file) {
-        const named = file.type.startsWith("image/") && /^image\.\w+$/.test(file.name)
-          ? new File([file], `pasted-screenshot.${file.type.split("/")[1] || "png"}`, { type: file.type })
-          : file;
-        input = { file: named };
-      } else {
-        const text = event.clipboardData.getData("text/plain").trim();
-        if (typing || text.length < 20) return;
-        input = { text, kind: /^(from|subject):/im.test(text) ? "email" : undefined };
+  // ⌘V or drop a file, link, company name or text anywhere (see use-paste-to-file.ts). Keep this when reskinning.
+  // From home or Deals an item goes through onPick (Add to company → Sauce Report); on a company it's filed there.
+  // A company name, or a homepage of one already in the inbox, opens its company screen.
+  usePasteToFile({
+    enabled: job === null && (screen.kind === "home" || screen.kind === "deals" || screen.kind === "company"),
+    companyId: screen.kind === "company" ? screen.id : undefined,
+    onFile: (input) => (input.companyId ? onDrop(input) : onPick(input)),
+    openCompany: async (q) => {
+      try {
+        const id = ((await getReport(q)).company as { id?: string }).id;
+        if (id) setScreen({ kind: "company", id, from: screen.kind === "deals" ? "deals" : "home" });
+        return !!id;
+      } catch {
+        return false;
       }
-      event.preventDefault();
-      if (companyId) onDrop({ ...input, companyId });
-      else onPick(input);
-    }
-    document.addEventListener("paste", onPaste);
-    return () => document.removeEventListener("paste", onPaste);
+    },
+    onMessage: setError,
   });
 
   async function onLookup(name: string): Promise<string | null> {

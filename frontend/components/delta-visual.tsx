@@ -62,10 +62,10 @@ function RaiseBar({
 
   return (
     <div>
-      <div aria-hidden="true" className="relative h-3">
-        <span className="absolute inset-x-0 top-[3px] h-1.5 bg-rule" />
+      <div aria-hidden="true" className="relative h-5">
+        <span className="absolute inset-x-0 top-1 h-3 rounded-[2px] bg-rule" />
         <motion.span
-          className="absolute top-[3px] left-0 h-1.5 origin-left bg-ink"
+          className="absolute top-1 left-0 h-3 origin-left rounded-l-[2px] bg-ink"
           style={{ width: percent(low) }}
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
@@ -73,7 +73,7 @@ function RaiseBar({
         />
         <motion.span
           className={cn(
-            "absolute top-[3px] h-1.5 origin-left",
+            "absolute top-1 h-3 origin-left",
             discrepancy ? "bg-signal" : "bg-graphite",
           )}
           style={{
@@ -85,7 +85,7 @@ function RaiseBar({
           transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: DUR.reveal * 0.6 }}
         />
         <motion.span
-          className="absolute top-0 h-3 w-px bg-ink"
+          className="absolute top-0 h-5 w-0.5 -translate-x-1/2 rounded-full bg-ink"
           style={{ left: percent(said) }}
           initial={{ opacity: 0, scaleY: 0 }}
           animate={{ opacity: 1, scaleY: 1 }}
@@ -201,7 +201,7 @@ function HeadcountSparkline({
   );
 }
 
-/** Everyone in the filing; a hollow dot marks who is not on the team page. */
+/** Everyone in the filing; a hollow dot marks who is named there only. */
 function LeadershipList({
   people,
 }: {
@@ -223,14 +223,14 @@ function LeadershipList({
             />
             <span>{person.name}</span>
             {!person.onSite && (
-              <span className="sr-only"> (not on the team page)</span>
+              <span className="sr-only"> (in the filing only)</span>
             )}
           </li>
         ))}
       </ul>
       <Caption>
         <span>
-          {onSite} on team page of {people.length} filed
+          {onSite} named of {people.length} filed
         </span>
       </Caption>
     </div>
@@ -266,6 +266,48 @@ function Timeline({
         <span>{formatDate(filedOn)} filed</span>
         <span>{formatDate(announcedOn)} press</span>
       </Caption>
+    </div>
+  );
+}
+
+/**
+ * Two bars on one scale, for a row with a said and a found figure but no
+ * chart of its own (headcount, a round against the press).
+ */
+export function CompareBars({
+  said,
+  found,
+  foundName,
+  discrepancy,
+}: {
+  said: number;
+  found: number;
+  /** "Filed" for an SEC filing, "Found" for other public records. */
+  foundName: string;
+  discrepancy: boolean;
+}) {
+  const max = Math.max(said, found) || 1;
+  const bars = [
+    { name: "Said", value: said, fill: "bg-ink" },
+    { name: foundName, value: found, fill: discrepancy ? "bg-signal" : "bg-data" },
+  ];
+
+  return (
+    <div aria-hidden="true" className="grid grid-cols-[40px_1fr] items-center gap-x-3 gap-y-1.5">
+      {bars.map((bar, index) => (
+        <div key={bar.name} className="contents">
+          <span className="text-[11px] leading-4 text-graphite">{bar.name}</span>
+          <span className="relative h-3 rounded-[2px] bg-rule">
+            <motion.span
+              className={cn("absolute inset-y-0 left-0 origin-left rounded-[2px]", bar.fill)}
+              style={{ width: `${(bar.value / max) * 100}%` }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: DUR.reveal, ease: EASE_ENTER, delay: index * DUR.reveal * 0.4 }}
+            />
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

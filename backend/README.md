@@ -8,7 +8,7 @@ uv run uvicorn main:app --reload --port 8000
 ```
 
 - `GET /health` → `{ok, fake}`
-- `POST /analyze` with FormData: `file` (PDF) or `text` → `{job_id}`
+- `POST /analyze` with FormData: `file` (PDF), `text` or `url` → `{job_id}`
 - `GET /jobs/{job_id}` → job (poll every 1s; `status` goes parsing → checking_sec → checking_linkedin → checking_press → ready, or `error`)
 - `GET /jobs/{job_id}?replay=1` → cached final result (demo fallback)
 - `GET /companies` → deal inbox list · `GET /companies/{id}` → company view (items, checks, questions) · `DELETE /companies/{id}`
@@ -20,10 +20,10 @@ uv run uvicorn main:app --reload --port 8000
 - `GET|POST /tts` (`text`, one sentence; optional `speed` 0.7–1.8, default `FISH_SPEED`=1.2) → Fish Audio mp3 streamed through; the client voices each sentence as it arrives and stops on interrupt
 - `POST /asr` (FormData `audio`: WAV or M4A, not WebM) → `{text}` via Fish Audio speech-to-text. Voice input for browsers without built-in speech recognition (Safari, Firefox)
 
-`POST /analyze` also takes optional `kind` (`email` | `notes`) for pasted text and `company_id` to file the item under a known company. Files: PDF (text or scanned), PPTX, PNG/JPG/WEBP, .eml, .txt/.md.
+`POST /analyze` also takes optional `kind` (`email` | `notes`) for pasted text and `company_id` to file the item under a known company. Files: PDF (text or scanned), PPTX, PNG/JPG/WEBP, .eml, .txt/.md. A `url` (pasted or dropped link) is downloaded and run the same way; a web page is read as text with its title as the label. Links to private addresses, login-walled share links (DocSend, Drive, Dropbox…) and files over 25 MB are refused with a readable 400; `/samples/…` links are read from disk.
 
 Fake mode replays `fixtures/job_acme.json` (fictional company) with ~1.5s per step.
-`sources/ground_truth.py` is a stub until Data replaces it.
+Public records are live but minimal until Data's version replaces `sources/ground_truth.py`: `sources/minimal_live.py` reads Form D straight from SEC EDGAR (no key) and searches press through Bright Data's Web Unlocker (`BRIGHTDATA_API_TOKEN`, `BRIGHTDATA_ZONE`); LinkedIn headcount isn't fetched yet. Lookups are cached in `data/gt_cache/` (3 days). `uv run python prewarm_sources.py` saves snapshots of the demo companies to `fixtures/ground_truth/` (real fetched data with source links), used when a live lookup fails. Acme AI is still the fictional fixture.
 
 ## Demo reset
 
@@ -40,7 +40,10 @@ Data's live sources landed, are recomputed when next read; `POST /companies/refr
 
 ## Demo desk
 
-`/demo` is a stand-in for an investor's daily tools (mail, decks, notes, a founder portal, saved press), so the
-extension can be demoed next to something familiar. Every downloadable item is a file in `samples/`, and email and note
-bodies are read from those same files. Generic look-alikes on purpose: no real product branding. Fictional data, except
-the quoted public claims, which link to their source. The deck's source is `samples/src/acme_deck.html`.
+`/demo` mimics the apps an investor lives in (a mail inbox, a shared-files drive, a notes workspace, a CRM pipeline,
+a founder's investor portal, a read-later list), switched from a dock along the bottom, so the extension can be
+demoed next to something that feels real. Every downloadable item is a file in `samples/`, and email and note bodies are
+read from those same files (the "(FICTIONAL ...)" markers are hidden on screen only). Familiar layouts, but no real
+product names or logos. Fictional data, except the quoted public claims, which link to their source. The deck's source is `samples/src/acme_deck.html`.
+
+The click path for the live demo, with the sponsor beats, is `docs/DEMO_SCRIPT.md`.

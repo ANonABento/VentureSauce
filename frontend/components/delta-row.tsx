@@ -7,7 +7,7 @@ import { DUR, EASE_ENTER, RISE, STAGGER } from "@/lib/motion";
 import type { Claim, DeltaRow as DeltaRowData, Source } from "@/lib/types";
 import { cn } from "./cn";
 import { Collapse } from "./collapse";
-import { DeltaVisual } from "./delta-visual";
+import { CompareBars, DeltaVisual } from "./delta-visual";
 import { Figures } from "./figures";
 import { formatDate } from "./report-utils";
 import { STATUS } from "./status";
@@ -22,9 +22,24 @@ function sourceIcon(label: string) {
   return Newspaper;
 }
 
+const FIGURE = /^[−+-]?\$?\d[\d,.]*\s?[KMB%]?/;
+const UNIT: Record<string, number> = { K: 1e3, M: 1e6, B: 1e9 };
+
+/** The figure a claim leads with ("$15M", "25"), if it has one. */
+function leadingFigure(claim: Claim | null): { label: string; value: number } | null {
+  // Dates such as "First sale Feb 11" are not figures.
+  if (!claim || claim.field === "first_sale") return null;
+  const label = claim.value.match(FIGURE)?.[0].trim();
+  if (!label) return null;
+  const number = Number(label.replace(/[^\d.]/g, ""));
+  if (!Number.isFinite(number)) return null;
+  return { label, value: number * (UNIT[label.slice(-1)] ?? 1) };
+}
+
 /**
- * Collapsed: status mark, signal, the delta in a few words, mini chart and
- * sources. Expanded: filed vs. said and the likeliest reason.
+ * Collapsed: status mark, signal, the delta in a few words, said → found in
+ * large figures, a chart and the sources. Expanded: the full comparison and
+ * the likeliest reason.
  */
 export function DeltaRow({
   row,
@@ -48,6 +63,11 @@ export function DeltaRow({
     (source): source is Source => Boolean(source),
   );
   const [topReason, ...moreReasons] = row.likelyReasons;
+  const discrepancy = row.status === "discrepancy";
+  const said = leadingFigure(row.said);
+  const found = leadingFigure(row.filed);
+  // LinkedIn and press are public records too, but nothing was "filed" there.
+  const foundName = /SEC|Form [A-Z0-9]/.test(row.filed?.source.label ?? "SEC") ? "Filed" : "Found";
 
   return (
     <motion.li
@@ -100,13 +120,36 @@ export function DeltaRow({
             </span>
           </button>
 
-          {row.visual && (
-            <div className="mt-3">
-              <DeltaVisual
-                visual={row.visual}
-                discrepancy={row.status === "discrepancy"}
+          {said && found && (
+            <p className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-1">
+              <BigFigure label="Said" value={said.label} className="text-ink" />
+              <span aria-hidden="true" className="pb-1.5 text-lg leading-6 text-rule-strong">
+                →
+              </span>
+              <BigFigure
+                label={foundName}
+                value={found.label}
+                className={discrepancy ? "text-signal" : "text-data"}
               />
+            </p>
+          )}
+
+          {row.visual ? (
+            <div className="mt-3">
+              <DeltaVisual visual={row.visual} discrepancy={discrepancy} />
             </div>
+          ) : (
+            said &&
+            found && (
+              <div className="mt-3">
+                <CompareBars
+                  said={said.value}
+                  found={found.value}
+                  foundName={foundName}
+                  discrepancy={discrepancy}
+                />
+              </div>
+            )
           )}
         </div>
 
@@ -115,6 +158,19 @@ export function DeltaRow({
           <p className="mt-2 flex items-center gap-1">
             {sources.map((source, index) => {
               const Icon = sourceIcon(source.label);
+              // "#item" marks a claim from the user's own item: no page to open.
+              if (source.url === "#item") {
+                return (
+                  <span
+                    key={index}
+                    title={source.label}
+                    className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tray text-graphite"
+                  >
+                    <Icon aria-hidden="true" size={13} weight="duotone" />
+                    <span className="sr-only">{source.label}</span>
+                  </span>
+                );
+              }
               return (
                 <a
                   key={index}
@@ -135,11 +191,11 @@ export function DeltaRow({
         <Collapse id={id} open={expanded}>
           <dl
             className={cn(
-              "grid grid-cols-[36px_1fr] gap-x-3 gap-y-1 pt-4 text-ink",
+              "grid grid-cols-[40px_1fr] gap-x-3 gap-y-1 pt-4 text-ink",
               text,
             )}
           >
-            <ClaimLine label="Filed" claim={row.filed} emptyText="Not in the filing" />
+            <ClaimLine label={foundName} claim={row.filed} emptyText="Not in the filing" />
             <ClaimLine label="Said" claim={row.said} emptyText="Not stated publicly" />
           </dl>
 
@@ -174,6 +230,16 @@ export function DeltaRow({
         </Collapse>
       </div>
     </motion.li>
+  );
+}
+
+function BigFigure({ label, value, className }: { label: string; value: string; className: string }) {
+  return (
+    <span>
+      <span className="block text-[11px] leading-4 text-graphite">{label}</span>
+      {/* Figures are the mono "data" voice (decision 66). */}
+      <span className={cn("block font-mono text-[28px] leading-9 font-medium tracking-[-0.04em]", className)}>{value}</span>
+    </span>
   );
 }
 

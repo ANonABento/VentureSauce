@@ -1,0 +1,87 @@
+{
+ "company": "Clerk",
+ "domain": null,
+ "linkedin": null,
+ "form_d": {
+  "entity_name": "CLERK, INC.",
+  "cik": "1959758",
+  "accession": "0001959758-25-000004",
+  "filing_date": "2025-07-03",
+  "date_of_first_sale": "2025-06-17",
+  "total_offering": 50000000,
+  "total_sold": 49999982,
+  "total_remaining": 18,
+  "num_investors": 8,
+  "url": "https://www.sec.gov/Archives/edgar/data/1959758/000195975825000004/xslFormDX01/primary_doc.xml",
+  "is_amendment": false,
+  "related_persons": [
+   "Braden Sidoti",
+   "Colin Sidoti",
+   "Shvetank Jain",
+   "Karan Mehandru"
+  ],
+  "related_people": [
+   {
+    "name": "Braden Sidoti",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Colin Sidoti",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Shvetank Jain",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Karan Mehandru",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   }
+  ],
+  "city": "SAN FRANCISCO",
+  "state": "CA",
+  "year_of_inc": null,
+  "industry_group": "Other Technology",
+  "history": [
+   {
+    "accession": "0001959758-23-000001",
+    "filing_date": "2023-07-03",
+    "date_of_first_sale": "2023-06-16",
+    "total_offering": 29999972,
+    "total_sold": 28999976,
+    "total_remaining": 999996,
+    "num_investors": 9,
+    "url": "https://www.sec.gov/Archives/edgar/data/1959758/000195975823000001/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0001959758-22-000002",
+    "filing_date": "2022-12-23",
+    "date_of_first_sale": "2022-12-13",
+    "total_offering": 15000000,
+    "total_sold": 14859986,
+    "total_remaining": 140014,
+    "num_investors": 8,
+    "url": "https://www.sec.gov/Archives/edgar/data/1959758/000195975822000002/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   }
+  ],
+  "edgar_company_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1959758&type=D",
+  "first_filing_date": null,
+  "via": "sec_edgar"
+ },
+ "press": [],
+ "fetched_at": "2026-10-11T00:43:43.713915+00:00"
+}

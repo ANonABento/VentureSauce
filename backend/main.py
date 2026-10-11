@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 import chat
 import delta
 import digest
+import fetch_url
 import jobs
 import store
 
@@ -86,13 +87,21 @@ def _rate_limit(request: Request, bucket: str = "analyze", per_hour: int | None 
 
 @app.post("/analyze")
 async def analyze(request: Request, file: UploadFile | None = File(None), text: str | None = Form(None),
-                  kind: str | None = Form(None), company_id: str | None = Form(None)):
-    """FormData: `file` (PDF, scanned PDF, PPTX, image, .eml, .txt) or `text` (pasted email/notes/deck text).
+                  url: str | None = Form(None), kind: str | None = Form(None), company_id: str | None = Form(None)):
+    """FormData: `file` (PDF, scanned PDF, PPTX, image, .eml, .txt), `text` (pasted email/notes/deck text) or `url`
+    (a pasted or dropped link: a file is downloaded, a web page is read as text).
     Optional `kind` for pasted text (`email` | `notes`) and `company_id` to file it under a known company."""
     _rate_limit(request)
-    if not file and not (text and text.strip()):
-        raise HTTPException(400, "send a file as `file` or pasted text as `text`")
+    if not file and not (text and text.strip()) and not (url and url.strip()):
+        raise HTTPException(400, "send a file as `file`, pasted text as `text` or a link as `url`")
     upload = {"filename": file.filename, "data": await file.read()} if file else None
+    if not upload and url and url.strip():
+        try:
+            upload = await asyncio.to_thread(fetch_url.fetch, url)
+        except fetch_url.LinkError as e:
+            raise HTTPException(400, str(e))
+        except httpx.HTTPError:
+            raise HTTPException(400, "Couldn't open that link. Download the file and drop it in instead.")
     if kind not in (None, "", "email", "notes", "text"):
         raise HTTPException(400, "kind must be email, notes or text")
     job = jobs.new_job()

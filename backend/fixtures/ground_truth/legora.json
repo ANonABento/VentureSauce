@@ -1,0 +1,142 @@
+{
+ "company": "Legora",
+ "domain": null,
+ "linkedin": null,
+ "form_d": {
+  "entity_name": "Legora, Inc.",
+  "cik": "2071663",
+  "accession": "0002071663-26-000001",
+  "filing_date": "2026-03-24",
+  "date_of_first_sale": "2026-03-09",
+  "total_offering": 600080000,
+  "total_sold": 441525860,
+  "total_remaining": 158554140,
+  "num_investors": 40,
+  "url": "https://www.sec.gov/Archives/edgar/data/2071663/000207166326000001/xslFormDX01/primary_doc.xml",
+  "is_amendment": false,
+  "related_persons": [
+   "Sigge Labor",
+   "Chetan Puttagunta",
+   "Jacob Effron",
+   "Max Junestrand"
+  ],
+  "related_people": [
+   {
+    "name": "Sigge Labor",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Chetan Puttagunta",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Jacob Effron",
+    "director": true,
+    "officer": false,
+    "promoter": false,
+    "title": null
+   },
+   {
+    "name": "Max Junestrand",
+    "director": true,
+    "officer": true,
+    "promoter": false,
+    "title": null
+   }
+  ],
+  "city": "DOVER",
+  "state": "DE",
+  "year_of_inc": "2023",
+  "industry_group": "Other Technology",
+  "history": [
+   {
+    "accession": "0002071663-25-000002",
+    "filing_date": "2025-11-13",
+    "date_of_first_sale": "2025-10-28",
+    "total_offering": 150352281,
+    "total_sold": 150352281,
+    "total_remaining": 0,
+    "num_investors": 15,
+    "url": "https://www.sec.gov/Archives/edgar/data/2071663/000207166325000002/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   },
+   {
+    "accession": "0002071663-25-000001",
+    "filing_date": "2025-07-01",
+    "date_of_first_sale": "2025-05-19",
+    "total_offering": 79999866,
+    "total_sold": 79849626,
+    "total_remaining": 150240,
+    "num_investors": 31,
+    "url": "https://www.sec.gov/Archives/edgar/data/2071663/000207166325000001/xslFormDX01/primary_doc.xml",
+    "is_amendment": false
+   }
+  ],
+  "edgar_company_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002071663&type=D",
+  "first_filing_date": null,
+  "via": "sec_edgar"
+ },
+ "press": [
+  {
+   "title": "Legora raises $550 million Series D to fuel US growth - Legora",
+   "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxPWkNtN1BLc2NYVEtRREFpaWFqTEJVaEFtTm1KQmJ3OEc1WWZoelRfTjRpd1BjaHQ1S3c0QjhFQUhHVEZQSWV0dFFMWWFIcEQ5Y0djalYzTElEc0FNMldQSERyVW1sYkJpZTdFOEZ3V0d5Vmp3azB0SE15Q21pNFdlVTY2SjNmcHc?oc=5",
+   "date": "2026-03-10",
+   "source": "Legora",
+   "snippet": "Legora raises $550 million Series D to fuel US growth",
+   "amount_mentioned": 550000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Legora in Talks to Raise Funds at a Roughly $8.5 Billion Value - Bloomberg.com",
+   "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQMndFVExSUnl4b01Udk5wS0lqbWJYbmFMUHFPd2J2QVFiblo0SDVZVXlfTDVSZGhuLVdtOVJsY1RKZFpieFlEaXJPNjRBbVZkSWdaNS0tRkN4MWo3S004UldsZlRzNldMOTM3YTV1ekF5R2RRUlBkZ09VQ0N5a2VRSng1Qi1GenZXNW1PMzNnSmRfU19VZHV1OHVBeW44N2dad1JlOU5jR2tydnJCLUhBTGF3?oc=5",
+   "date": "2026-09-22",
+   "source": "Bloomberg.com",
+   "snippet": "Legora in Talks to Raise Funds at a Roughly $8.5 Billion Value",
+   "amount_mentioned": 8500000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Legora extends Series D funding round by $50m, valuing business at $5.6bn - The Global Legal Post",
+   "url": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxPdElja0xoUjVMOUxPeUl4UUZFb1piUk9rWkN3cnlPczhNNUNjZEFxRXJKcWdfM1F2RmVMaDJtZExJczB2dk5TWEtmUlNQbHUwejVaTGU0SF9BNGliaUxHbDdhcFBsX2dSMkNOaVoycE8wclhSdDdUdl94WDA0RWhEblFtZEExU1VSVS1oLU9hYVBjclJCN1FDSk5XcWcwT1NRNDZ1dEhkcXNRMUVDa0l1Y01NMHhoVHNE?oc=5",
+   "date": "2026-05-01",
+   "source": "The Global Legal Post",
+   "snippet": "Legora extends Series D funding round by $50m, valuing business at $5.6bn",
+   "amount_mentioned": 50000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Legora raises $550M to fuel U.S. expansion of AI agents that automate legal work - SiliconANGLE",
+   "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxOdTFNTTlqWGIwRVpkUmZfVzdTa3JoVERldVo5Z1ZabDZ2NWhsal9LUmFhY3BUZFdFYlhZb21GaEdjekI5TXUxTGpqNlVPX09ubE5XWWc4R21BbzJpMXVOVVp1bFJVSE53TDRXVkFITXI3YWdSRkpNYTI4SWM0MUdKRFBoeGpRbmlfRnEyOXhqTWxTZTFYRW1SeDh4bms0emVhWGJFZEZxRQ?oc=5",
+   "date": "2026-03-10",
+   "source": "SiliconANGLE",
+   "snippet": "Legora raises $550M to fuel U.S. expansion of AI agents that automate legal work",
+   "amount_mentioned": 550000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Legora raises $50m Series D extension \u2013 Atlassian and NVIDIA fund join as investors - Legal IT Insider",
+   "url": "https://news.google.com/rss/articles/CBMirgFBVV95cUxPdUZIWURLMXI2djhHQjEtdlNlQnlqZUxyUzN1VHFHUlpfckhGN2haNmF4cEY4MGJ1UGFnZmxidzJfZWJjbEVmOVltLTd4QTBweE5sU0ZCS0pLZkxfTnM4OW9VdHhfeDgzUm5DeG0yTzN6V0ZtZ01IM0NoekpPTTlxVERleHVSUVN6RW1jbndveFdGb19CNnRHdWRrMEN2dEZfUEw5M3BERXQtYlBXWEE?oc=5",
+   "date": "2026-04-30",
+   "source": "Legal IT Insider",
+   "snippet": "Legora raises $50m Series D extension \u2013 Atlassian and NVIDIA fund join as investors",
+   "amount_mentioned": 50000000,
+   "via": "brightdata"
+  },
+  {
+   "title": "Legora reaches $5.55 billion valuation as AI legal tech boom endures - TechCrunch",
+   "url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNYzFfcmh2dmRVbHF4OVV5V1JBeC1pTGlqTEF2cVVuWkE0YnRZdlZEeW0zWTF6c0hiLVJWSVVTOEFYcGpFTUFNNUdxSmxldDluMEdRYW0xMGUyWXJPWHZLQmtxQWIxLVVHa0JpSnlSTUk5WDFJdmVvbk9ueldyZVFENmFkbTJUTVNqczF1UjJ0Q201RnF6RVpUSUtpT0hQQlpMdjdZ?oc=5",
+   "date": "2026-03-10",
+   "source": "TechCrunch",
+   "snippet": "Legora reaches $5.55 billion valuation as AI legal tech boom endures",
+   "amount_mentioned": 5550000000,
+   "via": "brightdata"
+  }
+ ],
+ "fetched_at": "2026-10-11T00:43:45.791203+00:00"
+}

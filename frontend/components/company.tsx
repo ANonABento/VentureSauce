@@ -27,6 +27,7 @@ import { ItemTag } from "./inbox";
 import { Sheet } from "./sheet";
 import { InfoTip } from "./info-tip";
 import { PulsePlot, pulseSeries } from "./pulse";
+import { Verdict } from "./verdict";
 import { ReportHeader } from "./report-header";
 import { formatDate, formatUsd } from "./report-utils";
 import { RangePlot, SignalStrip } from "./viz";
@@ -550,7 +551,17 @@ export function CompanyScreen({
           </>
         }
       >
-        {publicRows.length ? <DeltaRows rows={publicRows} /> : <p className="text-[13px] text-graphite">No public-record checks yet.</p>}
+        {publicRows.length ? (
+          <>
+            {/* The status breakdown of the checks (teammate's verdict bar), above the rows. */}
+            <Verdict rows={publicRows} />
+            <div className="mt-3">
+              <DeltaRows rows={publicRows} />
+            </div>
+          </>
+        ) : (
+          <p className="text-[13px] text-graphite">No public-record checks yet.</p>
+        )}
       </Sheet>
       <Sheet
         open={sheet === "contradictions"}

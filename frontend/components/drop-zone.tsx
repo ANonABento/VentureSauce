@@ -8,7 +8,8 @@ import { DUR, EASE_ENTER } from "@/lib/motion";
 import { cn } from "./cn";
 import { JOB_FLOW } from "./loading-steps";
 
-export type DropInput = { file?: File; text?: string; kind?: "email" | "notes" };
+/** A link (`url`) comes from a paste or drop anywhere in the panel (use-paste-to-file.ts); the backend downloads or reads it. */
+export type DropInput = { file?: File; text?: string; url?: string; kind?: "email" | "notes" };
 
 // What the backend reads (backend/ingest.py): decks, scans, slides, screenshots, emails, notes.
 const ACCEPT = {

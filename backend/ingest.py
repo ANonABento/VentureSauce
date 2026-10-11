@@ -1,11 +1,13 @@
 """Any input → plain text with page/slide markers.
 
-Handles: text PDFs, scanned/image PDFs (vision), images (vision), PPTX, .eml emails, plain text.
+Handles: text PDFs, scanned/image PDFs (vision), images (vision), PPTX, .eml emails, web pages (.html), plain text.
 Raw files are never stored; only the extracted text flows on (legal-and-compliance.md).
 """
 
 import base64
 import io
+import re
+from html.parser import HTMLParser
 from concurrent.futures import ThreadPoolExecutor
 from email import policy
 from email.parser import BytesParser
@@ -74,6 +76,47 @@ def from_eml(data: bytes) -> str:
     return head + text
 
 
+class _PageText(HTMLParser):
+    """Readable text of a web page: skips scripts, styles and site chrome; one line per block."""
+    SKIP = {"script", "style", "noscript", "svg", "nav", "footer", "header", "form", "button", "iframe", "template"}
+    BLOCK = {"p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "br", "section", "article", "blockquote"}
+
+    def __init__(self):
+        super().__init__()
+        self.depth, self.title, self.og, self.parts, self._in_title = 0, "", "", [], False
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.SKIP:
+            self.depth += 1
+        elif tag == "title" and not self.title:  # the page's own title, not an icon's <title> inside an svg
+            self._in_title = True
+        elif tag == "meta" and dict(attrs).get("property") == "og:title":
+            self.og = dict(attrs).get("content") or ""
+        elif tag in self.BLOCK:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag):
+        if tag in self.SKIP:
+            self.depth = max(0, self.depth - 1)
+        elif tag == "title":
+            self._in_title = False
+
+    def handle_data(self, data):
+        if self._in_title:
+            self.title += data
+        elif not self.depth:
+            self.parts.append(data)
+
+
+def from_html(data: bytes) -> tuple[str, str]:
+    """→ (title, text) of a web page, capped so a long page doesn't flood extraction."""
+    page = _PageText()
+    page.feed(data.decode("utf-8", "replace"))
+    lines = (re.sub(r"\s+", " ", line).strip() for line in "".join(page.parts).split("\n"))
+    text = "\n".join(line for line in lines if len(line) > 1)
+    return re.sub(r"\s+", " ", page.og or page.title).strip(), text[:20000]
+
+
 def to_text(filename: str | None, data: bytes | None, text: str | None, kind_hint: str | None = None) -> dict:
     """Returns {"kind", "text", "label"}. kind: pdf | pdf_scanned | slides | image | email | notes | text."""
     name = (filename or "").lower()
@@ -88,6 +131,9 @@ def to_text(filename: str | None, data: bytes | None, text: str | None, kind_hin
             body, kind = _vision([Image.open(io.BytesIO(data))])[0], "image"
         elif name.endswith((".txt", ".md")):
             body, kind = data.decode("utf-8", "replace"), kind_hint or "notes"
+        elif name.endswith((".html", ".htm")) or data[:300].lstrip().lower().startswith((b"<!doctype html", b"<html")):
+            title, body = from_html(data)
+            kind, filename = kind_hint or "text", title or filename  # the page's title is a better label than its URL
         else:
             raise ValueError(f"unsupported file type: {filename}. Use PDF, PPTX, an image, .eml, or paste text")
     else:
