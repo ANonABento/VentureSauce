@@ -45,6 +45,49 @@ const MAIL = [
     subject: "New metrics posted for September 2026",
     body: "Acme AI posted new metrics to their investor dashboard.\n\nPeriod: September 2026\nUpdated: ARR, growth, headcount, customers",
     cta: { label: "Open dashboard", href: "#portal" } },
+  // Older mail: texture so the inbox looks lived-in. Fictional people and companies; nothing here is dropped in the demo.
+  ...[
+    ["kestrel-sep", "Lena Ortiz", "lena@kestrelhealth.example", "Sep 30", "Kestrel Health - September investor update", "Portfolio",
+      "Hi all,\n\nSeptember was about our first hospital network going live. Highlights, lowlights and one ask below.\n\nHighlights\n- Network rollout finished on schedule\n- Two senior engineering hires accepted\n\nLowlights\n- Procurement at the second network slipped a quarter\n\nAsk: intros to heads of nursing informatics.\n\nLena"],
+    ["esign", "E-Signature", "no-reply@sign.fund.example", "Sep 30", "Completed: Side letter - Fund II (all parties signed)", "",
+      "All parties have completed \"Side letter - Fund II\".\n\nThe completed document is attached to the envelope in your account."],
+    ["ic-memo", "Morgan Lee", "morgan@fund.example", "Sep 29", "Re: IC memo template", "",
+      "Updated the template with a section for open diligence questions and a 'what would make us wrong' box. Use it for anything going to Monday.\n\nM", "Morgan, me", 4],
+    ["syndicate", "Harbor Lane Syndicate", "deals@harborlane.example", "Sep 29", "New deal: industrial automation, seed (allocations close Friday)", "",
+      "A new deal is open to syndicate members. Memo, terms and the founder Q&A recording are in the deal room.\n\nAllocations close Friday at 5pm PT."],
+    ["recruit", "Dana Whitfield", "dana@talentworks.example", "Sep 28", "Head of Finance candidates for your portfolio", "",
+      "Hi Taylor,\n\nThree strong Head of Finance candidates came free this month, all with Series A to B experience. Happy to share profiles with any portfolio company that's hiring.\n\nDana"],
+    ["lp-call", "Fund Ops", "ops@fund.example", "Sep 27", "LP call recording and slides", "LPs",
+      "Thanks to everyone who joined the quarterly LP call. The recording and slides are in the data room under Fund II / LP updates.\n\nFund Ops"],
+    ["copperline", "Ben Adeyemi", "ben@copperline.example", "Sep 26", "Copperline: we closed our bridge", "Portfolio",
+      "Taylor,\n\nQuick note that the bridge is closed and wired. Thank you for leaning in when it mattered. Full update with the October numbers next week.\n\nBen"],
+    ["intro-ravi", "Ravi Menon", "ravi@menonangels.example", "Sep 25", "Intro: Taylor <> Sofia (Fieldnote)", "Deals",
+      "Taylor, meet Sofia, who's building Fieldnote: voice notes for field technicians that turn into work orders. Sofia, Taylor invests at seed in vertical software.\n\nI'll let you two take it from here.\n\nRavi", "Ravi, Sofia, me", 3],
+    ["cal-accept", "Ben Adeyemi", "ben@copperline.example", "Sep 25", "Accepted: Copperline Q3 check-in @ Wed Oct 14", "",
+      "Ben Adeyemi has accepted this invitation.\n\nCopperline Q3 check-in\nWednesday Oct 14, 2026 ⋅ 11am – 11:45am (Pacific Time)"],
+    ["newsletter2", "The Weekly Term Sheet", "hello@termsheet.example", "Sep 24", "What founders ask for in a lead investor", "",
+      "Good morning.\n\nThis week: a survey of what founders say they want from a lead, how to run a reference call that actually tells you something, and a note on pro-rata.\n\nRead in browser · Unsubscribe"],
+    ["portco-board", "Lena Ortiz", "lena@kestrelhealth.example", "Sep 23", "Board meeting: Thu Oct 22, materials by Oct 15", "Portfolio",
+      "Hi board,\n\nLocking in Thursday Oct 22 for the Q3 board meeting. Materials will be out a week ahead. Let me know if you'd like anything added to the agenda.\n\nLena"],
+    ["legal", "Avery Brooks", "avery@brookslaw.example", "Sep 22", "Re: Copperline bridge - closing set", "Portfolio",
+      "Attached is the closing set for your records. Nothing further needed from you.\n\nAvery Brooks\nBrooks Law", "Avery, me", 5],
+    ["conf", "Logistics Tech Summit", "events@logisticssummit.example", "Sep 21", "Your pass for Logistics Tech Summit", "",
+      "Your investor pass is confirmed. Show the QR code in the app at check-in. The investor lounge is on level 2."],
+    ["fieldnote", "Sofia Marchetti", "sofia@fieldnote.example", "Sep 20", "Fieldnote - quick overview", "Deals",
+      "Hi Taylor,\n\nThanks for the time on Thursday. As promised, a short overview is in the doc linked below. We'd love to keep you posted as we get closer to raising.\n\nSofia"],
+    ["morgan-pipeline", "Morgan Lee", "morgan@fund.example", "Sep 19", "Pipeline sheet is now in the CRM", "",
+      "Moved the pipeline out of the spreadsheet and into the CRM. Owners and stages are set; please update next steps there from now on.\n\nM"],
+    ["expense", "Fund Ops", "ops@fund.example", "Sep 18", "Expense reports due Sep 25", "",
+      "Friendly reminder that September expense reports are due on the 25th."],
+    ["tidewell", "Marcus Hale", "marcus@tidewell.example", "Sep 17", "Re: Tidewell follow-up", "Deals",
+      "Totally understand, and thanks for the thoughtful note. Would love to stay in touch as we hit the milestones you mentioned.\n\nMarcus", "Marcus, me", 2],
+    ["alumni", "Founders Dinner", "rsvp@foundersdinner.example", "Sep 16", "You're invited: founders and investors dinner, Oct 20", "",
+      "Join us for a small dinner of founders and seed investors on Tuesday Oct 20. RSVP by Oct 12."],
+    ["orbitwise", "Kai Nakamura", "kai@orbitwise.example", "Sep 15", "Orbitwise data room access", "Deals",
+      "Hi Taylor,\n\nYou now have access to the data room. Let me know who else on your team should be added.\n\nKai"],
+    ["security", "Account Security", "no-reply@mail.fund.example", "Sep 14", "New sign-in on Mac", "",
+      "We noticed a new sign-in to your account on a Mac. If this was you, you don't need to do anything."],
+  ].map(([id, from, addr, when, subject, label, body, who, n]) => ({ id, from, addr, when, subject, label, body, who, n, date: `${when}, 2026` })),
 ];
 const NOTES = [
   { id: "acme-call", title: "Acme AI: call with Jane", icon: "📞", when: "October 6, 2026", file: "02_acme_call_notes.txt",
@@ -198,6 +241,7 @@ async function mailView(openId) {
     <div class="gm-read">
       <div class="gm-subj"><h2>${esc(open.subject)}</h2><span class="lab">Inbox ×</span>${open.label ? `<span class="lab">${open.label} ×</span>` : ""}
         <span style="flex:1"></span><button class="ib" aria-label="Print">${ic("print")}</button></div>
+      ${open.n > 1 ? `<div class="gm-earlier"><span>${open.n - 1}</span>earlier message${open.n > 2 ? "s" : ""}</div>` : ""}
       <div class="gm-msg">
         ${avatar(open.from, "lg")}
         <div><div class="gm-from"><b>${esc(open.from)}</b> <span>&lt;${esc(open.addr)}&gt;</span></div><div class="gm-to">to me ▾</div></div>
@@ -216,15 +260,16 @@ async function mailList() {
     const chips = (m.attachments || []).map((a) => `<span class="chipfile"><i class="k-${a.kind === "PDF" ? "pdf" : "ppt"}">${a.kind === "PDF" ? "PDF" : "P"}</i><span>${esc(a.name)}</span></span>`).join("");
     return `<a class="gm-row ${m.unread ? "unread" : ""}" href="#mail/${m.id}">
       <span class="chk"></span><span class="star ${m.starred ? "on" : ""}">${ic("star", m.starred ? 'fill="currentColor"' : "")}</span>
-      <span class="who">${esc(m.from)}</span>
+      <span class="who">${esc(m.who || m.from)}${m.n ? ` <span class="tn">${m.n}</span>` : ""}</span>
       <span class="what">${m.label ? `<span class="lab">${m.label}</span>` : ""}<b>${esc(m.subject)}</b> - ${esc(snip)}</span>
       <span class="when">${esc(m.when)}</span>
+      <span class="hacts">${ic("archive")}${ic("trash")}${ic("mail")}${ic("clock")}</span>
       ${chips ? `<span class="chips">${chips}</span>` : ""}</a>`;
   }));
   return mailShell(`
     <div class="gm-tool"><button class="ib" aria-label="Select"><span class="chk" style="width:18px;height:18px;border:2px solid #9aa0a6;border-radius:2px"></span></button>
       <button class="ib" aria-label="Refresh">${ic("refresh")}</button><button class="ib" aria-label="More">${ic("more", 'stroke-width="3"')}</button>
-      <span class="count">1–${MAIL.length} of ${MAIL.length}</span></div>
+      <span class="count">1–50 of 2,184</span></div>
     <div class="gm-tabs"><div class="on">${ic("inbox")}Primary</div><div>${ic("tag")}Promotions</div><div>${ic("people")}Social</div><div>${ic("help")}Updates <span class="pill">4 new</span></div></div>
     <div class="gm-list">${rows.join("")}</div>`);
 }
