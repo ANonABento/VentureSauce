@@ -141,6 +141,12 @@ ASK = re.compile(r"\b(raising|raise a|target|opening|seeking|plan(?:s|ning)? to 
 NAMED_ROUND = re.compile(r"\b(series [a-f]|seed|pre-seed|round)\b", re.I)
 
 
+def _round_name(text: str | None) -> str | None:
+    """"Series A", "seed"... named in a claim or headline, normalised, so a claim is only compared with press about that round."""
+    m = re.search(r"\b(series [a-f]|pre-seed|seed)\b", text or "", re.I)
+    return m.group(1).lower() if m else None
+
+
 def _is_ask(c: dict) -> bool:
     """A round the company is raising now ("Raising a $25M Series A") hasn't happened, so nothing can confirm it."""
     return bool(ASK.search(c.get("claim_text") or ""))
@@ -282,6 +288,20 @@ def press_checks(claims: list[dict], press: list[dict]) -> list[dict]:
         else:
             out.append(_check(c, **common, unit="usd", verdict="unverifiable", confidence="low",
                               note="No press coverage of this round found."))
+    # "Raised a $90M Series A": a total-raised claim that names a round, vs. press about that same round.
+    # Skipped when the same figure was also read as a round size above, so it isn't checked twice.
+    for c in (c for c in claims if c["claim_type"] == "raised" and not _is_ask(c) and _round_name(c.get("claim_text"))
+              and not any(_close(r["value"], c["value"]) for r in rounds)):
+        same = [p for p in amounts if _round_name(p.get("title")) == _round_name(c.get("claim_text"))]
+        if not same:
+            continue
+        hit = next((p for p in same if _close(p["amount_mentioned"], c["value"])), None)
+        p = hit or min(same, key=lambda p: abs(p["amount_mentioned"] - c["value"]))
+        out.append(_check(c, **common, unit="usd", observed_value=p["amount_mentioned"], source_url=p["url"],
+                          source_date=p.get("date"), verdict="match" if hit else "gap", confidence="high" if hit else "medium",
+                          note=f"Press reports {usd(p['amount_mentioned'])}: \"{p['title']}\"." if hit else
+                          f"Press reports {usd(p['amount_mentioned'])} for the {_round_name(p['title']).title()} vs. "
+                          f"{usd(c['value'])} claimed: \"{p['title']}\"."))
     for c in (c for c in claims if c["claim_type"] == "customer"):
         name = _norm(str(c["value"]))
         hit = next((p for p in press if name in _norm(f"{p.get('title', '')} {p.get('snippet', '')}")), None)

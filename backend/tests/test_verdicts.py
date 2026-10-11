@@ -125,3 +125,13 @@ def test_the_round_being_raised_now_is_not_checked():
     checks += v.press_checks([claim("round_size", 25_000_000, "Series A target: $25M, opening November")],
                              [{"amount_mentioned": 10_000_000, "url": "p", "title": "Acme raises $10M"}])
     assert not [c for c in checks if c["claim_type"] == "round_size"]
+
+
+def test_a_raised_round_is_checked_against_press_about_that_round():
+    press = [{"title": "Daytona Raises $24M Series A", "amount_mentioned": 24_000_000, "url": "https://example.com/a"},
+             {"title": "Daytona raises $5M seed", "amount_mentioned": 5_000_000, "url": "https://example.com/b"}]
+    [gap] = v.press_checks([claim("raised", 90_000_000, "Daytona raised a $90M Series A")], press)
+    assert gap["verdict"] == "gap" and gap["observed_value"] == 24_000_000
+    [ok] = v.press_checks([claim("raised", 24_000_000, "Daytona raised a $24M Series A")], press)
+    assert ok["verdict"] == "match"
+    assert v.press_checks([claim("raised", 90_000_000, "Daytona raised a $90M Series B")], press) == []
