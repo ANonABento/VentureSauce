@@ -218,7 +218,8 @@ def form_d_checks(claims: list[dict], form_d: dict | None, company: str | None =
 
         earlier = next((f for f in _filings(form_d)[1:] if fits(f)), None)
         if (offering and _close(claimed, offering)) or _close(claimed, sold):
-            add(c, "match", "high", f"Latest Form D: {usd(offering)} offering, {usd(sold)} sold." + still_open, sold, offering)
+            add(c, "match", "high", (f"Latest Form D: {usd(offering)} offering, {usd(sold)} sold." if offering
+                                     else f"Latest Form D: {usd(sold)} sold.") + still_open, sold, offering)
         elif earlier and not fits(form_d):
             # e.g. a Series A announced in February, and a newer, larger offering filed in August: the claim is
             # about the earlier round, and the newer filing is context, not a contradiction.

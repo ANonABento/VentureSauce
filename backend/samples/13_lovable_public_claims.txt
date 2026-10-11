@@ -1,0 +1,5 @@
+Lovable (Lovable Labs Inc) - public claims from the company's own announcement. Real company; these are its published statements, not a deck.
+
+- Lovable has raised $400 million in Series C funding at a $13.3 billion valuation, led by Menlo Ventures and co-led by the Scaleup Europe Fund, managed by EQT.
+- Returning investors include Accel, Antler, CapitalG, DST Global, Evantic Capital, HubSpot Ventures, and Salesforce Ventures.
+Source: https://lovable.dev/blog/series-c

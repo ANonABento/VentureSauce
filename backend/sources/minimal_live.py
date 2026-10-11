@@ -55,7 +55,8 @@ _sec_last = [0.0]
 
 
 # Legal names extracted from documents → the name the company goes by (cache, snapshots and news search use it).
-ALIASES = {"daytona-platforms": "Daytona", "legora-inc": "Legora", "clerk-inc": "Clerk"}
+ALIASES = {"daytona-platforms": "Daytona", "legora-inc": "Legora", "clerk-inc": "Clerk",
+           "lovable-labs": "Lovable", "harvey-ai": "Harvey", "general-counsel-ai": "GC AI"}
 LEGAL = re.compile(r"[,.]?\s+(inc|incorporated|llc|ltd|limited|corp|corporation|co|gmbh|ab|sa)\.?$", re.I)
 
 

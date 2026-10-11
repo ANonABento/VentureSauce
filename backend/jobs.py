@@ -15,6 +15,7 @@ import extract
 import ingest
 import store
 import verdicts
+from sources import minimal_live
 from sources import ground_truth
 from sources.ground_truth import get_ground_truth
 
@@ -166,7 +167,10 @@ async def run_real(job: dict, upload: dict | None, text: str | None, kind: str |
     # 1. Any input → text → claims → filed under a company.
     item = await asyncio.to_thread(ingest.to_text, upload and upload["filename"], upload and upload["data"], text, kind)
     extracted = await asyncio.to_thread(extract.extract, item["text"], item["kind"])
-    co = store.resolve_company(extracted["company"]["name"], extracted["company"]["domain"], company_id)
+    # The name the company goes by ("Daytona"), not its legal one ("Daytona Platforms Inc."), so the inbox reads well
+    # and a deck and an email under the two names land on one company.
+    name = extracted["company"]["name"]
+    co = store.resolve_company(minimal_live.common_name(name) if name else name, extracted["company"]["domain"], company_id)
     saved = store.add_item(co["id"], item["kind"], item["label"], extracted["item_date"], extracted["claims"])
     job.update(company_id=co["id"], item_id=saved["id"], company={"id": co["id"], "name": co["name"], "domain": co.get("domain")})
 
