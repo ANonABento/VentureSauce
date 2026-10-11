@@ -154,12 +154,59 @@ function mailShell(main, unread) {
 const SENDER = { from: "VentureSauce alerts", addr: "alerts@venturesauce" };
 const subject = (r) => `${r.name} raised ${money(r.sold)}${r.target && r.target !== r.sold ? ` of ${money(r.target)}` : ""} (Form D)`;
 
+// Real emails in the inbox (backend/samples/*.eml), above the SEC alerts. Dragging one drops its text into the panel.
+const EMAILS = ["Legora.eml"];
+let MAILS = null;
+async function emails() {
+  if (!MAILS) MAILS = (await Promise.all(EMAILS.map(async (file) => {
+    const raw = await load(file);
+    if (!raw) return null;
+    const { headers: h, body } = parseEml(raw);
+    const from = h.from || "";
+    const date = h.date ? new Date(h.date) : null;
+    return { id: file.replace(/\.eml$/, "").toLowerCase(), mail: true, unread: true, subj: h.subject || file, body,
+             who: from.replace(/\s*<.*>$/, "") || from, addr: (from.match(/<(.+)>/) || [])[1] || "",
+             date: date && !isNaN(date) ? date.toISOString().slice(0, 10) : null };
+  }))).filter(Boolean);
+  return MAILS;
+}
+const mailDrag = (m) => `draggable="true" data-text="${esc(`${m.subj}\n\n${m.body}`)}"`;
+function emailRow(m) {
+  return `<a class="gm-row ${m.unread ? "unread" : ""}" href="#mail/${m.id}" ${mailDrag(m)}>
+      <span class="chk"></span><span class="star">${ic("star")}</span>
+      <span class="who">${esc(m.who)}</span>
+      <span class="what"><b>${esc(m.subj)}</b> - ${esc(m.body.replace(/\s+/g, " ").slice(0, 150))}</span>
+      <span class="when">${esc(day(m.date).replace(/, \d{4}$/, ""))}</span>
+      <span class="hacts">${ic("archive")}${ic("trash")}${ic("mail")}${ic("clock")}</span></a>`;
+}
+function emailRead(m, list, unread) {
+  return mailShell(`
+    <div class="gm-tool"><a class="ib" href="#mail" aria-label="Back to Inbox">${ic("back")}</a>
+      <button class="ib" aria-label="Archive">${ic("archive")}</button><button class="ib" aria-label="Delete">${ic("trash")}</button>
+      <span class="count">${list.indexOf(m) + 1} of ${list.length}</span></div>
+    <div class="gm-read">
+      <div class="gm-subj"><h2>${esc(m.subj)}</h2></div>
+      <div class="gm-msg">
+        ${avatar(m.who || "?", "lg")}
+        <div><div class="gm-from"><b>${esc(m.who)}</b> <span>&lt;${esc(m.addr)}&gt;</span></div><div class="gm-to">to me ▾</div></div>
+        <div class="gm-date">${esc(day(m.date))}</div>
+        <div class="gm-text" ${mailDrag(m)}>${esc(m.body)}</div>
+        <p class="df-hint">Drag this email into VentureSauce to check its claims against the SEC filings, LinkedIn and Crunchbase.</p>
+      </div>
+    </div>`, unread);
+}
+
 async function mailView(openId) {
-  const list = await alerts();
+  const mails = await emails();
+  const list = [...mails, ...(await alerts())];
   const unread = list.filter((m) => m.unread).length;
   const open = list.find((m) => m.id === openId);
+  if (open && open.mail) {
+    open.unread = false;
+    return emailRead(open, list, list.filter((m) => m.unread).length);
+  }
   if (!open) {
-    const rows = list.map((r) => `<a class="gm-row ${r.unread ? "unread" : ""}" href="#mail/${r.id}" ${dragAttrs(r)}>
+    const rows = list.map((r) => r.mail ? emailRow(r) : `<a class="gm-row ${r.unread ? "unread" : ""}" href="#mail/${r.id}" ${dragAttrs(r)}>
       <span class="chk"></span><span class="star">${ic("star")}</span>
       <span class="who">${SENDER.from}</span>
       <span class="what"><span class="lab">SEC alerts</span><b>${esc(subject(r))}</b> - ${esc(alertText(r).replace(/\s+/g, " ").slice(0, 150))}</span>
