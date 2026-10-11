@@ -29,7 +29,7 @@ export function FirstRun({
   filing?: string | null;
   /** Resolves to a message to show when the company isn't in the inbox. Omit to hide the lookup. */
   onLookup?: (name: string) => Promise<string | null>;
-  /** Copies the prebuilt example inbox into this workspace (a fictional company plus two real startups' public claims). */
+  /** Copies the prebuilt example inbox into this workspace (real companies only). Omit to hide it. */
   onExample?: () => void;
   loadingExample?: boolean;
 }) {

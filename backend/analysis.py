@@ -92,15 +92,29 @@ def metric_name(name: str) -> str:
     return out[:1].upper() + out[1:]
 
 
+def _not_current(c: dict) -> bool:
+    """A plan ("grow to 300 by the end of 2026") or a starting point ("grown from 40 to 400") isn't today's figure, so
+    it can't contradict anything."""
+    text = c.get("claim_text") or ""
+    if verdicts.PLANNED.search(text):
+        return True
+    v = c["value"]
+    num = f"{v:g}" if isinstance(v, float) else str(v)
+    return bool(re.search(rf"\bfrom\s+\$?{re.escape(num)}\b[^.]*?\bto\b", text, re.I))
+
+
 def contradictions(claims: list[dict]) -> list[dict]:
     """Same fact, different numbers, in different items the user dropped in."""
     groups: dict[str, list[dict]] = {}
     for c in claims:
         k = _group_key(c)
-        if k and isinstance(c["value"], (int, float)):
+        if k and isinstance(c["value"], (int, float)) and not _not_current(c):
             groups.setdefault(k, []).append(c)
     out = []
     for key, cs in groups.items():
+        # "Grown from 40 to 400": 40 is a starting point even where the extractor shortened its own wording.
+        starts = {float(n.replace(",", "")) for c in cs for n in re.findall(r"\bfrom\s+\$?([\d,.]+)\b[^.]*?\bto\b", c.get("claim_text") or "", re.I)}
+        cs = [c for c in cs if float(c["value"]) not in starts]
         # The same file dropped twice says the same thing twice: keep one of each (source, value).
         uniq: dict[tuple, dict] = {}
         for c in cs:

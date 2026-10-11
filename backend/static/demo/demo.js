@@ -1,4 +1,4 @@
-// Demo desk: look-alikes of the tools an investor works in (mail, a deal-flow CRM, a read-later list), filled only
+// Demo desk: look-alikes of the tools an investor works in (mail, a deal-flow CRM, files, notes, a read-later list), filled only
 // with real data: SEC Form D raises from Data's pipeline (static/demo/data/dealflow.json, exported from OSO by
 // backend/export_dealflow.py) and companies' own funding announcements (backend/samples/). Nothing is invented.
 "use strict";
@@ -244,6 +244,141 @@ function dealsWire(filter = "all") {
   box.onkeydown = (e) => { if (e.key === "Enter") location.hash = `#deals/${filter}/${encodeURIComponent(box.value.trim())}`; };
 }
 
+
+/* ───────────── Files (Drive-like): real documents ───────────── */
+// Companies' own announcement pages, printed to PDF from their websites (samples/page_*_announcement.pdf).
+const DOCS = [
+  { id: "legora", title: "Legora raises $550 million Series D to fuel US growth", from: "legora.com", when: "Mar 10, 2026", file: "page_legora_announcement.pdf", pages: 6, size: "3.1 MB" },
+  { id: "lovable", title: "We just raised $400M in Series C funding", from: "lovable.dev", when: "Aug 12, 2026", file: "page_lovable_announcement.pdf", pages: 8, size: "1.8 MB" },
+  { id: "harvey", title: "Harvey Raises $550M at a $15.5B Valuation", from: "harvey.ai", when: "Sep 9, 2026", file: "page_harvey_announcement.pdf", pages: 4, size: "276 KB" },
+  { id: "clerk", title: "Clerk raises $50m Series C", from: "clerk.com", when: "Oct 15, 2025", file: "page_clerk_announcement.pdf", pages: 4, size: "1.3 MB" },
+  { id: "daytona", title: "Daytona raises $24M Series A", from: "vcnewsdaily.com", when: "Feb 6, 2026", file: "page_daytona_announcement.pdf", pages: 2, size: "184 KB" },
+];
+const FILE_COLORS = { pdf: "#ea4335", txt: "#4285f4", sec: "#5f6368" };
+const fileIcon = (kind) => `<svg class="fi" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="${FILE_COLORS[kind]}"/><text x="12" y="16" text-anchor="middle" font-size="7" font-weight="700" fill="#fff" font-family="Arial">${{ pdf: "PDF", txt: "≡", sec: "SEC" }[kind]}</text></svg>`;
+
+function filesShell(main, overlay = "") {
+  return `<div class="fd">
+    <header class="fd-top"><div class="fd-brand">${ic("file")}<span>Files</span></div>
+      <label class="fd-search">${ic("search")}<input placeholder="Search in Files"><span>${ic("menu")}</span></label>
+      <span class="grow"></span><button class="ib">${ic("help")}</button><button class="ib">${ic("gear")}</button><span style="padding:0 6px">${avatar(ME.name)}</span></header>
+    <div class="fd-body">
+      <nav class="fd-nav"><button class="fd-new"><b>+</b>New</button>
+        <a>${ic("inbox")}Home</a><a class="on" href="#files">${ic("file")}Diligence</a><a>${ic("clock")}Recent</a><a>${ic("star")}Starred</a><a>${ic("trash")}Trash</a></nav>
+      <main class="fd-main">${main}</main>
+    </div>${overlay}</div>`;
+}
+
+async function filesList() {
+  const { notes } = await notes_();
+  const cards = DOCS.map((d) => `<a class="fd-card" href="#files/${d.id}" draggable="true" data-file="${d.file}">
+      <div class="th"><img src="/static/demo/img/${d.id}-p1.webp" alt="" class="pt"></div>
+      <div class="cap">${fileIcon("pdf")}<span>${esc(d.title)}</span></div><small>Saved from ${esc(d.from)} · ${d.when}</small></a>`).join("");
+  const rows = [
+    ...DOCS.map((d) => `<tr data-href="#files/${d.id}" draggable="true" data-file="${d.file}"><td><span class="nm">${fileIcon("pdf")}${esc(d.title)}.pdf</span></td><td>${esc(d.from)}</td><td>${d.when}</td><td>${d.size}</td><td class="acts">${ic("dl")}${ic("share")}</td></tr>`),
+    ...CLIPS.map((c) => `<tr draggable="true" data-file="${c.file}"><td><span class="nm">${fileIcon("txt")}${esc(c.title)} (quotes).txt</span></td><td>${esc(c.from)}</td><td>Saved ${c.saved}</td><td>1 KB</td><td class="acts">${ic("dl")}</td></tr>`),
+    ...notes.filter((n) => n.filings[0]).map((n) => `<tr data-ext="${n.filings[0].url}"><td><span class="nm">${fileIcon("sec")}${esc(n.entity || n.name)}: Form D, ${esc(n.filings[0].date)}</span></td><td>sec.gov</td><td>${esc(n.filings[0].date)}</td><td>-</td><td class="acts">${ic("share")}</td></tr>`),
+  ].join("");
+  return `<div class="fd-head"><h1>Diligence</h1><span class="grow"></span></div>
+    <div class="fd-chips"><span>Type ⌄</span><span>Company ⌄</span><span>Modified ⌄</span></div>
+    <h3 class="fd-sub">Funding announcements, saved from the companies' own sites</h3><div class="fd-cards">${cards}</div>
+    <table class="fd-table"><thead><tr><th>Name</th><th>Source</th><th>Date</th><th>File size</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function filesView(id) {
+  const d = DOCS.find((x) => x.id === id);
+  if (!d) return filesShell(await filesList());
+  const overlay = `<div class="fd-ov">
+      <header class="fd-ovtop"><a class="ib" href="#files" aria-label="Close">${ic("back")}</a>${fileIcon("pdf")}<b draggable="true" data-file="${d.file}">${esc(d.title)}.pdf</b>
+        <span class="grow"></span><span class="fd-open">Saved from ${esc(d.from)}</span><span class="grow"></span>
+        <a class="ib" href="${S + d.file}" download aria-label="Download">${ic("dl")}</a></header>
+      <iframe class="fd-pdf" src="${S + d.file}#toolbar=0&view=FitH" title="${esc(d.title)}"></iframe>
+    </div>`;
+  return filesShell(await filesList(), overlay);
+}
+function filesWire() {
+  document.querySelectorAll("tr[data-href]").forEach((r) => (r.onclick = () => (location.hash = r.dataset.href)));
+  document.querySelectorAll("tr[data-ext]").forEach((r) => (r.onclick = () => window.open(r.dataset.ext, "_blank")));
+}
+
+/* ───────────── Notes (Notion-like): company research from public records ───────────── */
+let NOTES_ = null;
+async function notes_() {
+  if (!NOTES_) NOTES_ = await fetch("/static/demo/data/notes.json").then((r) => r.json());
+  return NOTES_;
+}
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+const link = (url, text) => `<a href="${url}" target="_blank" rel="noreferrer">${esc(text)}</a>`;
+
+function notesSide(list, active) {
+  return `<aside class="nt-side">
+      <div class="nt-ws"><i>R</i>Research<span class="chev">⌄</span></div>
+      <a class="it"><span class="em">🔍</span>Search</a><a class="it"><span class="em">🏠</span>Home</a>
+      <h6>Teamspaces</h6>
+      <a class="it ${active ? "" : "on"}" href="#notes"><span class="em">🗂️</span>Company research</a>
+      ${list.map((n) => `<a class="it sub ${slug(n.name) === active ? "on" : ""}" href="#notes/${slug(n.name)}"><span class="em">🏢</span>${esc(n.name)}</a>`).join("")}
+    </aside>`;
+}
+
+function noteText(n) {
+  const f = n.filings.map((x) => `- ${x.date}: ${money(x.sold)} sold${x.offering ? ` of ${money(x.offering)}` : ""}${x.amendment ? " (amendment)" : ""} ${x.url}`).join("\n");
+  return [`${n.name} (${n.domain})`, n.headline ? `In the news: ${n.headline}` : "", "SEC Form D filings:", f,
+    n.people.length ? `People on the filings: ${n.people.map((p) => p.name).join(", ")}` : "",
+    n.linkedin ? `LinkedIn: ${n.linkedin.employees} people ${n.linkedin.url}` : "",
+    n.crunchbase?.total_funding_usd ? `Crunchbase: ${money(n.crunchbase.total_funding_usd)} total funding ${n.crunchbase.url}` : "",
+    ...n.press.map((p) => `Press: ${p.title} ${p.url}`)].filter(Boolean).join("\n");
+}
+
+async function notesView(id) {
+  const { notes, fetched_at } = await notes_();
+  const n = notes.find((x) => slug(x.name) === id);
+  if (!n) {
+    const rows = notes.map((x) => `<tr data-href="#notes/${slug(x.name)}"><td class="nm"><span>🏢</span><b>${esc(x.name)}</b><span class="open">OPEN</span></td>
+      <td>${esc(x.sector || "-")}</td><td>${x.filings[0] ? money(x.filings[0].sold) : "-"}</td><td>${x.linkedin ? x.linkedin.employees : "-"}</td><td>${esc(x.domain)}</td></tr>`).join("");
+    return `<div class="nt">${notesSide(notes, null)}
+      <section class="nt-main"><div class="nt-top"><span>🗂️ Company research</span><span class="grow"></span><span class="crumb" style="font-size:13px">Updated ${esc(day((fetched_at || "").slice(0, 10)))}</span></div>
+      <div class="nt-page"><div class="nt-db">
+        <div class="nt-icon" style="margin-top:28px;font-size:56px">🗂️</div><h1>Company research</h1>
+        <p class="nt-desc">What the public record says about each company: SEC Form D filings, LinkedIn and Crunchbase via Bright Data, and press. Every figure links to its source.</p>
+        <table class="nt-table"><thead><tr><th>Aa Company</th><th>≡ Sector</th><th>$ Latest Form D</th><th>👥 LinkedIn</th><th>🔗 Website</th></tr></thead><tbody>${rows}</tbody></table>
+        <div class="nt-count">COUNT <b>${notes.length}</b></div>
+      </div></div></section></div>`;
+  }
+  const filings = n.filings.map((x) => `<li>${link(x.url, x.date)}: <b>${money(x.sold)}</b> sold${x.offering ? ` of ${money(x.offering)}` : ""}${x.amendment ? " (amendment)" : ""}</li>`).join("");
+  const people = n.people.map((p) => `<li>${esc(p.name)}${p.director || p.officer ? ` <span class="nt-tag" style="background:#e3e2e0">${[p.officer && "officer", p.director && "director"].filter(Boolean).join(", ")}</span>` : ""}</li>`).join("");
+  const press = n.press.map((p) => `<li>${link(p.url, p.title)}${p.date ? ` <span style="color:#9b9a97">${esc(p.date)}</span>` : ""}</li>`).join("");
+  return `<div class="nt">${notesSide(notes, id)}
+    <section class="nt-main">
+      <div class="nt-top"><span class="crumb">🗂️ Company research</span><span class="crumb">/</span><span>🏢 ${esc(n.name)}</span><span class="grow"></span>
+        <button class="tb" data-more aria-label="More">•••</button></div>
+      <div class="nt-page"><div class="nt-cover"></div><div class="nt-doc">
+        <div class="nt-icon">🏢</div><h1>${esc(n.name)}</h1>
+        <dl class="nt-props">
+          <dt>🔗 Website</dt><dd>${link(`https://${n.domain}`, n.domain)}</dd>
+          <dt>🏛 SEC filer</dt><dd>${n.edgar ? link(n.edgar, `${n.entity} (CIK ${n.cik})`) : '<span style="color:#c7c6c4">No Form D found</span>'}</dd>
+          <dt>≡ Sector</dt><dd>${esc(n.sector || "-")}</dd>
+          <dt>📍 Based in</dt><dd>${esc(n.city || "-")}${n.founded ? ` · incorporated ${n.founded}` : ""}</dd>
+        </dl>
+        <div class="nt-body">
+          ${n.headline ? `<p><mark>In the news: ${esc(n.headline)}</mark></p>` : ""}
+          <h3>Funding on file (SEC Form D)</h3>${filings ? `<ul>${filings}</ul>` : "<p>No Form D filings found.</p>"}
+          ${people ? `<h3>People on the filings</h3><ul>${people}</ul>` : ""}
+          <h3>Team and funding profiles (via Bright Data)</h3>
+          <ul><li>LinkedIn: ${n.linkedin ? `${link(n.linkedin.url, `${n.linkedin.employees} people`)}${n.linkedin.company_size ? ` (${esc(n.linkedin.company_size)})` : ""}` : "no confirmed profile"}</li>
+            <li>Crunchbase: ${n.crunchbase ? link(n.crunchbase.url, n.crunchbase.total_funding_usd ? `${money(n.crunchbase.total_funding_usd)} total funding` : "profile") : "no confirmed profile"}</li></ul>
+          ${press ? `<h3>In the press (via Bright Data)</h3><ul>${press}</ul>` : ""}
+        </div>
+        <div class="nt-back">Sources: SEC EDGAR, Bright Data (LinkedIn, Crunchbase, Google News), Data's pipeline on OSO</div>
+      </div></div>
+    </section></div>`;
+}
+async function notesWire(id) {
+  document.querySelectorAll("tr[data-href]").forEach((r) => (r.onclick = () => (location.hash = r.dataset.href)));
+  const n = (await notes_()).notes.find((x) => slug(x.name) === id);
+  const more = $("[data-more]");
+  if (n && more) more.onclick = (e) => { e.stopPropagation(); menu(more, [["Copy page text", () => copy(noteText(n), "Page text copied")]]); };
+}
+
 /* ───────────── Saved (read-later) ───────────── */
 /** A clip's reported statements. The clip files open with a note on provenance and end with the source URL (shown
  * as a link instead), so only the statements are on screen. */
@@ -289,11 +424,15 @@ const APPS = {
     icon: tile("#1a73e8", '<rect x="10" y="14" width="28" height="20" rx="3" fill="#fff"/><path d="M11 16l13 9 13-9" stroke="#1a73e8" stroke-width="2.4" fill="none" stroke-linejoin="round"/>') },
   deals: { name: "Deal flow", view: dealsView, wire: dealsWire, title: () => "Deal flow · Relate",
     icon: tile("#1b1f3b", '<circle cx="18" cy="20" r="5" fill="#7c5cff"/><circle cx="31" cy="18" r="4" fill="#3cc4ff"/><circle cx="27" cy="31" r="6" fill="#fff"/><path d="M18 20l13-2-4 13z" stroke="#fff" stroke-width="1.5" fill="none" opacity=".6"/>') },
+  files: { name: "Files", view: filesView, wire: filesWire, title: (id) => `${DOCS.find((d) => d.id === id)?.title || "Diligence"} - Files`,
+    icon: tile("#fff", '<rect x=".5" y=".5" width="47" height="47" rx="10.5" fill="none" stroke="#ddd"/><path d="M10 16a3 3 0 0 1 3-3h7l3 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#f4b400"/><path d="M10 20h28v11a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#fbc934"/>') },
+  notes: { name: "Notes", view: notesView, wire: notesWire, title: () => "Company research",
+    icon: tile("#fff", '<rect x=".5" y=".5" width="47" height="47" rx="10.5" fill="none" stroke="#ddd"/><path d="M14 12h16l6 6v18H14z" fill="#fff" stroke="#111" stroke-width="2.4" stroke-linejoin="round"/><path d="M19 21h12M19 26h12M19 31h8" stroke="#111" stroke-width="2.2" stroke-linecap="round"/>') },
   saved: { name: "Saved", view: savedView, wire: savedWire,
     title: (id) => `${(CLIPS.find((c) => c.id === id) || CLIPS[0]).title} · Saved`,
     icon: tile("#ef4056", '<path d="M15 12h18v24l-9-6-9 6z" fill="#fff"/>') },
 };
-const OLD = { press: "saved", crm: "deals" }; // old links
+const OLD = { press: "saved", crm: "deals", decks: "files" }; // old links
 
 // Dragging a funding headline carries its text (with the company's site); a row or link without one carries the
 // website; a saved clip carries its file.

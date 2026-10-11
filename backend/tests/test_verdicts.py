@@ -140,3 +140,19 @@ def test_a_raised_round_is_checked_against_press_about_that_round():
 def test_linkedin_far_above_the_claim_is_a_low_confidence_match():
     [c] = v.headcount_checks([claim("headcount", 40)], {"employees": 76, "url": "https://example.com/li"})
     assert c["verdict"] == "match" and c["confidence"] == "low" and "more than the 40" in c["note"]
+
+
+def test_a_planned_headcount_is_not_checked():
+    li = {"employees": 1170, "url": "https://example.com/li"}
+    assert v.headcount_checks([claim("headcount", 450, "We plan to grow to roughly 450 team members this year")], li) == []
+    assert len(v.headcount_checks([claim("headcount", 400, "We have 400 team members")], li)) == 1
+
+
+def test_plans_and_starting_points_dont_contradict():
+    import analysis
+    mk = lambda item, value, text: {"claim_type": "headcount", "value": value, "claim_text": text, "item_id": item,
+                                    "item_label": item, "item_day": "2026-03-10", "metric": None}
+    claims = [mk("a", 40, "40 ... team members"), mk("a", 400, "grown from 40 to 400 team members"),
+              mk("b", 400, "Legora has grown from 40 to 400 team members"),
+              mk("b", 300, "grow to more than 300 employees across its U.S. offices by the end of 2026")]
+    assert analysis.contradictions(claims) == []

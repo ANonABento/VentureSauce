@@ -22,3 +22,7 @@ The prebuilt example inbox only picks up new or changed files after `uv run pyth
 | `15_quartermaster_ai_headline.txt` | Bright Data SERP API, via Data's pipeline | "$43M" headline vs. **$122.65M sold on the SEC filing**: the raise is bigger than the press reported |
 | `16_penelope_health_headline.txt` | same | "$100M" matches press (Axios); the Form D shows $25M, so the filing can't confirm it |
 | `17_blitzy_headline.txt` | same | "$200M" matches the Form D ($188.8M sold of $190M) and press (Business Wire) |
+
+| Announcement PDFs | Source | Notes |
+| --- | --- | --- |
+| `page_legora_announcement.pdf`, `page_lovable_announcement.pdf`, `page_harvey_announcement.pdf`, `page_clerk_announcement.pdf`, `page_daytona_announcement.pdf` | The companies' own pages (VC News Daily for Daytona), printed to PDF with Chrome | Shown in the desk's Files app; drag one into the panel. Forward-looking lines ("we plan to grow to 450") aren't checked |

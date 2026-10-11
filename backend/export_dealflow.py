@@ -17,6 +17,11 @@ load_dotenv(".env")
 from sources import minimal_live, oso  # noqa: E402
 
 OUT = Path(__file__).parent / "static" / "demo" / "data" / "dealflow.json"
+NOTES = OUT.parent / "notes.json"
+# Research pages in the desk's Notes app: the demo inbox's companies, with the site that confirms who they are.
+NOTE_COMPANIES = {"Quartermaster AI": "quartermaster.us", "Blitzy": "blitzy.com", "Penelope Health": "penelope.health",
+                  "Legora": "legora.com", "Lovable": "lovable.dev", "Harvey": "harvey.ai", "Daytona": "daytona.io",
+                  "Clerk": "clerk.com"}
 UNIVERSE = f"""SELECT universe_rank, company_search_name, cik, city, state_or_country, sector, industry_group, year_of_inc,
   website, li_website, li_match_confidence, li_employees_on_linkedin, linkedin_url, cb_website, cb_match_confidence,
   cb_total_funding_usd, crunchbase_url, latest_round_filed_date, latest_round_first_sale_date, latest_round_security_type,
@@ -81,6 +86,22 @@ def row(r: dict, judges: dict) -> dict:
     }
 
 
+def note(name: str, domain: str, rows: list[dict]) -> dict:
+    """One company's public record, every figure with its source link (live lookup: OSO first, then SEC/Bright Data)."""
+    found = minimal_live.lookup(name, domain)
+    fd = found.get("form_d") or {}
+    filings = [{"date": f.get("filing_date"), "sold": f.get("total_sold"), "offering": f.get("total_offering"),
+                "amendment": f.get("is_amendment"), "url": f.get("url")} for f in [fd, *fd.get("history", [])] if f.get("filing_date")]
+    flow = next((r for r in rows if r["site"] == oso.host(domain)), {})
+    return {"name": name, "domain": domain, "entity": fd.get("entity_name"), "cik": fd.get("cik"), "edgar": fd.get("edgar_company_url"),
+            "sector": flow.get("sector") or fd.get("industry_group"), "city": flow.get("city") or (fd.get("city") or "").title(),
+            "founded": flow.get("founded") or fd.get("year_of_inc"), "headline": flow.get("headline"),
+            "filings": sorted(filings, key=lambda f: f["date"], reverse=True),
+            "people": [{"name": p["name"], "director": p.get("director"), "officer": p.get("officer")} for p in fd.get("related_people") or []],
+            "linkedin": found.get("linkedin"), "crunchbase": found.get("crunchbase"),
+            "press": [{"title": p["title"], "url": p["url"], "date": p.get("date"), "amount": p.get("amount_mentioned")} for p in found.get("press") or []]}
+
+
 if __name__ == "__main__":
     judges = {str(int(j["sec_cik"])): j for j in oso._query(JUDGES) if j.get("sec_cik")}
     rows = sorted((row(r, judges) for r in oso._query(UNIVERSE)), key=lambda r: r["filed"] or "", reverse=True)
@@ -91,3 +112,6 @@ if __name__ == "__main__":
           f"{sum(bool(r['site']) for r in rows)} confirmed websites, {sum(bool(r['li']) for r in rows)} LinkedIn, "
           f"{sum(bool(r['cb']) for r in rows)} Crunchbase, {sum(r['quiet'] for r in rows)} with no press yet, "
           f"{sum(bool(r['judges']) for r in rows)} tied to judges, {sum(bool(r['headline']) for r in rows)} funding headlines")
+    notes = [note(n, d, rows) for n, d in NOTE_COMPANIES.items()]
+    NOTES.write_text(json.dumps({"fetched_at": datetime.now(timezone.utc).isoformat(), "notes": notes}, separators=(",", ":")))
+    print(f"{len(notes)} research notes → {NOTES} ({NOTES.stat().st_size // 1024} KB)")

@@ -80,10 +80,14 @@ def _check(claim: dict | None, **kw) -> dict:
     return base
 
 
+# "We plan to grow to roughly 450 team members": a target, not today's team, so nothing can confirm it.
+PLANNED = re.compile(r"\b(plan(?:s|ning)? to|expect(?:s|ed)? to|will (?:grow|hire|reach)|aim(?:s|ing)? to|grow to|by the end of|target)\b", re.I)
+
+
 def headcount_checks(claims: list[dict], linkedin: dict | None) -> list[dict]:
     out = []
     for c in claims:
-        if c["claim_type"] != "headcount":
+        if c["claim_type"] != "headcount" or PLANNED.search(c.get("claim_text") or ""):
             continue
         common = dict(unit="people", source="linkedin", via="brightdata")
         if not linkedin or linkedin.get("employees") is None:

@@ -21,7 +21,7 @@ import { ThemeParam } from "@/components/theme-param";
 import type { DeltaReport } from "@/lib/types";
 import { type CompanyTab, CompanyScreen } from "@/components/company";
 import { DigestScreen } from "@/components/digest";
-import { type CompanySummary, dropItem, getReport, listCompanies, loadExample, moveItem } from "@/lib/api";
+import { type CompanySummary, dropItem, getReport, listCompanies, moveItem } from "@/lib/api";
 import { DUR, EASE_ENTER } from "@/lib/motion";
 import { detectCompany } from "./get-delta-report";
 import { PanelFrame } from "./panel-frame";
@@ -113,20 +113,7 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
   const [pending, setPending] = useState<DropInput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notInInbox, setNotInInbox] = useState(false);
-  const [loadingExample, setLoadingExample] = useState(false);
   const navigated = useRef(false);
-
-  async function onExample() {
-    setError(null);
-    setLoadingExample(true);
-    try {
-      await loadExample();
-      setCompanies(await listCompanies());
-    } catch (e) {
-      setError((e as Error).message);
-    }
-    setLoadingExample(false);
-  }
 
   function setScreen(next: Screen) {
     setDirection(DEPTH[next.kind] >= DEPTH[screen.kind] ? 1 : -1);
@@ -279,8 +266,6 @@ function InboxApp({ pageUrl }: { pageUrl: string | null }) {
                 step={step}
                 filing={filing}
                 onLookup={onLookup}
-                onExample={onExample}
-                loadingExample={loadingExample}
               />
             </>
           )}
