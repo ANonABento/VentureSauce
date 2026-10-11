@@ -1,0 +1,36 @@
+test_alerts_keep_new_raises_and_increased_amendments:
+  model: marts.alerts
+  inputs:
+    marts.filings:
+      columns:
+        accession_number: VARCHAR
+        filed_date: DATE
+        is_amendment: BOOLEAN
+        cik: VARCHAR
+        entity_name: VARCHAR
+        city: VARCHAR
+        state_or_country: VARCHAR
+        sector: VARCHAR
+        industry_group: VARCHAR
+        is_equity: BOOLEAN
+        date_of_first_sale: DATE
+        days_from_first_sale_to_filing: BIGINT
+        total_offering_amount: DECIMAL(18, 2)
+        total_amount_sold: DECIMAL(18, 2)
+        total_remaining: DECIMAL(18, 2)
+        amount_sold_change: DECIMAL(18, 2)
+        total_investors: INT
+        related_persons: STRUCT(name VARCHAR, relationships VARCHAR[])[]
+        filing_url: VARCHAR
+      rows:
+        - {accession_number: new, filed_date: 2026-07-09, is_amendment: false, sector: technology, is_equity: true}
+        - {accession_number: bump, filed_date: 2026-08-20, is_amendment: true, sector: technology, is_equity: true, amount_sold_change: 7700000}
+        - {accession_number: flat, filed_date: 2026-08-21, is_amendment: true, sector: technology, is_equity: true, amount_sold_change: 0}
+        - {accession_number: fund, filed_date: 2026-07-10, is_amendment: false, sector: fund, is_equity: true}
+        - {accession_number: debt, filed_date: 2026-07-11, is_amendment: false, sector: health, is_equity: false}
+  outputs:
+    query:
+      partial: true
+      rows:
+        - {accession_number: new, alert_type: new_offering}
+        - {accession_number: bump, alert_type: amount_sold_increased}
